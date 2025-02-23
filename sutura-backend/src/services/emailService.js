@@ -1,23 +1,21 @@
-const nodemailer = require('nodemailer');
-const emailConfig = require('../config/emailConfig');
-
+const nodemailer = require("nodemailer");
+const emailConfig = require("../config/emailConfig");
 
 /**
  * Service d'envoi d'emails pour l'application Sutura Énergie
  */
 const emailService = {
-
   /**
    * Initialise et retourne un transporteur Nodemailer
    * @returns {object} Transporteur Nodemailer configuré
    */
-  getTransporter: function() {
+  getTransporter: function () {
     return nodemailer.createTransport({
       service: emailConfig.service,
       host: emailConfig.host,
       port: emailConfig.port,
       secure: emailConfig.secure,
-      auth: emailConfig.auth
+      auth: emailConfig.auth,
     });
   },
 
@@ -26,7 +24,7 @@ const emailService = {
    * @param {object} options - Options de l'email
    * @returns {Promise<object>} Résultat de l'envoi
    */
-  envoyerEmail: async function(options) {
+  envoyerEmail: async function (options) {
     try {
       const transporter = this.getTransporter();
 
@@ -34,15 +32,15 @@ const emailService = {
         from: emailConfig.from,
         to: options.to,
         subject: options.subject,
-        text: options.text || '',
-        html: options.html || ''
+        text: options.text || "",
+        html: options.html || "",
       };
 
       const info = await transporter.sendMail(message);
-      console.log('Email envoyé: %s', info.messageId);
+      console.log("Email envoyé: %s", info.messageId);
       return info;
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      console.error("Erreur lors de l'envoi de l'email:", error);
       throw error;
     }
   },
@@ -53,11 +51,12 @@ const emailService = {
    * @param {string} motDePasse - Mot de passe temporaire
    * @returns {Promise<object>} Résultat de l'envoi
    */
-  envoyerIdentifiants: async function(utilisateur, motDePasse) {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const loginUrl = `${frontendUrl}/login`;
+  envoyerIdentifiants: async function (utilisateur, motDePasse) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const loginUrl = `${frontendUrl}/`;
 
-    const sujet = 'Bienvenue sur Sutura Énergie - Vos identifiants de connexion';
+    const sujet =
+      "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
 
     const texte = `
       Bonjour ${utilisateur.prenom} ${utilisateur.nom},
@@ -108,7 +107,7 @@ const emailService = {
       to: utilisateur.email,
       subject: sujet,
       text: texte,
-      html: html
+      html: html,
     });
   },
 
@@ -119,10 +118,14 @@ const emailService = {
    * @param {string} frontendUrl - URL de base du frontend
    * @returns {Promise<object>} Résultat de l'envoi
    */
-  envoyerLienReinitialisation: async function(utilisateur, token, frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173') {
+  envoyerLienReinitialisation: async function (
+    utilisateur,
+    token,
+    frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
+  ) {
     const resetURL = `${frontendUrl}/reinitialiser-mot-de-passe/${token}`;
 
-    const sujet = 'Réinitialisation de votre mot de passe - Sutura Énergie';
+    const sujet = "Réinitialisation de votre mot de passe - Sutura Énergie";
 
     const texte = `
       Bonjour ${utilisateur.prenom} ${utilisateur.nom},
@@ -157,7 +160,7 @@ const emailService = {
       to: utilisateur.email,
       subject: sujet,
       text: texte,
-      html: html
+      html: html,
     });
   },
 
@@ -166,8 +169,9 @@ const emailService = {
    * @param {object} utilisateur - Utilisateur destinataire
    * @returns {Promise<object>} Résultat de l'envoi
    */
-  envoyerConfirmationReinitialisation: async function(utilisateur) {
-    const sujet = 'Confirmation - Votre mot de passe a été réinitialisé - Sutura Énergie';
+  envoyerConfirmationReinitialisation: async function (utilisateur) {
+    const sujet =
+      "Confirmation - Votre mot de passe a été réinitialisé - Sutura Énergie";
 
     const texte = `
       Bonjour ${utilisateur.prenom} ${utilisateur.nom},
@@ -193,9 +197,9 @@ const emailService = {
       to: utilisateur.email,
       subject: sujet,
       text: texte,
-      html: html
+      html: html,
     });
-  }
+  },
 };
 
 module.exports = emailService;

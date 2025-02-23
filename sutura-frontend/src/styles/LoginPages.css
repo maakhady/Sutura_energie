@@ -1,0 +1,84 @@
+/* Styles pour le conteneur principal */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Styles pour la carte de connexion */
+.card {
+  border: none;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  background-color: white;
+  padding: 0.5rem;
+}
+
+/* Styles pour le texte principal */
+.primary-text {
+  color: #2b4c7e;
+  font-weight: 600;
+}
+
+/* Styles pour les boutons */
+.btn-primary {
+  background-color: #2b4c7e !important;
+  border-color: #2b4c7e !important;
+}
+
+.btn-outline-secondary {
+  border-color: #2b4c7e !important;
+  color: #2b4c7e;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #2b4c7e !important;
+  color: white;
+}
+
+/* Styles pour les inputs */
+.border-primary {
+  border-color: #2b4c7e !important;
+}
+
+.code-input {
+  font-size: 1.5rem;
+  border: 2px solid #2b4c7e !important;
+  border-radius: 12px !important;
+}
+
+/* Styles pour les icônes */
+.icon-wrapper {
+  background-color: #2b4c7e;
+  border-radius: 12px;
+}
+
+/* Styles pour les liens */
+.text-end {
+  text-align: left !important;
+}
+
+.text-end button {
+  color: #2b4c7e;
+  text-decoration: none;
+}
+
+.text-end button:hover {
+  text-decoration: underline;
+}
+/* Styles pour la page de connexion */
+.login-page {
+  background-image: url(/public/sutura-background.svg); /* Remplacez par le chemin de votre image */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

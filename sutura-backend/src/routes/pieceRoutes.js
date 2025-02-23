@@ -8,7 +8,6 @@ const {
   obtenirPieceParId,
   mettreAJourPiece,
   supprimerPiece,
-  obtenirPiecesParUtilisateur,
 } = require("../controllers/pieceControleur");
 
 // Routes nécessitant un rôle admin
