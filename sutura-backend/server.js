@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: false }));
 // Routes API - à décommenter au fur et à mesure de leur création
 app.use("/api/utilisateurs", require("./src/routes/utilisateurRoutes"));
 app.use("/api/pieces", require("./src/routes/pieceRoutes"));
-//app.use("/api/appareils", require("./src/routes/appareilRoutes"));
+app.use("/api/appareils", require("./src/routes/appareilRoutes"));
 // app.use('/api/energie', require('./src/routes/energieRoutes'));
 app.use("/api/auth", require("./src/routes/authRoutes"));
 
