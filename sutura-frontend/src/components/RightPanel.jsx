@@ -6,6 +6,8 @@ const RightPanel = () => {
   const [showAlertDetails, setShowAlertDetails] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
   
+
+
   // Gestion de la fermeture du dropdown lors d'un clic à l'extérieur
   useEffect(() => {
     const handleClickOutside = (event) => {
