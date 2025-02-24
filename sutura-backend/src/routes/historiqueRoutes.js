@@ -5,16 +5,20 @@ const verifRole = require('../middleware/verifRole');
 const {
   obtenirHistoriques,
   obtenirMesActions,
-  obtenirHistorique,
-  supprimerHistoriques
+  supprimerHistoriques,
+  obtenirHistoriqueParUser
+
 } = require('../controllers/historiqueControleur');
 
 // Route pour les utilisateurs normaux
 router.get('/mes-actions', auth, obtenirMesActions);
+router.get('/user/:userId', auth, obtenirHistoriqueParUser);
+
 
 // Routes protégées pour les admins
 router.get('/', auth, verifRole(['admin']), obtenirHistoriques);
-router.get('/:id', auth, verifRole(['admin']), obtenirHistorique);
 router.delete('/', auth, verifRole(['admin']), supprimerHistoriques);
+router.get('/user/:userId', auth, verifRole(['admin']),obtenirHistoriqueParUser);
+
 
 module.exports = router;

@@ -107,27 +107,27 @@ const obtenirMesActions = async (req, res) => {
 };
 
 /**
- * Obtenir un historique spécifique
- * @route GET /api/historiques/:id
+ * Obtenir l'historique d'un utilisateur
+ * @route GET /api/historiques/user/:userId
  * @access Private
  */
-const obtenirHistorique = async (req, res) => {
+const obtenirHistoriqueParUser = async (req, res) => {
   try {
-    const historique = await Historique.findById(req.params.id)
+    const historiques = await Historique.find({ users_id: req.params.userId })
       .populate('users_id', 'nom prenom email')
       .populate('app_id', 'nom_app')
       .populate('pieces_id', 'nom_piece')
       .lean();
 
-    if (!historique) {
+    if (!historiques || historiques.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Historique non trouvé'
+        message: 'Aucun historique trouvé pour cet utilisateur'
       });
     }
 
     // Vérification des droits d'accès
-    if (req.user.role !== 'admin' && historique.users_id._id.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && req.params.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Accès non autorisé à cet historique'
@@ -136,10 +136,10 @@ const obtenirHistorique = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: historique
+      data: historiques
     });
   } catch (error) {
-    console.error('Erreur obtenirHistorique:', error);
+    console.error('Erreur obtenirHistoriqueParUser:', error);
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération de l\'historique',
@@ -209,5 +209,6 @@ module.exports = {
   obtenirHistoriques,
   obtenirMesActions,
   obtenirHistorique,
-  supprimerHistoriques
+  supprimerHistoriques,
+  obtenirHistoriqueParUser
 };

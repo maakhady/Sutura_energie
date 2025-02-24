@@ -1,0 +1,18 @@
+/* Reset des styles de Vite et nouveaux styles de base */
+#root {
+  max-width: none;  /* Enlève la limitation de largeur */
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* Si vous voulez garder le style de la carte mais adapté */
+.card {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Supprimez les styles du logo et les animations si vous ne les utilisez pas */

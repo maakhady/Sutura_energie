@@ -65,6 +65,7 @@ router.get("/:id", auth, obtenirUtilisateur);
 router.put("/:id", auth, mettreAJourUtilisateur);
 router.post("/reinitialiser-password", reinitialiserMotDePasse);
 router.post("/demander-reinitialisation", demanderReinitialisation);
+router.post("/changerpassword", auth, reinitialiserMotDePasse);
 
 // Route pour l'utilisateur (désactiver sa propre carte)
 router.patch("/desactiver-ma-carte", auth, desactiverMaCarteRFID);

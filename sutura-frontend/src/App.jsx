@@ -6,11 +6,17 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import DashboardPage from "./pages/DashboardPages";
 import ProtectedRoute from "./components/auth/ProtectedRoute"; // Importez votre composant ProtectedRoute
+import './App.css'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import Sidebar from './components/Sidebar'
 
-const App = () => {
+
+function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col items-center bg-gray-100">
+      <Sidebar />
         <Routes>
           {/* Route publique */}
           <Route path="/" element={<LoginPage />} />
@@ -24,6 +30,10 @@ const App = () => {
           {/* Route protégée */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/appareils" element={<Dashboard />} />
+                  <Route path="/historiques" element={<Dashboard />} />
+                  <Route path="/utilisateurs" element={<Dashboard />} />
           </Route>
 
           {/* Route 404 */}
@@ -32,6 +42,6 @@ const App = () => {
       </div>
     </Router>
   );
-};
+}
 
-export default App;
+  export default App;

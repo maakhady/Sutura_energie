@@ -4,7 +4,6 @@ const Utilisateur = require('../models/Utilisateur');
 const TokenInvalide = require('../models/TokenInvalide');
 const { creerHistorique } = require('./historiqueControleur');
 
-
 /**
  * Connecter un utilisateur avec email et mot de passe
  * @route POST /api/auth/connexion
