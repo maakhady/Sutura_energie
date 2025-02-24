@@ -4,21 +4,29 @@ import FirstLoginPage from "./pages/auth/FirstLoginPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import DashboarPage from "./pages/DashboardPages";
+import DashboardPage from "./pages/DashboardPages";
+import ProtectedRoute from "./components/auth/ProtectedRoute"; // Importez votre composant ProtectedRoute
 
 const App = () => {
   return (
     <Router>
       <div className="min-h-screen flex flex-col items-center bg-gray-100">
         <Routes>
-          <Route path="/dashboard" element={<DashboarPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          {/* Route publique */}
+          <Route path="/" element={<LoginPage />} />
           <Route path="/firstlogin" element={<FirstLoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route
             path="/reinitialiser-mot-de-passe/:token"
             element={<ResetPasswordPage />}
           />
-          <Route path="/" element={<LoginPage />} />
+
+          {/* Route protégée */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+          </Route>
+
+          {/* Route 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>

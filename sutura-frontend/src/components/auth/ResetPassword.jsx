@@ -1,5 +1,5 @@
-import { useState} from "react";
-import { Lock } from "lucide-react";
+import { useState } from "react";
+import { Lock, Eye, EyeClosed } from "lucide-react";
 import PropTypes from "prop-types";
 import { useNavigate, useParams } from "react-router-dom"; // Utiliser useParams pour récupérer le token
 import { authService } from "../../services/authService"; // Assure-toi d'importer ton service
@@ -9,6 +9,9 @@ const ResetPassword = () => {
   const [actuelPassword, setActuelPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showActuelPassword, setShowActuelPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -74,13 +77,24 @@ const ResetPassword = () => {
                   <Lock size={16} />
                 </span>
                 <input
-                  type="password"
+                  type={showActuelPassword ? "text" : "password"}
                   className="form-control border-primary"
                   placeholder="Entrez votre mot de passe actuel"
                   value={actuelPassword}
                   onChange={(e) => setActuelPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowActuelPassword(!showActuelPassword)}
+                >
+                  {showActuelPassword ? (
+                    <Eye size={16} />
+                  ) : (
+                    <EyeClosed size={16} />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -93,13 +107,24 @@ const ResetPassword = () => {
                   <Lock size={16} />
                 </span>
                 <input
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   className="form-control border-primary"
                   placeholder="Entrez votre nouveau mot de passe"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? (
+                    <Eye size={16} />
+                  ) : (
+                    <EyeClosed size={16} />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -112,13 +137,24 @@ const ResetPassword = () => {
                   <Lock size={16} />
                 </span>
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   className="form-control border-primary"
                   placeholder="Confirmez votre mot de passe"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <Eye size={16} />
+                  ) : (
+                    <EyeClosed size={16} />
+                  )}
+                </button>
               </div>
             </div>
 

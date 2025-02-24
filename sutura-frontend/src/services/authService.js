@@ -60,9 +60,10 @@ const changeInitialPassword = async (data, token) => {
 };
 
 // Fonction pour se déconnecter
-const logout = async (token) => {
+const logout = async () => {
   try {
-    const response = await axios.post(
+    const token = localStorage.getItem("token");
+    await axios.post(
       `${API_URL}/logout`,
       {},
       {
@@ -71,33 +72,33 @@ const logout = async (token) => {
         },
       }
     );
-    return response.data;
+    localStorage.removeItem("token"); // Supprimez le token du localStorage
   } catch (error) {
-    console.error(
-      "Erreur lors de la déconnexion:",
-      error.response?.data?.message || error.message
-    );
-    throw error;
+    console.error("Erreur lors de la déconnexion:", error);
   }
 };
 
-// Fonction pour récupérer le profil de l'utilisateur
-const getMyProfile = async (token) => {
+// Fonction pour récupérer le profil de l'utilisateur vérification d'authentification dans authService
+
+const getMyProfile = async () => {
   try {
+    const token = localStorage.getItem("token"); // Récupérez le token du localStorage
+    if (!token) {
+      return null; // Pas de token, utilisateur non authentifié
+    }
+
     const response = await axios.get(`${API_URL}/mon-profil`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return response.data; // Retourne les données du profil si l'utilisateur est authentifié
   } catch (error) {
-    console.error(
-      "Erreur lors de la récupération du profil:",
-      error.response?.data?.message || error.message
-    );
-    throw error;
+    console.error("Erreur lors de la récupération du profil:", error);
+    return null; // En cas d'erreur, utilisateur non authentifié
   }
 };
+
 const demanderReinitialisation = async (email) => {
   try {
     const response = await axios.post(`${API_URL2}/demander-reinitialisation`, {

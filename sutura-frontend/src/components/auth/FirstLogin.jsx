@@ -11,6 +11,8 @@ const FirstLogin = () => {
   const [error, setError] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showdefaultPassword, setShowdefaultPassword] = useState(false);
+
   const [passwordRules, setPasswordRules] = useState({
     minLength: false,
     hasUppercase: false,
@@ -156,13 +158,24 @@ const FirstLogin = () => {
                   <Lock size={16} />
                 </span>
                 <input
-                  type="password"
+                  type={showdefaultPassword ? "text" : "password"}
                   className="form-control border-primary"
                   placeholder="Entrez votre mot de passe par défaut"
                   value={defaultPassword}
                   onChange={(e) => setDefaultPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowdefaultPassword(!showdefaultPassword)}
+                >
+                  {showdefaultPassword ? (
+                    <Eye size={16} />
+                  ) : (
+                    <EyeClosed size={16} />
+                  )}
+                </button>
               </div>
             </div>
 

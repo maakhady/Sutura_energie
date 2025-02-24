@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { LayoutGrid, Mail } from "lucide-react";
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom"; // Importez useNavigate pour la redirection
-import { authService } from "../../services/authService"; // Importez le service d'authentification
+import { useNavigate } from "react-router-dom";
+import { authService } from "../../services/authService";
 
 const CodeForm = ({ setPage }) => {
   const [code, setCode] = useState(["", "", "", ""]);
@@ -11,16 +11,14 @@ const CodeForm = ({ setPage }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [attemptsLeft, setAttemptsLeft] = useState(3); // Nombre de tentatives restantes
   const firstCodeInputRef = useRef(null);
-  const navigate = useNavigate(); // Hook pour la redirection
+  const navigate = useNavigate();
 
-  // Focus sur le premier champ au chargement
   useEffect(() => {
     if (firstCodeInputRef.current) {
       firstCodeInputRef.current.focus();
     }
   }, []);
 
-  // Restaurer le temps restant depuis le localStorage
   useEffect(() => {
     const savedTimeLeft = localStorage.getItem("timeLeft");
     if (savedTimeLeft) {
@@ -28,7 +26,6 @@ const CodeForm = ({ setPage }) => {
     }
   }, []);
 
-  // Sauvegarder le temps restant dans le localStorage
   useEffect(() => {
     if (timeLeft > 0) {
       localStorage.setItem("timeLeft", timeLeft.toString());
@@ -37,76 +34,73 @@ const CodeForm = ({ setPage }) => {
     }
   }, [timeLeft]);
 
-  // Décompte du temps
   useEffect(() => {
+    let timer;
     if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
+      timer = setInterval(() => setTimeLeft((prevTime) => prevTime - 1), 1000);
+    } else {
+      setAttemptsLeft(3); // Réinitialiser les tentatives après le décompte
     }
+    return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Gestion de la saisie du code
   const handleCodeChange = (index, value) => {
-    if (timeLeft > 0) return; // Bloquer la saisie si le décompte est actif
+    if (timeLeft > 0) return;
 
-    if (isNaN(value)) return; // Accepter uniquement les chiffres
+    if (isNaN(value)) return;
 
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
 
-    // Passer au champ suivant si un chiffre est saisi
     if (value && index < 3) {
       document.getElementById(`code-input-${index + 1}`).focus();
     }
 
-    // Masquer le code après 1 seconde
     if (newCode.some((digit) => digit !== "")) {
       setShowCode(true);
       setTimeout(() => setShowCode(false), 1000);
     }
 
-    // Soumettre le code si tous les chiffres sont saisis
     if (newCode.every((digit) => digit !== "")) {
       validateCode(newCode.join(""));
     }
+
+    setCodeError(""); // Réinitialiser les erreurs lors de la saisie
   };
 
-  // Validation du code
   const validateCode = async (submittedCode) => {
     try {
       const response = await authService.loginWithCode(submittedCode);
       if (response.success) {
         setCodeError("");
-
-        // Stocker le token dans le localStorage
         localStorage.setItem("token", response.token);
-
         console.log("Code valide !");
-        navigate("/dashboard"); // Rediriger vers le tableau de bord
+        navigate("/dashboard");
       } else {
-        setCodeError("Code incorrect");
-        setAttemptsLeft((prev) => prev - 1);
-
-        if (attemptsLeft === 1) {
-          setTimeLeft(30); // Bloquer pendant 30 secondes après 3 erreurs
-          setAttemptsLeft(3); // Réinitialiser les tentatives
-        }
-
-        // Vider les champs et revenir au premier input
-        setCode(["", "", "", ""]);
-        firstCodeInputRef.current.focus();
+        handleValidationError();
       }
     } catch (error) {
-      setCodeError(
-        error.response?.data?.message || "Erreur lors de la validation du code"
-      );
-      setCode(["", "", "", ""]);
-      firstCodeInputRef.current.focus();
+      console.error("Erreur lors de la validation du code:", error);
+      handleValidationError();
     }
   };
 
-  // Gestion de la touche Backspace
+  const handleValidationError = () => {
+    setCodeError("Code incorrect");
+    setAttemptsLeft((prevAttempts) => {
+      const newAttempts = prevAttempts - 1;
+      if (newAttempts === 0) {
+        setTimeLeft(30); // Bloquer pendant 30 secondes après 3 erreurs
+        return 3; // Réinitialiser les tentatives après le décompte
+      }
+      return newAttempts;
+    });
+    setCode(["", "", "", ""]);
+    setCodeError("");
+    firstCodeInputRef.current.focus();
+  };
+
   const handleCodeKeyDown = (index, e) => {
     if (timeLeft > 0) return;
 
@@ -115,7 +109,6 @@ const CodeForm = ({ setPage }) => {
     }
   };
 
-  // Réinitialiser le code après un décompte ou une erreur
   useEffect(() => {
     if (timeLeft === 0 || codeError) {
       setCode(["", "", "", ""]);
@@ -123,7 +116,6 @@ const CodeForm = ({ setPage }) => {
     }
   }, [timeLeft, codeError]);
 
-  // Calcul de la largeur de la jauge de décompte
   const gaugeWidth = (timeLeft / 30) * 100;
 
   return (
@@ -148,14 +140,14 @@ const CodeForm = ({ setPage }) => {
 
           <div className="d-flex gap-2 mb-4">
             <button
-              className={`btn flex-grow-1 d-flex align-items-center justify-content-center gap-2 btn-outline-secondary`}
+              className="btn flex-grow-1 d-flex align-items-center justify-content-center gap-2 btn-outline-secondary"
               onClick={() => setPage("login")}
             >
               <Mail size={16} />
               Email
             </button>
             <button
-              className={`btn flex-grow-1 d-flex align-items-center justify-content-center gap-2 btn-primary`}
+              className="btn flex-grow-1 d-flex align-items-center justify-content-center gap-2 btn-primary"
               onClick={() => setPage("code")}
             >
               <LayoutGrid size={16} />
@@ -188,7 +180,7 @@ const CodeForm = ({ setPage }) => {
                 {codeError}
               </div>
             )}
-            {timeLeft > 0 && (
+            {timeLeft > 0 ? (
               <div className="text-center mb-3">
                 <p>
                   Veuillez patienter {timeLeft} secondes avant de réessayer.
@@ -211,6 +203,10 @@ const CodeForm = ({ setPage }) => {
                     }}
                   ></div>
                 </div>
+              </div>
+            ) : (
+              <div className="text-center mb-3">
+                <p>Tentatives restantes : {attemptsLeft}</p>
               </div>
             )}
           </form>

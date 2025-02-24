@@ -63,7 +63,9 @@ const ForgotPassword = () => {
             </div>
 
             {message && (
-              <div className="text-success small mb-3">{message}</div>
+              <div className="alert alert-success mt-3" role="alert">
+                {message}
+              </div>
             )}
             {error && <div className="text-danger small mb-3">{error}</div>}
 

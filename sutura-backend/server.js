@@ -27,6 +27,7 @@ app.use("/api/pieces", require("./src/routes/pieceRoutes"));
 app.use("/api/appareils", require("./src/routes/appareilRoutes"));
 // app.use('/api/energie', require('./src/routes/energieRoutes'));
 app.use("/api/auth", require("./src/routes/authRoutes"));
+app.use("/api/historiques", require("./src/routes/historiqueRoutes"));
 
 // Route de base
 app.get("/", (req, res) => {
