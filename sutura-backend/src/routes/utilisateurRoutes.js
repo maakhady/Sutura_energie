@@ -34,12 +34,15 @@ router.delete('/', auth, verifRole(['admin']), supprimerUtilisateurs);
 // Routes accessibles par l'admin et l'utilisateur concerné
 router.get('/:id', auth, obtenirUtilisateur);
 router.put('/:id', auth, mettreAJourUtilisateur);
-router.post('/reinitialiser-password', auth, reinitialiserMotDePasse);
-router.post('/demander-reinitialisation', auth, demanderReinitialisation);
+router.post('/reinitialiser-password',  reinitialiserMotDePasse);
+router.post('/demander-reinitialisation', demanderReinitialisation);
+router.post('/changerpassword', auth,  reinitialiserMotDePasse);
+
 
 
 
 // Route pour l'utilisateur (désactiver sa propre carte)
 router.patch('/desactiver-ma-carte', auth, desactiverMaCarteRFID);
+
 
 module.exports = router;

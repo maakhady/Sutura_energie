@@ -1,0 +1,115 @@
+/* src/styles/sidebar.css */
+.sidebar {
+  width: 80px;
+  height: 105vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  transition: width 0.3s ease;
+  border-right: 0.1px solid #274C77;
+}
+
+/* Logo styles */
+.sidebar-logo {
+  padding: 0 16px;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.logo-container {
+  width: 48px;
+  height: 48px;
+  background-color: #274C77;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  transition: all 0.3s ease;
+}
+
+.sidebar:hover .logo-container {
+  width: 208px;
+  height: auto;
+  position: relative;
+}
+
+.sidebar:hover .logo-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+/* Navigation items */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  color: #64748B;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+  background-color: #F1F5F9;
+  color: #274C77;
+}
+
+.nav-item.active {
+  background-color: #274C77;
+  color: white;
+}
+
+.nav-text {
+  margin-left: 12px;
+  display: none;
+}
+
+/* Déconnexion button */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 0 16px;
+}
+
+.deconnexion-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #DC2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.deconnexion-btn:hover {
+  background-color: #B91C1C;
+}
+
+/* Hover state - expand sidebar */
+.sidebar:hover {
+  width: 240px;
+}
+
+.sidebar:hover .nav-text {
+  display: block;
+}
