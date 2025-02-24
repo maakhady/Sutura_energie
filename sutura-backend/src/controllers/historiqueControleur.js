@@ -1,4 +1,4 @@
-const Historique = require('../models/Historique');
+const Historique = require("../models/Historique");
 
 /**
  * Créer une nouvelle entrée dans l'historique
@@ -9,12 +9,14 @@ const creerHistorique = async (data) => {
     const nouvelHistorique = await Historique.create({
       ...data,
       date_creation: Date.now(),
-      date_modif: Date.now()
+      date_modif: Date.now(),
     });
     return nouvelHistorique;
   } catch (error) {
-    console.error('Erreur creerHistorique:', error);
-    throw new Error(`Erreur lors de la création de l'historique: ${error.message}`);
+    console.error("Erreur creerHistorique:", error);
+    throw new Error(
+      `Erreur lors de la création de l'historique: ${error.message}`
+    );
   }
 };
 
@@ -28,7 +30,7 @@ const obtenirHistoriques = async (req, res) => {
     let filtres = {};
 
     // Gestion des filtres basée sur le rôle
-    if (req.user.role === 'admin') {
+    if (req.user.role === "admin") {
       // L'admin peut tout voir et filtrer
       if (req.query.users_id) filtres.users_id = req.query.users_id;
     } else {
@@ -38,7 +40,8 @@ const obtenirHistoriques = async (req, res) => {
 
     // Filtres communs pour tous les rôles
     if (req.query.type_entite) filtres.type_entite = req.query.type_entite;
-    if (req.query.type_operation) filtres.type_operation = req.query.type_operation;
+    if (req.query.type_operation)
+      filtres.type_operation = req.query.type_operation;
     if (req.query.statut) filtres.statut = req.query.statut;
 
     // Filtre par date
@@ -54,22 +57,22 @@ const obtenirHistoriques = async (req, res) => {
 
     const historiques = await Historique.find(filtres)
       .sort({ date_creation: -1 })
-      .populate('users_id', 'nom prenom email')
-      .populate('app_id', 'nom_app')
-      .populate('pieces_id', 'nom_piece')
+      .populate("users_id", "nom prenom email")
+      .populate("app_id", "nom_app")
+      .populate("pieces_id", "nom_piece")
       .lean();
 
     res.status(200).json({
       success: true,
       count: historiques.length,
-      data: historiques
+      data: historiques,
     });
   } catch (error) {
-    console.error('Erreur obtenirHistoriques:', error);
+    console.error("Erreur obtenirHistoriques:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la récupération des historiques',
-      error: error.message
+      message: "Erreur lors de la récupération des historiques",
+      error: error.message,
     });
   }
 };
@@ -82,26 +85,26 @@ const obtenirHistoriques = async (req, res) => {
 const obtenirMesActions = async (req, res) => {
   try {
     const filtres = {
-      users_id: req.user.id
+      users_id: req.user.id,
     };
 
     const historiques = await Historique.find(filtres)
       .sort({ date_creation: -1 })
-      .populate('app_id', 'nom_app')
-      .populate('pieces_id', 'nom_piece')
+      .populate("app_id", "nom_app")
+      .populate("pieces_id", "nom_piece")
       .lean();
 
     res.status(200).json({
       success: true,
       count: historiques.length,
-      data: historiques
+      data: historiques,
     });
   } catch (error) {
-    console.error('Erreur obtenirMesActions:', error);
+    console.error("Erreur obtenirMesActions:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la récupération de votre historique',
-      error: error.message
+      message: "Erreur lors de la récupération de votre historique",
+      error: error.message,
     });
   }
 };
@@ -114,36 +117,36 @@ const obtenirMesActions = async (req, res) => {
 const obtenirHistoriqueParUser = async (req, res) => {
   try {
     const historiques = await Historique.find({ users_id: req.params.userId })
-      .populate('users_id', 'nom prenom email')
-      .populate('app_id', 'nom_app')
-      .populate('pieces_id', 'nom_piece')
+      .populate("users_id", "nom prenom email")
+      .populate("app_id", "nom_app")
+      .populate("pieces_id", "nom_piece")
       .lean();
 
     if (!historiques || historiques.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Aucun historique trouvé pour cet utilisateur'
+        message: "Aucun historique trouvé pour cet utilisateur",
       });
     }
 
     // Vérification des droits d'accès
-    if (req.user.role !== 'admin' && req.params.userId !== req.user.id) {
+    if (req.user.role !== "admin" && req.params.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: 'Accès non autorisé à cet historique'
+        message: "Accès non autorisé à cet historique",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: historiques
+      data: historiques,
     });
   } catch (error) {
-    console.error('Erreur obtenirHistoriqueParUser:', error);
+    console.error("Erreur obtenirHistoriqueParUser:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la récupération de l\'historique',
-      error: error.message
+      message: "Erreur lors de la récupération de l'historique",
+      error: error.message,
     });
   }
 };
@@ -160,7 +163,7 @@ const supprimerHistoriques = async (req, res) => {
     if (!date_debut || !date_fin) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir une date de début et de fin'
+        message: "Veuillez fournir une date de début et de fin",
       });
     }
 
@@ -170,36 +173,38 @@ const supprimerHistoriques = async (req, res) => {
     if (isNaN(dateDebut.getTime()) || isNaN(dateFin.getTime())) {
       return res.status(400).json({
         success: false,
-        message: 'Dates invalides'
+        message: "Dates invalides",
       });
     }
 
     const result = await Historique.deleteMany({
       date_creation: {
         $gte: dateDebut,
-        $lte: dateFin
-      }
+        $lte: dateFin,
+      },
     });
 
     // Créer une entrée pour la suppression
     await creerHistorique({
       users_id: req.user.id,
-      type_entite: 'historique',
-      type_operation: 'suppression',
-      description: `Suppression de ${result.deletedCount} entrées d'historique entre ${dateDebut.toISOString()} et ${dateFin.toISOString()}`,
-      statut: 'succès'
+      type_entite: "historique",
+      type_operation: "suppression",
+      description: `Suppression de ${
+        result.deletedCount
+      } entrées d'historique entre ${dateDebut.toISOString()} et ${dateFin.toISOString()}`,
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: `${result.deletedCount} historiques supprimés avec succès`
+      message: `${result.deletedCount} historiques supprimés avec succès`,
     });
   } catch (error) {
-    console.error('Erreur supprimerHistoriques:', error);
+    console.error("Erreur supprimerHistoriques:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la suppression des historiques',
-      error: error.message
+      message: "Erreur lors de la suppression des historiques",
+      error: error.message,
     });
   }
 };
@@ -208,7 +213,6 @@ module.exports = {
   creerHistorique,
   obtenirHistoriques,
   obtenirMesActions,
-  obtenirHistorique,
   supprimerHistoriques,
-  obtenirHistoriqueParUser
+  obtenirHistoriqueParUser,
 };
