@@ -1,5 +1,4 @@
 import  { useState } from 'react';
-import { Search } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import '../styles/dashboard.css';
 import RightPanel from '../components/RightPanel'

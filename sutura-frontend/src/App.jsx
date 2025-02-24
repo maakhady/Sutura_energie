@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
+import DashboardListes from './pages/dashboard-listes'
+
 
 function App() {
   return (
@@ -22,7 +24,7 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/appareils" element={<Dashboard />} />
                   <Route path="/historiques" element={<Dashboard />} />
-                  <Route path="/utilisateurs" element={<Dashboard />} />
+                  <Route path="/utilisateurs" element={<DashboardListes />} />
                 </Routes>
               </div>
             </div>
