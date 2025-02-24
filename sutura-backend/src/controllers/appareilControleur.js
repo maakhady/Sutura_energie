@@ -1,4 +1,5 @@
 const Appareil = require("../models/Appareil");
+const { creerHistorique } = require("./historiqueControleur");
 
 // Créer un nouvel appareil à partir d'une pièce
 exports.creerAppareil = async (req, res) => {
@@ -13,12 +14,30 @@ exports.creerAppareil = async (req, res) => {
       automatique: automatique || false, // Par défaut, mode manuel
     });
 
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "creation",
+      description: `Création de l'appareil ${nom_app}`,
+      statut: "succès",
+    });
+
     const nouvelAppareil = await appareil.save();
     res.status(201).json(nouvelAppareil);
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la création de l'appareil",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "creation",
+      description: `Erreur lors de la création de l'appareil ${req.body.nom_app}`,
+      statut: "erreur",
     });
   }
 };
@@ -88,11 +107,29 @@ exports.modifierAppareil = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `Modification de l'appareil ${appareilModifie.nom_app}`,
+      statut: "succès",
+    });
+
     res.status(200).json(appareilModifie);
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la mise à jour de l'appareil",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `Erreur lors de la modification de l'appareil ${req.body.nom_app}`,
+      statut: "erreur",
     });
   }
 };
@@ -113,6 +150,15 @@ exports.supprimerAppareil = async (req, res) => {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
 
+    // crréer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "suppression",
+      description: `Suppression de l'appareil ${appareil.nom_app}`,
+      statut: "succès",
+    });
+
     // Marquer l'appareil comme supprimé et le désactiver
     appareil.supprime = true;
     appareil.actif = false; // Désactiver l'appareil lors de la suppression
@@ -123,6 +169,15 @@ exports.supprimerAppareil = async (req, res) => {
     res.status(500).json({
       message: "Erreur lors de la suppression de l'appareil",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "suppression",
+      description: `Erreur lors de la suppression de l'appareil ${req.body.nom_app}`,
+      statut: "erreur",
     });
   }
 };
@@ -145,6 +200,17 @@ exports.activerDesactiverAppareil = async (req, res) => {
 
     appareil.actif = req.body.actif;
     await appareil.save();
+
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `${
+        req.body.actif ? "Activation" : "Désactivation"
+      } de l'appareil ${appareil.nom_app}`,
+      statut: "succès",
+    });
 
     res.status(200).json(appareil);
   } catch (error) {
@@ -174,11 +240,29 @@ exports.definirMode = async (req, res) => {
     appareil.automatique = req.body.automatique;
     await appareil.save();
 
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `Définition du mode de l'appareil ${appareil.nom_app}`,
+      statut: "succès",
+    });
+
     res.status(200).json(appareil);
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la définition du mode de l'appareil",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareils",
+      type_operation: "modif",
+      description: `Erreur lors de la définition du mode de l'appareil ${req.body.nom_app}`,
+      statut: "erreur",
     });
   }
 };
@@ -190,6 +274,15 @@ exports.creerIntervalle = async (req, res) => {
     if (!appareil) {
       return res.status(404).json({ message: "Appareil non trouvé" });
     }
+
+    //créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "creation",
+      description: `Définition de l'intervalle de l'appareil ${appareil.nom_app}`,
+      statut: "succès",
+    });
 
     // Vérifier si l'utilisateur a le droit de modifier cet appareil
     if (
@@ -203,11 +296,29 @@ exports.creerIntervalle = async (req, res) => {
     appareil.intervalle = req.body.intervalle;
     await appareil.save();
 
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `Définition de l'intervalle de l'appareil ${appareil.nom_app}`,
+      statut: "succès",
+    });
+
     res.status(200).json(appareil);
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la gestion de l'intervalle",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `Erreur lors de la définition de l'intervalle de l'appareil ${req.body.nom_app}`,
+      statut: "erreur",
     });
   }
 };
@@ -244,6 +355,15 @@ exports.supprimerIntervalle = async (req, res) => {
     ) {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
+
+    // creer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: "modif",
+      description: `Suppression de l'intervalle de l'appareil ${appareil.nom_app}`,
+      statut: "succès",
+    });
 
     // Supprimer l'intervalle
     appareil.intervalle = undefined;

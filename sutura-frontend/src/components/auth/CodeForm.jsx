@@ -85,7 +85,6 @@ const CodeForm = ({ setPage }) => {
       handleValidationError();
     }
   };
-
   const handleValidationError = () => {
     setCodeError("Code incorrect");
     setAttemptsLeft((prevAttempts) => {

@@ -1,5 +1,6 @@
 const Piece = require("../models/piece");
 const Appareil = require("../models/Appareil"); // Assurez-vous d'importer le modèle Appareil
+const { creerHistorique } = require("./historiqueControleur");
 
 // Créer une nouvelle pièce (admin seulement)
 exports.creerPiece = async (req, res) => {
@@ -10,12 +11,30 @@ exports.creerPiece = async (req, res) => {
       actif: req.body.actif,
     });
 
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "pieces",
+      type_operation: "creation",
+      description: `Création de la pièce ${req.body.nom_piece}`,
+      statut: "succès",
+    });
+
     const nouvellePiece = await piece.save();
     res.status(201).json(nouvellePiece);
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la création de la pièce",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "pieces",
+      type_operation: "creation",
+      description: `Erreur lors de la création de la pièce ${req.body.nom_piece}`,
+      statut: "erreur",
     });
   }
 };
@@ -98,11 +117,29 @@ exports.mettreAJourPiece = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "pieces",
+      type_operation: "modif",
+      description: `Modification de la pièce ${pieceModifiee.nom_piece}`,
+      statut: "succès",
+    });
+
     res.status(200).json(pieceModifiee);
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la mise à jour de la pièce",
       error: error.message,
+    });
+
+    // Créer un historique en cas d
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "pieces",
+      type_operation: "modif",
+      description: `Erreur lors de la modification de la pièce ${pieceModifiee.nom_piece}`,
+      statut: "erreur",
     });
   }
 };
@@ -130,7 +167,14 @@ exports.supprimerPiece = async (req, res) => {
         message: "Impossible de supprimer une pièce contenant des appareils",
       });
     }
-
+    // Créer un historique
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "pieces",
+      type_operation: "suppression",
+      description: `Suppression de la pièce ${piece.nom_piece}`,
+      statut: "erreur",
+    });
     // Désactiver la pièce
     piece.actif = false;
     await piece.save();

@@ -1,4 +1,4 @@
-:root {
+/*  :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -29,7 +29,7 @@ body {
   align-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background-image: url(/public/sutura-background.svg);
+  background-image: url(/public/backImage.png);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -65,4 +65,5 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
+}a
+ */
