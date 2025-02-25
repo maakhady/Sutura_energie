@@ -5,6 +5,9 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import DashboardListes from './pages/dashboard-listes'
+import AjouterUtilisateur from './pages/AjouterUtilisateur'
+import ModifierUtilisateur from './pages/ModifierUtilisateur'
+
 
 
 function App() {
@@ -25,6 +28,10 @@ function App() {
                   <Route path="/appareils" element={<Dashboard />} />
                   <Route path="/historiques" element={<Dashboard />} />
                   <Route path="/utilisateurs" element={<DashboardListes />} />
+                  <Route path="/ajouter-utilisateur" element={<AjouterUtilisateur />} />
+                  <Route path="/modifier-utilisateur/:id" element={<ModifierUtilisateur />} />
+                  <Route path="/modifier-utilisateur/" element={<ModifierUtilisateur />} />
+
                 </Routes>
               </div>
             </div>

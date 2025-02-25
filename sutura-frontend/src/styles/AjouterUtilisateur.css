@@ -1,0 +1,256 @@
+/* Styles pour la page d'ajout d'utilisateur */
+
+.ajouter-utilisateur-page {
+    padding: 30px;
+    background-color: #F1F6FA;
+    width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  
+  /* Conteneur du formulaire */
+  .form-container {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+  }
+  
+  /* En-tête du formulaire avec le titre et le bouton de retour */
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .form-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #274C77;
+    margin: 0;
+  }
+  
+  .btn-retour {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #274C77;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-retour:hover {
+    background-color: #1e3a5f;
+  }
+  
+  /* Grille du formulaire à deux colonnes */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  /* Groupe de champs de formulaire */
+  .form-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4B5563;
+    margin-bottom: 8px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 10px 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1F2937;
+    background-color: white;
+    transition: border-color 0.2s;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #274C77;
+  }
+  
+  /* Style pour les champs avec erreur */
+  .input-error {
+    border-color: #EF4444 !important;
+    background-color: #FEF2F2 !important;
+  }
+  
+  /* Message d'erreur */
+  .error-message {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #EF4444;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  
+  /* Texte d'aide */
+  .helper-text {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 5px;
+  }
+  
+  /* Conteneur pour le téléphone avec préfixe */
+  .phone-input-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .phone-prefix {
+    background-color: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #4B5563;
+    font-weight: 500;
+  }
+  
+  .phone-input-container input {
+    border-radius: 0 6px 6px 0;
+    flex: 1;
+  }
+  
+  /* Styles pour l'input file (photo) */
+  .photo-input-container {
+    position: relative;
+  }
+  
+  .photo-input {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+  }
+  
+  .photo-input-ui {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    background-color: white;
+    color: #6B7280;
+    font-size: 14px;
+  }
+  
+  .photo-preview {
+    margin-top: 8px;
+    border-radius: 6px;
+    overflow: hidden;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #E5E7EB;
+  }
+  
+  .photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Bouton de soumission */
+  .form-submit {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .btn-ajouter {
+    background-color: #D9D9D9;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 48px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 300px;
+  }
+  
+  .btn-ajouter:hover:not(:disabled) {
+    background-color: #c0c0c0;
+  }
+  
+  .btn-ajouter:disabled {
+    background-color: #E5E7EB;
+    color: #9CA3AF;
+    cursor: not-allowed;
+  }
+  
+  /* Responsive pour les petits écrans */
+  @media screen and (max-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .form-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  
+    .btn-retour {
+      align-self: flex-start;
+    }
+  }
+
+/*mofificationcss
+  /* Styles pour l'indicateur de chargement */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #F1F6FA;
+  }
+  
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #E5E7EB;
+    border-top: 5px solid #274C77;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loading-container p {
+    font-size: 16px;
+    color: #4B5563;
+  }

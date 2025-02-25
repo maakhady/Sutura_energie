@@ -1,19 +1,58 @@
-import { useState } from 'react';
-import '../styles/dashboard.css';
-import '../styles/dashboard-liste.css'; // Vous devrez créer ce fichier CSS
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { 
+  Pencil, 
+  Trash2, 
+  IdCard, 
+  LockKeyholeOpen, 
+  Search, 
+  SlidersHorizontal,
+  ArrowLeftToLine, 
+  ArrowRightToLine,
+  ChevronDown
+} from 'lucide-react';
+import '../styles/dashboard-liste.css';
 import MiniRightPanel from '../components/MiniRightPanel';
+import CardStat from '../components/CardStat';
+import CardModal from '../components/CardModal'; // Importez le composant modal
 
 const DashboardListe = () => {
+  const navigate = useNavigate();
+
   // États pour les données des utilisateurs et la pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [roleFilter, setRoleFilter] = useState('');
+  
+  // État pour le modal d'assignation de carte
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  
+  const filterRef = useRef(null);
+
+  // Fermer le dropdown de filtre si on clique ailleurs
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilterDropdown(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [filterRef]);
   
   // Données fictives pour les statistiques
   const stats = [
-    { title: 'Utilisateurs Totales', value: 9, icon: 'users' },
-    { title: 'Utilisateurs Actifs', value: 6, icon: 'user' },
-    { title: 'Boîtes Assignés', value: 3, icon: 'device' }
+    { title: 'Utilisateurs Totales', value: 6, icon: 'users' },
+    { title: 'Utilisateurs Actifs', value: 3, icon: 'user' },
+    { title: 'Cartes Assignées', value: 3, icon: 'device' }
   ];
   
   // Données fictives pour les utilisateurs
@@ -21,19 +60,21 @@ const DashboardListe = () => {
     { 
       id: 1, 
       initials: 'CW', 
-      photo: null, 
+      photo: 'avatar.png', 
       nom: 'Fallou', 
       prenom: 'Thiam', 
+      role: 'Utilisateur',
       telephone: '77 123 45 67', 
       email: 'fallou@unitiledu.com', 
       status: 'actif' 
     },
     { 
       id: 2, 
-      initials: '', 
-      photo: '/assets/profile-1.jpg', 
+      initials: 'HH', 
+      photo: 'avatar.png', 
       nom: 'Hinata', 
       prenom: 'Hyuga', 
+      role: 'Utilisateur', 
       telephone: '77 123 45 67', 
       email: 'natali@unitiledu.com', 
       status: 'actif' 
@@ -41,29 +82,32 @@ const DashboardListe = () => {
     { 
       id: 3, 
       initials: 'OD', 
-      photo: null, 
+      photo: 'avatar.png', 
       nom: 'Lahate', 
-      prenom: 'Thiem', 
+      prenom: 'Thiam', 
+      role: 'Utilisateur',
       telephone: '77 123 45 67', 
       email: 'draw@unitiledu.com', 
       status: 'actif' 
     },
     { 
       id: 4, 
-      initials: '', 
-      photo: '/assets/profile-2.jpg', 
-      nom: 'Oumame', 
-      prenom: 'Thiem', 
+      initials: 'OT', 
+      photo: 'avatar.png', 
+      nom: 'Ousmame', 
+      prenom: 'Thiam', 
+      role: 'Utilisateur',
       telephone: '77 123 45 67', 
       email: 'andi@unitiledu.com', 
       status: 'inactif' 
     },
     { 
       id: 5, 
-      initials: '', 
-      photo: '/assets/profile-3.jpg', 
+      initials: 'ST', 
+      photo: 'avatar.png', 
       nom: 'Serigne', 
-      prenom: 'Thiem', 
+      prenom: 'Thiam', 
+      role: 'Admin',
       telephone: '77 123 45 67', 
       email: 'andi@unitiledu.com', 
       status: 'inactif' 
@@ -71,9 +115,10 @@ const DashboardListe = () => {
     { 
       id: 6, 
       initials: 'AL', 
-      photo: null, 
+      photo: 'avatar.png', 
       nom: 'Andi Lane', 
       prenom: 'Thiem', 
+      role: 'Admin',
       telephone: '77 123 45 67', 
       email: 'andi@unitiledu.com', 
       status: 'inactif' 
@@ -83,11 +128,182 @@ const DashboardListe = () => {
   // Gérer la sélection/désélection de tous les utilisateurs
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedUsers(users.map(user => user.id));
+      setSelectedUsers(currentUsers.map(user => user.id));
     } else {
       setSelectedUsers([]);
     }
   };
+
+  // Gestion de la redirection vers la page d'ajout d'utilisateur
+  const handleAddUser = () => {
+    navigate('/ajouter-utilisateur');
+  };
+  
+  // Gestion de la redirection vers la page de modification d'utilisateur
+  const handleEditUser = (id) => {
+    navigate(`/modifier-utilisateur/${id}`);
+  };
+
+  // Gestion de la suppression d'un utilisateur avec sweetalert
+  const handleDeleteUser = (id) => {
+    Swal.fire({
+      title: 'Êtes-vous sûr?',
+      text: "Êtes-vous sûr de vouloir supprimer cet utilisateur?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, supprimez!',
+      cancelButtonText: 'Annuler',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Modifié!',
+            text: 'L\'utilisateur a été modifiée.',
+            timer: 2000, // 2 secondes
+            showConfirmButton: false
+        });
+      }
+    });
+  };
+
+  // Gestion active/inactive d'un utilisateur à partir du bouton status
+  const handleToggleStatus = (id) => {
+    Swal.fire({
+      title: 'Êtes-vous sûr?',
+      text: "Êtes-vous sûr de vouloir activer/désactiver cet utilisateur?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, activer/désactiver',
+      cancelButtonText: 'Annuler',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Modifié!',
+            text: 'L\'utilisateur a été modifiée.',
+            timer: 2000, // 2 secondes
+            showConfirmButton: false
+         });
+      }
+    });
+  };
+
+  // Ouvrir le modal d'assignation de carte
+  const handleOpenCardModal = (user) => {
+    setSelectedUser(user);
+    setCardModalOpen(true);
+  };
+  
+  // Fermer le modal d'assignation de carte
+  const handleCloseCardModal = () => {
+    setCardModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  // Gestion désactivé/activé la carte RFID d'un utilisateur
+  const handleToggleCard = (id) => {
+    Swal.fire({
+      title: 'Êtes-vous sûr?',
+      text: "Êtes-vous sûr de vouloir activer/désactiver la carte RFID de cet utilisateur?",  
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, activer/désactiver',      
+      cancelButtonText: 'Annuler',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Modifié!',
+          text: 'La carte RFID de l\'utilisateur a été modifiée.',
+          timer: 2000, // 2 secondes
+          showConfirmButton: false
+       });
+      }
+    });
+  };
+
+  // Gestion assigner une carte RFID à un utilisateur
+  const handleAssignCard = (id) => {
+    handleCloseCardModal(); // Fermer le modal
+    
+    Swal.fire({
+        title: 'Assigner une carte RFID',
+        text: "Veuillez placer la carte RFID sur le lecteur",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Assigner',
+        cancelButtonText: 'Annuler',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Afficher une alerte de chargement pendant 3 secondes
+          Swal.fire({
+            title: 'Lecture de la carte en cours...',
+            text: 'Veuillez patienter',
+            timer: 3000, // 3 secondes
+            timerProgressBar: true,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          }).then(() => {
+            // Après 3 secondes, afficher le message de succès
+            Swal.fire({
+              icon: 'success',
+              title: 'Assigné!',
+              text: 'La carte RFID a été assignée.',
+              timer: 2000, // 2 secondes
+              showConfirmButton: false
+            });
+          });
+        }
+      });
+    };
+
+  // Gestion enregistrer une empreinte digitale pour un utilisateur
+  const handleSaveFingerprint = (id) => {
+    handleCloseCardModal(); // Fermer le modal
+    
+    Swal.fire({
+        title: 'Enregistrer une empreinte digitale',
+        text: "Veuillez placer votre doigt sur le capteur d'empreintes digitales",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Enregistrer',
+        cancelButtonText: 'Annuler',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Afficher une alerte de chargement pendant 3 secondes
+          Swal.fire({
+            title: 'Lecture de l\'empreinte en cours...',
+            text: 'Veuillez maintenir votre doigt sur le capteur',
+            timer: 3000, // 3 secondes
+            timerProgressBar: true,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          }).then(() => {
+            // Après 3 secondes, afficher le message de succès pendant 2 secondes
+            Swal.fire({
+              icon: 'success',
+              title: 'Enregistré!',
+              text: 'L\'empreinte digitale a été enregistrée.',
+              timer: 2000, // 2 secondes
+              showConfirmButton: false
+            });
+          });
+        }
+      });
+    };
+
 
   // Gérer la sélection/désélection d'un utilisateur
   const handleSelectUser = (userId) => {
@@ -103,83 +319,86 @@ const DashboardListe = () => {
     setCurrentPage(page);
   };
 
-  // Générer les numéros de page pour la pagination
-  const pages = [1, 2, 3, '...', 8, 9, 10];
+  // Filtrer les utilisateurs selon la recherche et le rôle
+  const filteredUsers = users.filter(user => {
+    // Filtre de recherche
+    const matchesSearch = 
+      user.nom.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      user.prenom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filtre de rôle
+    const matchesRole = roleFilter ? user.role === roleFilter : true;
+    
+    return matchesSearch && matchesRole;
+  });
 
-  // Filtrer les utilisateurs selon la recherche
-  const filteredUsers = users.filter(user => 
-    user.nom.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    user.prenom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Calculer l'index de début et de fin pour les utilisateurs à afficher
+  const indexOfLastUser = currentPage * itemsPerPage;
+  const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+  
+  // Utilisateurs affichés sur la page actuelle
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
-  // Rendu des icônes pour les statistiques
-  const renderIcon = (iconType) => {
-    switch(iconType) {
-      case 'users':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-        );
-      case 'user':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        );
-      case 'device':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-            <line x1="8" y1="21" x2="16" y2="21" />
-            <line x1="12" y1="17" x2="12" y2="21" />
-          </svg>
-        );
-      default:
-        return null;
+  // Calculer le nombre total de pages
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  // Réinitialiser la page actuelle lorsque les filtres changent
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter]);
+
+  // Générer les boutons de pagination dynamiquement
+  const getPaginationButtons = () => {
+    const buttons = [];
+    
+    // Toujours afficher la première page
+    buttons.push(1);
+    
+    // Logique pour afficher les points de suspension et les pages pertinentes
+    if (currentPage > 3) {
+      buttons.push('...');
     }
+    
+    // Pages autour de la page courante
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      buttons.push(i);
+    }
+    
+    // Autre point de suspension si nécessaire
+    if (currentPage < totalPages - 2 && totalPages > 3) {
+      buttons.push('...');
+    }
+    
+    // Toujours afficher la dernière page si elle existe et est différente de 1
+    if (totalPages > 1) {
+      buttons.push(totalPages);
+    }
+    
+    return buttons;
+  };
+
+  // Formater le texte du bouton de filtre
+  const getFilterButtonText = () => {
+    if (roleFilter === '') {
+      return 'Tous les rôles';
+    }
+    return `Rôle: ${roleFilter}`;
   };
 
   return (
     <div className="dashboard">
-      {/* Welcome Section */}
-      {/* <div className="welcome-section">
-        <div className="user-profile">
-          <div className="user-info">
-            <h1>Bonjour Bamba !</h1>
-            <p>Administrateur</p>
-          </div>
-        </div>
-      </div> */}
-
       <div className="content-wrapper">
         <div className="main-content">
-          {/* Stats Cards */}
-          <div className="stats-cards">
-            {stats.map((stat, index) => (
-              <div className="stat-card" key={index}>
-                <div className="stat-icon">
-                  {renderIcon(stat.icon)}
-                </div>
-                <div className="stat-info">
-                  <p className="stat-title">{stat.title}</p>
-                  <h2 className="stat-value">{stat.value}</h2>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Cartes de statistiques */}
+          <CardStat stats={stats} />
 
           {/* Liste des utilisateurs */}
           <div className="users-list-container">
             <div className="users-list-header">
               <h2>Liste des utilisateurs</h2>
-              <button className="create-user-btn">
-                <span>+</span> Créer un Utilisateur
+              <button className="create-user-btn" onClick={handleAddUser}>
+                <span>+</span> Créer un Utilisateur 
               </button>
             </div>
 
@@ -193,26 +412,52 @@ const DashboardListe = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <button className="search-btn">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
+                  <Search size={18} />
                 </button>
               </div>
-              <button className="filters-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="4" y1="21" x2="4" y2="14" />
-                  <line x1="4" y1="10" x2="4" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12" y2="3" />
-                  <line x1="20" y1="21" x2="20" y2="16" />
-                  <line x1="20" y1="12" x2="20" y2="3" />
-                  <line x1="1" y1="14" x2="7" y2="14" />
-                  <line x1="9" y1="8" x2="15" y2="8" />
-                  <line x1="17" y1="16" x2="23" y2="16" />
-                </svg>
-                Filtres
-              </button>
+              
+              <div className="filter-dropdown-container" ref={filterRef}>
+                <button 
+                  className="filters-btn" 
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                >
+                  <SlidersHorizontal size={18} />
+                  {getFilterButtonText()}
+                  <ChevronDown size={16} className="ml-2" />
+                </button>
+                
+                {showFilterDropdown && (
+                  <div className="filter-dropdown">
+                    <div 
+                      className={`filter-option ${roleFilter === '' ? 'active' : ''}`}
+                      onClick={() => {
+                        setRoleFilter('');
+                        setShowFilterDropdown(false);
+                      }}
+                    >
+                      Tous les rôles
+                    </div>
+                    <div 
+                      className={`filter-option ${roleFilter === 'Admin' ? 'active' : ''}`}
+                      onClick={() => {
+                        setRoleFilter('Admin');
+                        setShowFilterDropdown(false);
+                      }}
+                    >
+                      Admin
+                    </div>
+                    <div 
+                      className={`filter-option ${roleFilter === 'Utilisateur' ? 'active' : ''}`}
+                      onClick={() => {
+                        setRoleFilter('Utilisateur');
+                        setShowFilterDropdown(false);
+                      }}
+                    >
+                      Utilisateur
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Users Table */}
@@ -224,7 +469,7 @@ const DashboardListe = () => {
                       <input 
                         type="checkbox" 
                         onChange={handleSelectAll} 
-                        checked={selectedUsers.length === users.length && users.length > 0}
+                        checked={currentUsers.length > 0 && selectedUsers.length >= currentUsers.length}
                       />
                     </th>
                     <th>Photo</th>
@@ -232,102 +477,118 @@ const DashboardListe = () => {
                     <th>Prénom</th>
                     <th>Téléphone</th>
                     <th>Email</th>
+                    <th>Role</th>
                     <th>Statut</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map(user => (
-                    <tr key={user.id}>
-                      <td>
-                        <input 
-                          type="checkbox" 
-                          checked={selectedUsers.includes(user.id)}
-                          onChange={() => handleSelectUser(user.id)}
-                        />
-                      </td>
-                      <td>
-                        {user.photo ? (
-                          <img src={user.photo} alt={`${user.prenom} ${user.nom}`} className="user-photo" />
-                        ) : (
-                          <div className="user-initials">{user.initials}</div>
-                        )}
-                      </td>
-                      <td>{user.nom}</td>
-                      <td>{user.prenom}</td>
-                      <td>{user.telephone}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <span className={`status-badge ${user.status}`}>
-                          {user.status === 'actif' ? 'Actif' : 'Inactif'}
-                        </span>
-                      </td>
-                      <td className="action-buttons">
-                        <button className="action-btn delete-btn" title="Supprimer">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
-                        </button>
-                        <button className="action-btn edit-btn" title="Éditer">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        <button className="action-btn message-btn" title="Message">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                            <polyline points="22,6 12,13 2,6" />
-                          </svg>
-                        </button>
-                        <button className="action-btn lock-btn" title="Verrouiller">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                          </svg>
-                        </button>
+                  {currentUsers.length > 0 ? (
+                    currentUsers.map(user => (
+                      <tr key={user.id}>
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedUsers.includes(user.id)}
+                            onChange={() => handleSelectUser(user.id)}
+                          />
+                        </td>
+                        <td>
+                          {user.photo ? (
+                            <img src={user.photo} alt={`${user.prenom} ${user.nom}`} className="user-photo" />
+                          ) : (
+                            <div className="user-initials">{user.initials}</div>
+                          )}
+                        </td>
+                        <td>{user.nom}</td>
+                        <td>{user.prenom}</td>
+                        <td>{user.telephone}</td>
+                        <td>{user.email}</td>
+                        <td>{user.role}</td>
+                        <td>
+                          <span className={`status-badge ${user.status}`} onClick={() => handleToggleStatus(user.id)}>
+                            {user.status === 'actif' ? 'Actif' : 'Inactif' }
+                          </span>
+                        </td>
+                        <td className="action-buttons">
+                          <button className="buton" title="Supprimer" onClick={() => handleDeleteUser(user.id)}>
+                            <Trash2 size={18} />
+                          </button>
+                          <button className="buton" title="Éditer" onClick={() => handleEditUser(user.id)}>
+                            <Pencil size={18} />
+                          </button>
+                          <button className="buton" title="Carte" onClick={() => handleOpenCardModal(user)}>
+                            <IdCard size={18} />
+                          </button>
+                          <button className="buton" title="Déverrouiller" onClick={() => handleToggleCard(user.id)}>
+                            <LockKeyholeOpen size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="9" className="no-results">
+                        Aucun utilisateur trouvé
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
-            <div className="pagination">
-              <button className="pagination-btn prev" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-                Précédent
-              </button>
-              <div className="page-numbers">
-                {pages.map((page, index) => (
-                  <button 
-                    key={index}
-                    className={`page-number ${currentPage === page ? 'active' : ''}`}
-                    onClick={() => typeof page === 'number' && handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
+            {filteredUsers.length > 0 && (
+              <div className="pagination">
+                <button 
+                  className="pagination-btn prev" 
+                  onClick={() => handlePageChange(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ArrowLeftToLine size={18} />
+                  Précédent
+                </button>
+                <div className="page-numbers">
+                  {getPaginationButtons().map((page, index) => (
+                    <button 
+                      key={index}
+                      className={`page-number ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => typeof page === 'number' && handlePageChange(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  className="pagination-btn next" 
+                  onClick={() => handlePageChange(currentPage + 1)} 
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                  <ArrowRightToLine size={18} />
+                </button>
               </div>
-              <button className="pagination-btn next" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === 10}>
-                Suivant
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Right Panel */}
         <MiniRightPanel />
       </div>
+      
+      {/* Modal pour l'assignation de carte */}
+      {selectedUser && (
+        <CardModal 
+          isOpen={cardModalOpen}
+          onClose={handleCloseCardModal}
+          user={selectedUser}
+          onAssignCard={handleAssignCard}
+          onRegisterFingerprint={handleSaveFingerprint}
+        />
+      )}
     </div>
   );
 };
+
 
 export default DashboardListe;
