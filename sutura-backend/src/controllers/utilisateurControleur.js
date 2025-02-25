@@ -9,20 +9,125 @@ const { creerHistorique } = require('./historiqueControleur');
  * @route POST /api/utilisateurs
  * @access Private/Admin
  */
+// const creerUtilisateur = async (req, res) => {
+//   try {
+//     // Générer un code unique à 4 chiffres
+//     const code = await Utilisateur.generateUniqueCode();
+    
+//     // Créer l'utilisateur sans mot de passe définitif
+//     // (le système de hachage Mongoose créera un hash temporaire)
+//     const nouvelUtilisateur = await Utilisateur.create({
+//       ...req.body,
+//       code
+//     });
+
+//     // Créer l'historique pour la création réussie
+//     await creerHistorique({
+//       users_id: nouvelUtilisateur._id,
+//       type_entite: 'utilisateur',
+//       type_operation: 'creation',
+//       description: `Création d'un nouvel utilisateur (${nouvelUtilisateur.nom} ${nouvelUtilisateur.prenom})`,
+//       statut: 'succès'
+//     });
+
+//     // Générer un token pour la définition du mot de passe (valide 24h)
+//     const token = genererToken(nouvelUtilisateur._id, '15m');
+
+//     // Envoyer un email de bienvenue avec les identifiants et le lien pour définir le mot de passe
+//     try {
+//       await emailService.envoyerIdentifiants(nouvelUtilisateur, token);
+//       console.log(`Email d'identifiants envoyé à ${nouvelUtilisateur.email}`);
+
+//       // Historique pour l'envoi d'email réussi
+//       await creerHistorique({
+//         users_id: nouvelUtilisateur._id,
+//         type_entite: 'utilisateur',
+//         type_operation: 'creation',
+//         description: `Email d'invitation envoyé avec succès à ${nouvelUtilisateur.email}`,
+//         statut: 'succès'
+//       });
+//     } catch (emailError) {
+//       console.error('Erreur lors de l\'envoi de l\'email d\'invitation:', emailError);
+      
+//       // Historique pour l'échec d'envoi d'email
+//       await creerHistorique({
+//         users_id: nouvelUtilisateur._id,
+//         type_entite: 'utilisateur',
+//         type_operation: 'creation',
+//         description: `Échec de l'envoi d'email d'invitation à ${nouvelUtilisateur.email}: ${emailError.message}`,
+//         statut: 'erreur'
+//       });
+//     }
+
+//     // Ne pas renvoyer le mot de passe dans la réponse
+//     const utilisateurSansMdp = nouvelUtilisateur.toObject();
+//     delete utilisateurSansMdp.password;
+
+//     res.status(201).json({
+//       success: true,
+//       message: 'Utilisateur créé avec succès. Un email d\'invitation a été envoyé pour définir le mot de passe.',
+//       data: utilisateurSansMdp
+//     });
+//   } catch (error) {
+//     console.error('Erreur creerUtilisateur:', error);
+    
+//     let message = 'Erreur lors de la création de l\'utilisateur';
+//     let statusCode = 500;
+    
+//     // Gérer les erreurs de validation
+//     if (error.name === 'ValidationError') {
+//       const messages = Object.values(error.errors).map(val => val.message);
+//       message = messages.join(', ');
+//       statusCode = 400;
+
+//       await creerHistorique({
+//         type_entite: 'utilisateur',
+//         type_operation: 'creation',
+//         description: `Échec de création d'utilisateur - Erreur de validation: ${message}`,
+//         statut: 'erreur'
+//       });
+//     }
+    
+//     // Gérer les erreurs de duplicate (email, téléphone, etc.)
+//     else if (error.code === 11000) {
+//       const champ = Object.keys(error.keyValue)[0];
+//       message = `Ce ${champ} est déjà utilisé`;
+//       statusCode = 400;
+
+//       await creerHistorique({
+//         type_entite: 'utilisateur',
+//         type_operation: 'creation',
+//         description: `Échec de création d'utilisateur - Doublon: ${message}`,
+//         statut: 'erreur'
+//       });
+//     }
+    
+//     // Erreur système
+//     else {
+//       await creerHistorique({
+//         type_entite: 'utilisateur',
+//         type_operation: 'creation',
+//         description: `Erreur système lors de la création d'utilisateur: ${error.message}`,
+//         statut: 'erreur'
+//       });
+//     }
+    
+//     res.status(statusCode).json({
+//       success: false,
+//       message: message
+//     });
+//   }
+// };
+
 const creerUtilisateur = async (req, res) => {
   try {
     // Générer un code unique à 4 chiffres
     const code = await Utilisateur.generateUniqueCode();
     
-    // Mot de passe par défaut si non spécifié
-    const defaultPassword = 'Sutura123!';
-    const password = req.body.password || defaultPassword;
-    
     // Créer l'utilisateur
     const nouvelUtilisateur = await Utilisateur.create({
       ...req.body,
-      code,
-      password
+      code
     });
 
     // Créer l'historique pour la création réussie
@@ -34,28 +139,31 @@ const creerUtilisateur = async (req, res) => {
       statut: 'succès'
     });
 
-    // Envoyer un email de bienvenue avec les identifiants
+    // Générer un token pour la définition du mot de passe (valide 15 minutes)
+    const token = genererToken(nouvelUtilisateur._id, '15m');
+
+    // Envoyer un email de bienvenue avec les identifiants et le lien
     try {
-      await emailService.envoyerIdentifiants(nouvelUtilisateur, password);
-      console.log(`Email d'identifiants envoyé à ${nouvelUtilisateur.email}`);
+      await emailService.envoyerIdentifiants(nouvelUtilisateur, token);
+      console.log(`Email d'invitation envoyé à ${nouvelUtilisateur.email}`);
 
       // Historique pour l'envoi d'email réussi
       await creerHistorique({
         users_id: nouvelUtilisateur._id,
         type_entite: 'utilisateur',
         type_operation: 'creation',
-        description: `Email d'identifiants envoyé avec succès à ${nouvelUtilisateur.email}`,
+        description: `Email d'invitation envoyé avec succès à ${nouvelUtilisateur.email}`,
         statut: 'succès'
       });
     } catch (emailError) {
-      console.error('Erreur lors de l\'envoi de l\'email d\'identifiants:', emailError);
+      console.error('Erreur lors de l\'envoi de l\'email d\'invitation:', emailError);
       
       // Historique pour l'échec d'envoi d'email
       await creerHistorique({
         users_id: nouvelUtilisateur._id,
         type_entite: 'utilisateur',
         type_operation: 'creation',
-        description: `Échec de l'envoi d'email d'identifiants à ${nouvelUtilisateur.email}: ${emailError.message}`,
+        description: `Échec de l'envoi d'email d'invitation à ${nouvelUtilisateur.email}: ${emailError.message}`,
         statut: 'erreur'
       });
     }
@@ -64,10 +172,12 @@ const creerUtilisateur = async (req, res) => {
     const utilisateurSansMdp = nouvelUtilisateur.toObject();
     delete utilisateurSansMdp.password;
 
+    // Inclure le token dans la réponse pour les tests
     res.status(201).json({
       success: true,
-      message: 'Utilisateur créé avec succès',
-      data: utilisateurSansMdp
+      message: 'Utilisateur créé avec succès. Un email d\'invitation a été envoyé pour définir le mot de passe.',
+      data: utilisateurSansMdp,
+      token_for_testing: token // Ajouter cette ligne pour les tests
     });
   } catch (error) {
     console.error('Erreur creerUtilisateur:', error);
@@ -119,7 +229,6 @@ const creerUtilisateur = async (req, res) => {
     });
   }
 };
-
 
 /**
  * Obtenir tous les utilisateurs
@@ -1014,6 +1123,20 @@ const desactiverMaCarteRFID = async (req, res) => {
         message: 'Erreur lors de la réactivation de la carte RFID'
       });
     }
+  };
+
+  /**
+   * Fonction utilitaire pour générer un token JWT
+   * @param {string} id - ID de l'utilisateur
+   * @param {string} expiresIn - Durée de validité du token
+   * @returns {string} Token JWT
+   */
+  const genererToken = (id, expiresIn = process.env.JWT_EXPIRE) => {
+      return jwt.sign(
+        { id },
+        process.env.JWT_SECRET,
+        { expiresIn }
+      );
   };
   
 

@@ -5,7 +5,8 @@ const verifRole = require('../middleware/verifRole');
 const { 
   connexionParEmail, 
   connexionParCode, 
-  changerMotDePasseInitial, 
+  // changerMotDePasseInitial, 
+  definirMotDePasseInitial,
   deconnexion, 
   monProfil 
 } = require('../controllers/authControleur');
@@ -15,7 +16,8 @@ router.post('/connexion', connexionParEmail);
 router.post('/logincode', connexionParCode);
 
 // Routes protégées
-router.post('/changer-password', auth, changerMotDePasseInitial);
+// router.post('/changer-password',  changerMotDePasseInitial);
+router.post('/definir-mot-de-passe/:token', definirMotDePasseInitial);
 router.post('/logout', auth, deconnexion);
 router.get('/mon-profil',auth, verifRole(['admin', 'utilisateur']), monProfil);
 

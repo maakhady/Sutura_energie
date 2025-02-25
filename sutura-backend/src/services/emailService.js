@@ -46,17 +46,16 @@ const emailService = {
   },
 
   /**
-   * Envoie un email de bienvenue avec les identifiants lors de la création de compte
+   * Envoie un email de bienvenue avec les identifiants lors de la création de compte et un lien pour définir le mot de passe
    * @param {object} utilisateur - Utilisateur destinataire
-   * @param {string} motDePasse - Mot de passe temporaire
+   * @param {string} token - Token pour définir le mot de passe
    * @returns {Promise<object>} Résultat de l'envoi
    */
-  envoyerIdentifiants: async function (utilisateur, motDePasse) {
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    const loginUrl = `${frontendUrl}/`;
+  envoyerIdentifiants: async function (utilisateur, token) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173/firstlogin";
+    const definirMdpUrl = `${frontendUrl}/firstlogin/definir-mot-de-passe/${token}`;
 
-    const sujet =
-      "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
+    const sujet = "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
 
     const texte = `
       Bonjour ${utilisateur.prenom} ${utilisateur.nom},
@@ -68,12 +67,11 @@ const emailService = {
       Prénom: ${utilisateur.prenom}
       Téléphone: ${utilisateur.telephone}
       Email: ${utilisateur.email}
-      Code: ${utilisateur.code}
-      Mot de passe PAR DEFAUT: ${motDePasse}
 
-      Lors de votre première connexion, vous serez invité à changer votre mot de passe.
+      Pour finaliser la création de votre compte, veuillez définir votre mot de passe en cliquant sur le lien suivant:
+      ${definirMdpUrl}
 
-      Pour vous connecter, rendez-vous sur: ${loginUrl}
+      Ce lien est valide pendant 24 heures.
 
       Merci de garder ces informations confidentielles.
 
@@ -86,17 +84,70 @@ const emailService = {
         <p>Bonjour <strong>${utilisateur.prenom} ${utilisateur.nom}</strong>,</p>
         <p>Bienvenue sur la plateforme Sutura Énergie !</p>
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #333;">Vos identifiants de connexion</h3>
+          <h3 style="margin-top: 0; color: #333;">Vos informations</h3>
           <p><strong>Nom:</strong> ${utilisateur.nom}</p>
           <p><strong>Prénom:</strong> ${utilisateur.prenom}</p>
           <p><strong>Téléphone:</strong> ${utilisateur.telephone}</p>
           <p><strong>Email:</strong> ${utilisateur.email}</p>
-          <p><strong>Code:</strong> ${utilisateur.code}</p>
-          <p><strong>Mot de passe PAR DEFAUT:</strong> ${motDePasse}</p>
         </div>
-        <p style="color: #e74c3c; font-weight: bold;">Lors de votre première connexion, vous serez invité à changer votre mot de passe.</p>
+        <p style="color: #e74c3c; font-weight: bold;">Pour finaliser la création de votre compte, veuillez définir votre mot de passe:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${loginUrl}" style="background-color: #274C77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Accéder à la plateforme</a>
+          <a href="${definirMdpUrl}" style="background-color: #274C77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Définir mon mot de passe</a>
+        </div>
+        <p>Merci de garder ces informations confidentielles.</p>
+        <p style="margin-top: 30px; color: #666;">L'équipe Sutura Énergie</p>
+      </div>
+    `;
+
+    return await this.envoyerEmail({
+      to: utilisateur.email,
+      subject: sujet,
+      text: texte,
+      html: html,
+    });
+  },
+
+  /**
+   * Envoie une notification de confirmation après la définition du mot de passe avec le code de connexion
+   * @param {object} utilisateur - Utilisateur destinataire
+   * @returns {Promise<object>} Résultat de l'envoi
+   */
+  envoyerConfirmationMotDePasse: async function (utilisateur) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const loginUrl = `${frontendUrl}/`;
+
+    const sujet = "Confirmation - Votre compte est actif - Sutura Énergie";
+
+    const texte = `
+      Bonjour ${utilisateur.prenom} ${utilisateur.nom},
+
+      Nous vous confirmons que votre mot de passe a été défini avec succès et que votre compte est maintenant actif.
+
+      Voici vos options de connexion:
+      - Option 1: Connectez-vous avec votre email (${utilisateur.email}) et votre mot de passe
+      - Option 2: Connectez-vous simplement avec votre code: ${utilisateur.code}
+
+      Pour vous connecter, rendez-vous sur: ${loginUrl}
+
+      Merci de garder ces informations confidentielles.
+
+      L'équipe Sutura Énergie
+    `;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+        <h2 style="color: #274C77;">Confirmation d'activation de compte</h2>
+        <p>Bonjour <strong>${utilisateur.prenom} ${utilisateur.nom}</strong>,</p>
+        <p>Nous vous confirmons que votre mot de passe a été défini avec succès et que votre compte est maintenant actif.</p>
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #333;">Vos options de connexion:</h3>
+          <p><strong>Option 1:</strong> Connectez-vous avec votre email et votre mot de passe</p>
+          <p><strong>Email:</strong> ${utilisateur.email}</p>
+          <p style="margin-top: 15px;"><strong>Option 2:</strong> Connectez-vous simplement avec votre code</p>
+          <p><strong>Code:</strong> <span style="font-size: 1.2em; color: #274C77; font-weight: bold;">${utilisateur.code}</span></p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${loginUrl}" style="background-color: #274C77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Se connecter à la plateforme</a>
         </div>
         <p>Merci de garder ces informations confidentielles.</p>
         <p style="margin-top: 30px; color: #666;">L'équipe Sutura Énergie</p>

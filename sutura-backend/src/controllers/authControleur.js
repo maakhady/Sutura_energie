@@ -3,6 +3,7 @@ const config = require('../config/config');
 const Utilisateur = require('../models/Utilisateur');
 const TokenInvalide = require('../models/TokenInvalide');
 const { creerHistorique } = require('./historiqueControleur');
+const emailService = require('../services/emailService');
 
 /**
  * Connecter un utilisateur avec email et mot de passe
@@ -13,43 +14,51 @@ const { creerHistorique } = require('./historiqueControleur');
  */
 const connexionParEmail = async (req, res, next) => {
   try {
+    console.log("1. Début de connexionParEmail");
     const { email, password } = req.body;
-
+    console.log(`2. Tentative de connexion pour: ${email}`);
+    
     // Validation des données d'entrée
     if (!email || !password) {
+      console.log("3. Données manquantes");
       await creerHistorique({
         type_entite: 'utilisateur',
         type_operation: 'connexion',
         description: `Tentative de connexion échouée - Données manquantes (email: ${email || 'non fourni'})`,
         statut: 'erreur'
       });
-
+      
       return res.status(400).json({
         success: false,
         message: 'Veuillez fournir un email et un mot de passe'
       });
     }
-
+    
     // Rechercher l'utilisateur
+    console.log("4. Recherche de l'utilisateur dans la base de données");
     const utilisateur = await Utilisateur.findOne({ email }).select('+password');
-
+    console.log("5. Utilisateur trouvé:", !!utilisateur);
+    
     // Vérifier si l'utilisateur existe
     if (!utilisateur) {
+      console.log("6. Utilisateur non trouvé");
       await creerHistorique({
         type_entite: 'utilisateur',
         type_operation: 'connexion',
         description: `Tentative de connexion échouée - Utilisateur non trouvé (email: ${email})`,
         statut: 'erreur'
       });
-
+      
       return res.status(401).json({
         success: false,
         message: 'Identifiants invalides'
       });
     }
-
+    
     // Vérifier si l'utilisateur est actif
+    console.log("7. Vérification si l'utilisateur est actif:", utilisateur.actif);
     if (!utilisateur.actif) {
+      console.log("8. Utilisateur inactif");
       await creerHistorique({
         users_id: utilisateur._id,
         type_entite: 'utilisateur',
@@ -57,51 +66,62 @@ const connexionParEmail = async (req, res, next) => {
         description: `Tentative de connexion sur un compte désactivé (${utilisateur.nom} ${utilisateur.prenom})`,
         statut: 'erreur'
       });
-
+      
       return res.status(401).json({
         success: false,
         message: 'Ce compte a été désactivé. Veuillez contacter l\'administrateur.'
       });
     }
-
-    // Vérifier le mot de passe
-    const isMatch = await utilisateur.comparePassword(password);
-    if (!isMatch) {
+    
+    // Vérifier si l'utilisateur a un mot de passe défini
+    console.log("8.5. Vérification si l'utilisateur a un mot de passe défini");
+    if (!utilisateur.password) {
+      console.log("8.6. Utilisateur sans mot de passe défini");
       await creerHistorique({
         users_id: utilisateur._id,
         type_entite: 'utilisateur',
         type_operation: 'connexion',
-        description: `Tentative de connexion échouée - Mot de passe incorrect (${utilisateur.nom} ${utilisateur.prenom})`,
+        description: `Tentative de connexion échouée - Mot de passe non défini (${utilisateur.nom} ${utilisateur.prenom})`,
         statut: 'erreur'
       });
-
+      
       return res.status(401).json({
         success: false,
-        message: 'Identifiants invalides'
+        message: 'Veuillez d\'abord définir votre mot de passe en utilisant le lien reçu par email.'
       });
     }
-
-    // Vérifier si c'est le mot de passe par défaut
-    if (password === 'Sutura123!') {
-      await creerHistorique({
-        users_id: utilisateur._id,
-        type_entite: 'utilisateur',
-        type_operation: 'connexion',
-        description: `Première connexion - Changement de mot de passe requis (${utilisateur.nom} ${utilisateur.prenom})`,
-        statut: 'succès'
-      });
-
-      const tempToken = genererToken(utilisateur._id, '10m');
+    
+    // Vérifier le mot de passe
+    console.log("9. Vérification du mot de passe");
+    console.log("10. Password fourni présent:", !!password);
+    console.log("11. Password hash dans la BDD présent:", !!utilisateur.password);
+    
+    try {
+      const isMatch = await utilisateur.comparePassword(password);
+      console.log("12. Résultat de la comparaison:", isMatch);
       
-      return res.status(200).json({
-        success: true,
-        passwordChangeRequired: true,
-        message: 'Pour des raisons de sécurité, vous devez changer votre mot de passe',
-        token: tempToken
-      });
+      if (!isMatch) {
+        console.log("13. Mot de passe incorrect");
+        await creerHistorique({
+          users_id: utilisateur._id,
+          type_entite: 'utilisateur',
+          type_operation: 'connexion',
+          description: `Tentative de connexion échouée - Mot de passe incorrect (${utilisateur.nom} ${utilisateur.prenom})`,
+          statut: 'erreur'
+        });
+        
+        return res.status(401).json({
+          success: false,
+          message: 'Identifiants invalides'
+        });
+      }
+    } catch (pwError) {
+      console.error("Erreur spécifique lors de la comparaison des mots de passe:", pwError);
+      throw pwError;
     }
-
+    
     // Connexion réussie
+    console.log("14. Connexion réussie");
     await creerHistorique({
       users_id: utilisateur._id,
       type_entite: 'utilisateur',
@@ -109,9 +129,11 @@ const connexionParEmail = async (req, res, next) => {
       description: `Connexion réussie (${utilisateur.nom} ${utilisateur.prenom})`,
       statut: 'succès'
     });
-
+    
+    console.log("15. Génération du token");
     const token = genererToken(utilisateur._id);
-
+    console.log("16. Token généré avec succès");
+    
     res.status(200).json({
       success: true,
       token,
@@ -124,7 +146,8 @@ const connexionParEmail = async (req, res, next) => {
       }
     });
   } catch (error) {
-    console.error('Erreur connexionParEmail:', error);
+    console.error('Erreur connexionParEmail détaillée:', error);
+    console.error('Stack trace:', error.stack);
     
     await creerHistorique({
       type_entite: 'utilisateur',
@@ -132,13 +155,15 @@ const connexionParEmail = async (req, res, next) => {
       description: `Erreur système lors de la tentative de connexion: ${error.message}`,
       statut: 'erreur'
     });
-
+    
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la connexion'
+      message: `Erreur lors de la connexion: ${error.message}`
     });
   }
 };
+
+
 /**
  * Connecter un utilisateur avec son code à 4 chiffres uniquement
  * @route POST /api/auth/connexion-code
@@ -245,33 +270,183 @@ const connexionParCode = async (req, res, next) => {
  * @param {string} confirmPassword - Confirmation du nouveau mot de passe
  * @returns {object} Objet contenant le nouveau token et les informations de l'utilisateur
  */
-const changerMotDePasseInitial = async (req, res, next) => {
+// const changerMotDePasseInitial = async (req, res, next) => {
+//   try {
+//     const { nouveauPassword, confirmPassword } = req.body;
+
+//     // Validation des données d'entrée
+//     if (!nouveauPassword || !confirmPassword) {
+//       await creerHistorique({
+//         users_id: req.user.id,
+//         type_entite: 'utilisateur',
+//         type_operation: 'modif',
+//         description: 'Tentative de changement de mot de passe initial échouée - Données manquantes',
+//         statut: 'erreur'
+//       });
+
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Veuillez fournir un nouveau mot de passe et sa confirmation'
+//       });
+//     }
+
+//     // Vérifier que les mots de passe correspondent
+//     if (nouveauPassword !== confirmPassword) {
+//       await creerHistorique({
+//         users_id: req.user.id,
+//         type_entite: 'utilisateur',
+//         type_operation: 'modif',
+//         description: 'Tentative de changement de mot de passe initial échouée - Mots de passe non identiques',
+//         statut: 'erreur'
+//       });
+
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Les mots de passe ne correspondent pas'
+//       });
+//     }
+
+//     // Vérifier la complexité du mot de passe
+//     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+//     if (!passwordRegex.test(nouveauPassword)) {
+//       await creerHistorique({
+//         users_id: req.user.id,
+//         type_entite: 'utilisateur',
+//         type_operation: 'modif',
+//         description: 'Tentative de changement de mot de passe initial échouée - Critères de complexité non respectés',
+//         statut: 'erreur'
+//       });
+
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Le mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial'
+//       });
+//     }
+
+//     // Récupérer l'utilisateur
+//     const utilisateur = await Utilisateur.findById(req.user.id).select('+password');
+
+//     // Vérifier si l'utilisateur existe
+//     if (!utilisateur) {
+//       await creerHistorique({
+//         users_id: req.user.id,
+//         type_entite: 'utilisateur',
+//         type_operation: 'modif',
+//         description: 'Tentative de changement de mot de passe initial échouée - Utilisateur non trouvé',
+//         statut: 'erreur'
+//       });
+
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Utilisateur non trouvé'
+//       });
+//     }
+
+//     // La vérification du mot de passe par défaut a été supprimée
+
+//     // Mettre à jour le mot de passe
+//     utilisateur.password = nouveauPassword;
+//     await utilisateur.save();
+
+//     // Invalider le token actuel
+//     await TokenInvalide.create({
+//       token: req.token,
+//       dateExpiration: jwt.decode(req.token).exp * 1000
+//     });
+
+//     // Créer l'historique pour le changement réussi
+//     await creerHistorique({
+//       users_id: utilisateur._id,
+//       type_entite: 'utilisateur',
+//       type_operation: 'modif',
+//       description: `Changement du mot de passe initial réussi (${utilisateur.nom} ${utilisateur.prenom})`,
+//       statut: 'succès'
+//     });
+
+//     // Générer un nouveau token JWT
+//     const token = genererToken(utilisateur._id);
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Mot de passe changé avec succès',
+//       token,
+//       utilisateur: {
+//         id: utilisateur._id,
+//         nom: utilisateur.nom,
+//         prenom: utilisateur.prenom,
+//         email: utilisateur.email,
+//         role: utilisateur.role
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Erreur changerMotDePasseInitial:', error);
+
+//     await creerHistorique({
+//       users_id: req.user?.id,
+//       type_entite: 'utilisateur',
+//       type_operation: 'modif',
+//       description: `Erreur système lors du changement de mot de passe initial: ${error.message}`,
+//       statut: 'erreur'
+//     });
+
+//     res.status(500).json({
+//       success: false,
+//       message: 'Erreur lors du changement de mot de passe'
+//     });
+//   }
+// };
+
+const definirMotDePasseInitial = async (req, res, next) => {
   try {
     const { nouveauPassword, confirmPassword } = req.body;
+    const { token } = req.params; // Récupérer le token de l'URL
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token manquant'
+      });
+    }
+
+    // Vérifier le token et récupérer l'ID de l'utilisateur
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      await creerHistorique({
+        type_entite: 'utilisateur',
+        type_operation: 'modif',
+        description: 'Tentative de définition de mot de passe échouée - Token invalide ou expiré',
+        statut: 'erreur'
+      });
+
+      return res.status(401).json({
+        success: false,
+        message: 'Lien invalide ou expiré. Veuillez contacter un administrateur.'
+      });
+    }
 
     // Validation des données d'entrée
     if (!nouveauPassword || !confirmPassword) {
       await creerHistorique({
-        users_id: req.user.id,
         type_entite: 'utilisateur',
         type_operation: 'modif',
-        description: 'Tentative de changement de mot de passe initial échouée - Données manquantes',
+        description: 'Tentative de définition de mot de passe échouée - Données manquantes',
         statut: 'erreur'
       });
 
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir un nouveau mot de passe et sa confirmation'
+        message: 'Veuillez fournir un mot de passe et sa confirmation'
       });
     }
 
     // Vérifier que les mots de passe correspondent
     if (nouveauPassword !== confirmPassword) {
       await creerHistorique({
-        users_id: req.user.id,
         type_entite: 'utilisateur',
         type_operation: 'modif',
-        description: 'Tentative de changement de mot de passe initial échouée - Mots de passe non identiques',
+        description: 'Tentative de définition de mot de passe échouée - Mots de passe non identiques',
         statut: 'erreur'
       });
 
@@ -285,10 +460,9 @@ const changerMotDePasseInitial = async (req, res, next) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(nouveauPassword)) {
       await creerHistorique({
-        users_id: req.user.id,
         type_entite: 'utilisateur',
         type_operation: 'modif',
-        description: 'Tentative de changement de mot de passe initial échouée - Critères de complexité non respectés',
+        description: 'Tentative de définition de mot de passe échouée - Critères de complexité non respectés',
         statut: 'erreur'
       });
 
@@ -299,15 +473,16 @@ const changerMotDePasseInitial = async (req, res, next) => {
     }
 
     // Récupérer l'utilisateur
-    const utilisateur = await Utilisateur.findById(req.user.id).select('+password');
+    console.log("Recherche de l'utilisateur avec ID:", decoded.id);
+    const utilisateur = await Utilisateur.findById(decoded.id).select('+password');
+    console.log("Utilisateur trouvé:", !!utilisateur);
 
     // Vérifier si l'utilisateur existe
     if (!utilisateur) {
       await creerHistorique({
-        users_id: req.user.id,
         type_entite: 'utilisateur',
         type_operation: 'modif',
-        description: 'Tentative de changement de mot de passe initial échouée - Utilisateur non trouvé',
+        description: 'Tentative de définition de mot de passe échouée - Utilisateur non trouvé',
         statut: 'erreur'
       });
 
@@ -317,73 +492,94 @@ const changerMotDePasseInitial = async (req, res, next) => {
       });
     }
 
-    // Vérifier que le nouveau mot de passe est différent du mot de passe par défaut
-    if (nouveauPassword === 'Sutura123!') {
-      await creerHistorique({
-        users_id: utilisateur._id,
-        type_entite: 'utilisateur',
-        type_operation: 'modif',
-        description: 'Tentative de changement de mot de passe initial échouée - Utilisation du mot de passe par défaut',
-        statut: 'erreur'
-      });
-
-      return res.status(400).json({
-        success: false,
-        message: 'Vous ne pouvez pas utiliser le mot de passe par défaut comme nouveau mot de passe'
-      });
-    }
+    console.log("Utilisateur avant mise à jour:", {
+      id: utilisateur._id,
+      passwordExists: !!utilisateur.password,
+      isNew: utilisateur.isNew
+    });
 
     // Mettre à jour le mot de passe
     utilisateur.password = nouveauPassword;
-    await utilisateur.save();
+    console.log("Password défini sur l'objet utilisateur:", !!utilisateur.password);
 
-    // Invalider le token actuel
+    try {
+      console.log("Tentative de sauvegarde...");
+      await utilisateur.save();
+      console.log("Sauvegarde réussie");
+
+      // Vérifier que le mot de passe a bien été enregistré
+      const utilisateurVerif = await Utilisateur.findById(utilisateur._id).select('+password');
+      console.log("Vérification après sauvegarde:", {
+        id: utilisateurVerif._id,
+        passwordExists: !!utilisateurVerif.password
+      });
+    } catch (saveError) {
+      console.error("Erreur lors de la sauvegarde:", saveError);
+      throw saveError;
+    }
+
+    // Invalider le token utilisé pour définir le mot de passe
     await TokenInvalide.create({
-      token: req.token,
-      dateExpiration: jwt.decode(req.token).exp * 1000
+      token: token,
+      dateExpiration: decoded.exp * 1000
     });
 
-    // Créer l'historique pour le changement réussi
+    // Créer l'historique pour la définition réussie
     await creerHistorique({
       users_id: utilisateur._id,
       type_entite: 'utilisateur',
       type_operation: 'modif',
-      description: `Changement du mot de passe initial réussi (${utilisateur.nom} ${utilisateur.prenom})`,
+      description: `Définition du mot de passe initial réussie (${utilisateur.nom} ${utilisateur.prenom})`,
       statut: 'succès'
     });
 
-    // Générer un nouveau token JWT
-    const token = genererToken(utilisateur._id);
+    // Envoyer l'email de confirmation avec le code
+    try {
+      await emailService.envoyerConfirmationMotDePasse(utilisateur);
 
+      await creerHistorique({
+        users_id: utilisateur._id,
+        type_entite: 'utilisateur',
+        type_operation: 'modif',
+        description: `Email de confirmation envoyé avec succès à ${utilisateur.email}`,
+        statut: 'succès'
+      });
+    } catch (emailError) {
+      console.error('Erreur lors de l\'envoi de l\'email de confirmation:', emailError);
+
+      await creerHistorique({
+        users_id: utilisateur._id,
+        type_entite: 'utilisateur',
+        type_operation: 'modif',
+        description: `Échec de l'envoi d'email de confirmation à ${utilisateur.email}: ${emailError.message}`,
+        statut: 'erreur'
+      });
+      // Ne pas bloquer la suite du processus si l'email échoue
+    }
+
+    // Retourner simplement un message de succès sans token
     res.status(200).json({
       success: true,
-      message: 'Mot de passe changé avec succès',
-      token,
-      utilisateur: {
-        id: utilisateur._id,
-        nom: utilisateur.nom,
-        prenom: utilisateur.prenom,
-        email: utilisateur.email,
-        role: utilisateur.role
-      }
+      message: 'Mot de passe défini avec succès. Vous avez reçu un email avec vos identifiants de connexion.'
     });
   } catch (error) {
-    console.error('Erreur changerMotDePasseInitial:', error);
+    console.error('Erreur definirMotDePasseInitial:', error);
 
     await creerHistorique({
-      users_id: req.user?.id,
       type_entite: 'utilisateur',
       type_operation: 'modif',
-      description: `Erreur système lors du changement de mot de passe initial: ${error.message}`,
+      description: `Erreur système lors de la définition du mot de passe: ${error.message}`,
       statut: 'erreur'
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors du changement de mot de passe'
+      message: 'Erreur lors de la définition du mot de passe'
     });
   }
 };
+
+
 
 /**
  * Déconnecter l'utilisateur (invalider le token)
@@ -466,7 +662,7 @@ const genererToken = (id, expiresIn = process.env.JWT_EXPIRE) => {
 module.exports = {
   connexionParEmail,
   connexionParCode,
-  changerMotDePasseInitial,
+  definirMotDePasseInitial,
   deconnexion,
   monProfil
 };

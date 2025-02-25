@@ -32,9 +32,18 @@ const UtilisateurSchema = new mongoose.Schema({
       'Le code doit être composé exactement de 4 chiffres'
     ]
   },
+  // password: {
+  //   type: String,
+  //   required: [true, 'Le mot de passe est requis'],
+  //   minlength: [8, 'Le mot de passe doit comporter au moins 8 caractères'],
+  //   select: false // Ne pas inclure dans les requêtes par défaut
+  // },
   password: {
     type: String,
-    required: [true, 'Le mot de passe est requis'],
+    required: function() {
+      // Le mot de passe est requis seulement si l'utilisateur n'est pas nouveau
+      return !this.isNew;
+    },
     minlength: [8, 'Le mot de passe doit comporter au moins 8 caractères'],
     select: false // Ne pas inclure dans les requêtes par défaut
   },
@@ -56,7 +65,11 @@ const UtilisateurSchema = new mongoose.Schema({
   telephone: {
     type: Number,
     required: [true, 'Le numéro de téléphone est requis'],
-    unique: true
+    unique: true,
+    match: [
+      /^[0-9]{9}$/,
+      'Le numéro de téléphone doit être composé exactement de 9 chiffres'
+    ]
   },
   cardId: {
     type: String,
@@ -111,8 +124,12 @@ UtilisateurSchema.pre('findOneAndUpdate', function(next) {
   next();
 });
 
-// Méthode pour comparer les mots de passe
 UtilisateurSchema.methods.comparePassword = async function(candidatePassword) {
+  // Si le mot de passe n'existe pas dans la base de données
+  if (!this.password) {
+    console.log("Mot de passe non défini pour cet utilisateur");
+    return false; // Renvoyer false pour indiquer que la comparaison a échoué
+  }
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
