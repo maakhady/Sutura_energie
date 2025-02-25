@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Lightbulb, Tv, Cog, Plus, Settings, Users } from "lucide-react";
+import { Lightbulb, Tv, Cog, Plus, Users } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarAlt, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
 
