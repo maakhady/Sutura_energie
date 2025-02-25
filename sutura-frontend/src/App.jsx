@@ -9,6 +9,7 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import DashboardPage from "./pages/DashboardPages"; // Utilisation de DashboardPage
+import AppareilsPage from "./pages/AppareilsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute"; // Importez votre composant ProtectedRoute
 
 const App = () => {
@@ -35,7 +36,7 @@ const App = () => {
                   <div className="flex-grow-1">
                     <Routes>
                       <Route path="/dashboard" element={<DashboardPage />} />
-                      <Route path="/appareils" element={<DashboardPage />} />
+                      <Route path="/appareils" element={<AppareilsPage />} />
                       <Route path="/historiques" element={<DashboardPage />} />
                       <Route path="/utilisateurs" element={<DashboardPage />} />
                     </Routes>
