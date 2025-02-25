@@ -15,41 +15,27 @@ import ProtectedRoute from "./components/auth/ProtectedRoute"; // Importez votre
 const App = () => {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col items-center bg-gray-100">
-        <Routes>
-          {/* Route publique */}
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/firstlogin" element={<FirstLoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route
-            path="/reinitialiser-mot-de-passe/:token"
-            element={<ResetPasswordPage />}
-          />
-
-          {/* Route protégée */}
-          <Route element={<ProtectedRoute />}>
-            <Route
-              path="/*"
-              element={
-                <div className="d-flex">
-                  <Sidebar />
-                  <div className="flex-grow-1">
-                    <Routes>
-                      <Route path="/dashboard" element={<DashboardPage />} />
-                      <Route path="/appareils" element={<AppareilsPage />} />
-                      <Route path="/historiques" element={<DashboardPage />} />
-                      <Route path="/utilisateurs" element={<DashboardPage />} />
-                    </Routes>
-                  </div>
-                </div>
-              }
-            />
-          </Route>
-
-          {/* Route 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* Route pour la page de connexion */}
+        
+        {/* Route pour le dashboard et autres pages protégées */}
+        <Route
+          path="/*"
+          element={
+            <div className="d-flex">
+              <Sidebar />
+              <div className="flex-grow-1">
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/appareils" element={<Dashboard />} />
+                  <Route path="/historiques" element={<Dashboard />} />
+                  <Route path="/utilisateurs" element={<Dashboard />} />
+                </Routes>
+              </div>
+            </div>
+          }
+        />
+      </Routes>
     </Router>
   );
 };

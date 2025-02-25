@@ -12,7 +12,7 @@
 .card {
   background-color: white;
   border-radius: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
 /* Supprimez les styles du logo et les animations si vous ne les utilisez pas */
