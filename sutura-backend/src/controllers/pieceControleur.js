@@ -1,4 +1,4 @@
-const Piece = require("../models/piece");
+const Piece = require("../models/Piece");
 const Appareil = require("../models/Appareil"); // Assurez-vous d'importer le modèle Appareil
 const { creerHistorique } = require("./historiqueControleur");
 

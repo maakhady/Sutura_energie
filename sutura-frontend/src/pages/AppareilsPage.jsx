@@ -1,9 +1,8 @@
 import { useState } from "react";
-import PropTypes from "prop-types";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Lightbulb, Tv, Cog, Plus, Users } from "lucide-react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarAlt, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import { Lightbulb, Tv, Cog, Plus } from "lucide-react";
+import CardStat from "../components/CardStat";
+import MiniRightPanel from "../components/MiniRightPanel";
 
 const AppareilsPage = () => {
   const [rooms, setRooms] = useState([
@@ -28,6 +27,13 @@ const AppareilsPage = () => {
     },
   ]);
 
+  // Données fictives pour les statistiques
+  const stats = [
+    { title: "Pièces Totales", value: rooms.length, icon: "device" },
+    { title: "Appareils Actifs", value: 8, icon: "light" },
+    { title: "Appareils Inactifs", value: 3, icon: "tv" },
+  ];
+
   const toggleDevice = (roomIndex, deviceIndex) => {
     const updatedRooms = [...rooms];
     const newStatus =
@@ -43,27 +49,7 @@ const AppareilsPage = () => {
       {/* En-tête des statistiques */}
       <Row className="mb-4">
         <Col>
-          <Card className="shadow-sm rounded-lg">
-            <Card.Body className="py-4">
-              <Row>
-                <StatCard
-                  icon={<Users size={24} />}
-                  label="Pièces Totales"
-                  value="4"
-                />
-                <StatCard
-                  icon={<Lightbulb size={24} />}
-                  label="Appareils Actifs"
-                  value="8"
-                />
-                <StatCard
-                  icon={<Lightbulb size={24} />}
-                  label="Appareils Inactifs"
-                  value="3"
-                />
-              </Row>
-            </Card.Body>
-          </Card>
+          <CardStat stats={stats} />
         </Col>
       </Row>
 
@@ -110,28 +96,14 @@ const AppareilsPage = () => {
           Suivant →
         </Button>
       </div>
+
+      {/* MiniRightPanel */}
+      <MiniRightPanel />
     </Container>
   );
 };
 
-// Composant StatCard
-const StatCard = ({ icon, label, value }) => (
-  <Col md={4} className="text-center">
-    <div className="d-flex justify-content-center mb-2">{icon}</div>
-    <div>
-      <h4 className="fw-bold mb-0">{value}</h4>
-      <p className="text-muted small">{label}</p>
-    </div>
-  </Col>
-);
-
-StatCard.propTypes = {
-  icon: PropTypes.element.isRequired,
-  label: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-};
-
-// Composant RoomCard
+// Composant RoomCard (inchangé)
 const RoomCard = ({ room, roomIndex, toggleDevice }) => {
   return (
     <Card className="shadow-sm border-0 h-100">
@@ -168,24 +140,7 @@ const RoomCard = ({ room, roomIndex, toggleDevice }) => {
   );
 };
 
-RoomCard.propTypes = {
-  room: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    energy: PropTypes.string.isRequired,
-    devices: PropTypes.arrayOf(
-      PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        conso: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
-        status: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-  }).isRequired,
-  roomIndex: PropTypes.number.isRequired,
-  toggleDevice: PropTypes.func.isRequired,
-};
-
-// Composant DeviceCard
+// Composant DeviceCard (inchangé)
 const DeviceCard = ({ device, onToggle }) => {
   const getDeviceIcon = (type) => {
     switch (type) {
@@ -194,90 +149,10 @@ const DeviceCard = ({ device, onToggle }) => {
       case "tv":
         return <Tv size={24} />;
       case "fan":
-        return (
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 5C12 3.34 10.66 2 9 2C7.34 2 6 3.34 6 5C6 6.66 7.34 8 9 8H12V5Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M19 12C20.66 12 22 10.66 22 9C22 7.34 20.66 6 19 6C17.34 6 16 7.34 16 9V12H19Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M12 19C12 20.66 10.66 22 9 22C7.34 22 6 20.66 6 19C6 17.34 7.34 16 9 16H12V19Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M5 12C3.34 12 2 10.66 2 9C2 7.34 3.34 6 5 6C6.66 6 8 7.34 8 9V12H5Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
-      case "ac":
-        return (
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="2"
-              y="6"
-              width="20"
-              height="12"
-              rx="2"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M6 10H18"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M7 14H9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M12 14H14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        );
+        return <Cog size={24} />;
       default:
         return <Lightbulb size={24} />;
     }
-  };
-
-  const getConsoColor = (wattage) => {
-    if (wattage.includes("15")) return "text-warning";
-    return "text-warning";
   };
 
   return (
@@ -285,7 +160,7 @@ const DeviceCard = ({ device, onToggle }) => {
       className={`border-0 h-100 ${
         device.status === "on" ? "bg-blue-100" : "bg-light"
       }`}
-      style={{ borderRadius: "10px" }}
+      style={{ borderRadius: "10px", width: "200px" }}
     >
       <Card.Body className="p-3">
         <div className="d-flex justify-content-between align-items-center mb-2">
@@ -306,35 +181,15 @@ const DeviceCard = ({ device, onToggle }) => {
                 onChange={onToggle}
               />
             </div>
-            <Button variant="light" size="sm" className="p-0 me-1">
-              <FontAwesomeIcon
-                icon={faCalendarAlt}
-                className="text-secondary"
-              />
-            </Button>
-            <Button variant="light" size="sm" className="p-0">
-              <FontAwesomeIcon icon={faEllipsisV} className="text-secondary" />
-            </Button>
           </div>
         </div>
         <p className="text-gray-700 mb-1 mt-2">{device.name}</p>
         <p className="text-gray-500 mb-0 small">
-          Conso:{" "}
-          <span className={getConsoColor(device.conso)}>{device.conso}</span>
+          Conso: <span className="text-warning">{device.conso}</span>
         </p>
       </Card.Body>
     </Card>
   );
-};
-
-DeviceCard.propTypes = {
-  device: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    conso: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-  }).isRequired,
-  onToggle: PropTypes.func.isRequired,
 };
 
 export default AppareilsPage;
