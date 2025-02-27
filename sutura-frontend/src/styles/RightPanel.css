@@ -6,8 +6,6 @@
     gap: 20px;
     padding: 20px;
     overflow-y: auto;
-
-
 }
 
 /* Styles de base pour mobile */
@@ -61,7 +59,6 @@
     }
 
     .security-alerts {
-
         overflow: auto;
     }
 
@@ -107,6 +104,28 @@
     object-fit: cover;
 }
 
+/* Style pour les initiales de l'utilisateur */
+.user-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: #274C77;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 50%;
+    text-transform: uppercase;
+}
+
+/* Style pour les initiales dans le dropdown */
+.dropdown-avatar.user-initials {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
+
 .avatar-dropdown {
     position: absolute;
     top: -35px;
@@ -133,6 +152,10 @@
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+.dropdown-user-info {
+    flex: 1;
 }
 
 .dropdown-user-info h4 {
@@ -197,6 +220,32 @@
 .consumption-date {
     font-size: 14px;
     opacity: 0.9;
+}
+
+/* Messages d'erreur et de succès */
+.error-message, .success-message {
+    padding: 8px 12px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.error-message {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.success-message {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.error-message.floating, .success-message.floating {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 10;
 }
 
 /* Widget Alertes */
@@ -282,7 +331,6 @@
     background:rgb(141, 186, 253);
     padding: 3px;
     border-radius: 12%
-
 }
 
 /* Widget Caméra */
@@ -433,6 +481,69 @@
     background-color: #1a365d;
 }
 
+/* Styles pour le modal de changement de mot de passe */
+.password-form {
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.submit-btn, .cancel-btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.submit-btn {
+    background-color: #274C77;
+    color: white;
+    border: none;
+}
+
+.submit-btn:hover {
+    background-color: #1a365d;
+}
+
+.submit-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.cancel-btn {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+.cancel-btn:hover {
+    background-color: #e5e7eb;
+}
+
 /* Animation pour le modal */
 @keyframes fadeIn {
     from {
@@ -463,4 +574,72 @@
 /* Pour assurer que le modal est au-dessus de tout */
 .modal-overlay {
     z-index: 9999;
+}
+
+/* Conteneur pour l'input et le bouton d'affichage du mot de passe */
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-input-container input {
+    width: 100%;
+    padding: 10px;
+    padding-right: 40px; /* Espace pour le bouton œil */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+/* Styles pour indiquer si les mots de passe correspondent ou non */
+.password-match {
+    border-color: #4CAF50 !important;
+    background-color: rgba(76, 175, 80, 0.05);
+}
+
+.password-mismatch {
+    border-color: #f44336 !important;
+    background-color: rgba(244, 67, 54, 0.05);
+}
+
+/* Bouton pour afficher/masquer le mot de passe */
+.toggle-password-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #555;
+}
+
+.toggle-password-btn:hover {
+    color: #000;
+}
+
+.toggle-password-btn:focus {
+    outline: none;
+}
+
+/* Messages de validation du mot de passe */
+.password-validation-message {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.password-validation-message.error {
+    color: #f44336;
+}
+
+.password-validation-message.success {
+    color: #4CAF50;
 }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { authService } from "./authService";
 
 const API_URL = "http://localhost:2500/api/utilisateurs";
 
@@ -323,11 +324,14 @@ const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, c
 // Fonction pour changer son mot de passe (utilisateur connecté)
 const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPassword) => {
   try {
+    // Vérification des champs requis côté client
     if (!actuelPassword || !nouveauPassword || !confirmPassword) {
       throw new Error("Tous les champs de mot de passe sont requis");
     }
+    
+    // Appel API pour changer le mot de passe
     const response = await axios.post(
-      `${API_URL}/changer-mot-de-passe`,
+      `${API_URL}/changerpassword`,
       {
         actuelPassword,
         nouveauPassword,
@@ -335,6 +339,16 @@ const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPasswor
       },
       getAuthConfig()
     );
+    
+    // Si le changement de mot de passe est réussi
+    if (response.data.success) {
+      // Déconnecter l'utilisateur en utilisant la fonction logout existante
+      await authService.logout();
+      
+      // Rediriger vers la page de connexion
+      window.location.href = '/';
+    }
+    
     return response.data;
   } catch (error) {
     console.error(

@@ -784,12 +784,14 @@ const handleDeleteMultiple = (ids) => {
                           {user.role === 'admin' ? 'Administrateur' : user.role === 'utilisateur' ? 'Utilisateur' : user.role || '-'}
                         </td>
                         <td>
-                          <span
-                            className={`status-badge ${user.actif ? 'actif' : 'inactif'}`}
-                            onClick={() => handleToggleStatus(user.id || user._id)}
-                          >
-                            {user.actif ? 'Actif' : 'Inactif'}
-                          </span>
+                          <label className="switch1">
+                            <input
+                              type="checkbox"
+                              checked={user.actif}
+                              onChange={() => handleToggleStatus(user.id || user._id)}
+                            />
+                            <span className="slider1"></span>
+                          </label>
                         </td>
                         <td className="action-buttons">
                           <button

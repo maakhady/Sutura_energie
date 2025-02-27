@@ -761,6 +761,7 @@ const demanderReinitialisation = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      token,
       message: 'Email de réinitialisation envoyé'
     });
   } catch (error) {
@@ -789,17 +790,16 @@ const demanderReinitialisation = async (req, res) => {
  * Réinitialiser le mot de passe
  * @route POST /api/utilisateurs/reinitialiser-mot-de-passe
  * @param {string} token - Token de réinitialisation
- * @param {string} actuelPassword - Mot de passe actuel
  * @param {string} nouveauPassword - Nouveau mot de passe
  * @param {string} confirmPassword - Confirmation du nouveau mot de passe
  * @returns {object} Message de confirmation
  */
 const reinitialiserMotDePasse = async (req, res) => {
   try {
-    const { token, actuelPassword, nouveauPassword, confirmPassword } = req.body;
+    const { token, nouveauPassword, confirmPassword } = req.body;
 
     // Validation des données d'entrée
-    if (!token || !actuelPassword || !nouveauPassword || !confirmPassword) {
+    if (!token || !nouveauPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
         message: 'Veuillez fournir toutes les informations nécessaires'
@@ -825,17 +825,6 @@ const reinitialiserMotDePasse = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Utilisateur non trouvé'
-      });
-    }
-
-    // Vérifier le mot de passe actuel
-    const isMatch = await utilisateur.comparePassword(actuelPassword);
-    console.log('Mot de passe correspond:', isMatch);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'Mot de passe actuel incorrect'
       });
     }
 
@@ -879,6 +868,94 @@ const reinitialiserMotDePasse = async (req, res) => {
   }
 };
 
+/**
+ * Changer le mot de passe
+ * @route POST /api/utilisateurs/changerpassword
+ * @param {string} token - Token de réinitialisation
+ * @param {string} actuelPassword - Mot de passe actuel
+ * @param {string} nouveauPassword - Nouveau mot de passe
+ * @param {string} confirmPassword - Confirmation du nouveau mot de passe
+ * @returns {object} Message de confirmation
+ */
+
+
+const changerpassword = async (req, res) => {
+  try {
+    const { actuelPassword, nouveauPassword, confirmPassword } = req.body;
+    const userId = req.user.id; // Supposant que l'ID de l'utilisateur est disponible via l'authentification
+
+    // Validation des données d'entrée
+    if (!actuelPassword || !nouveauPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Veuillez fournir toutes les informations nécessaires'
+      });
+    }
+
+    // Vérifier que les nouveaux mots de passe correspondent
+    if (nouveauPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Les nouveaux mots de passe ne correspondent pas'
+      });
+    }
+
+    // Récupérer l'utilisateur depuis la base de données
+    const utilisateur = await Utilisateur.findById(userId).select('+password');
+    
+    if (!utilisateur) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    // Vérifier le mot de passe actuel
+    const isMatch = await utilisateur.comparePassword(actuelPassword);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mot de passe actuel incorrect'
+      });
+    }
+
+    // Mettre à jour le mot de passe
+    utilisateur.password = nouveauPassword;
+    utilisateur.date_modif = Date.now();
+    await utilisateur.save();
+
+    // Créer l'historique pour le changement de mot de passe
+    await creerHistorique({
+      users_id: utilisateur._id,
+      type_entite: 'utilisateur',
+      type_operation: 'modif',
+      description: `Mot de passe modifié pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
+      statut: 'succès'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Mot de passe modifié avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur changerMotDePasse:', error);
+
+    // Créer l'historique pour l'échec du changement de mot de passe
+    await creerHistorique({
+      users_id: req.user?.id,
+      type_entite: 'utilisateur',
+      type_operation: 'modif',
+      description: `Échec de la modification du mot de passe: ${error.message}`,
+      statut: 'erreur'
+    });
+
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la modification du mot de passe'
+    });
+  }
+};
   
   
 
@@ -1042,4 +1119,5 @@ module.exports = {
   desactiverMaCarteRFID, 
   reactiverCarteRFID, 
   demanderReinitialisation,
+  changerpassword,
 };

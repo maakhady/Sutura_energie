@@ -6,10 +6,8 @@ import { authService } from "../../services/authService"; // Assure-toi d'import
 
 const ResetPassword = () => {
   const { token } = useParams(); // Récupérer le token depuis l'URL
-  const [actuelPassword, setActuelPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showActuelPassword, setShowActuelPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
@@ -27,7 +25,6 @@ const ResetPassword = () => {
     try {
       // Appeler le service pour réinitialiser le mot de passe
       const response = await authService.reinitialiserMotDePasse(token, {
-        actuelPassword,
         nouveauPassword: newPassword,
         confirmPassword,
       });
@@ -68,7 +65,7 @@ const ResetPassword = () => {
           </h4>
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
+            {/* <div className="mb-3">
               <label className="form-label primary-text">
                 Mot de passe actuel
               </label>
@@ -96,7 +93,7 @@ const ResetPassword = () => {
                   )}
                 </button>
               </div>
-            </div>
+            </div> */}
 
             <div className="mb-3">
               <label className="form-label primary-text">

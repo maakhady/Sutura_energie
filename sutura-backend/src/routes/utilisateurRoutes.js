@@ -17,6 +17,7 @@ const {
   desassignerEmpreinte,
   reinitialiserMotDePasse,
   demanderReinitialisation,
+  changerpassword,
 } = require("../controllers/utilisateurControleur");
 
 // Routes nécessitant un rôle admin
@@ -65,7 +66,7 @@ router.get("/:id", auth, obtenirUtilisateur);
 router.put("/:id", auth, mettreAJourUtilisateur);
 router.post("/reinitialiser-password", reinitialiserMotDePasse);
 router.post("/demander-reinitialisation", demanderReinitialisation);
-router.post("/changerpassword", auth, reinitialiserMotDePasse);
+router.post("/changerpassword", auth, changerpassword);
 
 // Route pour l'utilisateur (désactiver sa propre carte)
 router.patch("/desactiver-ma-carte", auth, desactiverMaCarteRFID);
