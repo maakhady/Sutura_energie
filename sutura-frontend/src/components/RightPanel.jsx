@@ -1,12 +1,55 @@
 import { useState, useEffect } from 'react';
 import '../styles/RightPanel.css';
+import { utilisateurService } from "../services/utilisateurService";
+import { authService } from '../services/authService';
 
 const RightPanel = () => {
+  // Fonction pour formatter le rôle
+  const formatterRole = (role) => {
+    if (!role) return '';
+    
+    switch(role.toLowerCase()) {
+      case 'admin':
+        return 'Administrateur';
+      case 'utilisateur':
+        return 'Utilisateur';
+      default:
+        // Première lettre en majuscule pour tout autre rôle
+        return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+  };
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAlertDetails, setShowAlertDetails] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
-  
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showModifierMotDePasse, setShowModifierMotDePasse] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    actuelPassword: '',
+    nouveauPassword: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
+  // Récupérer les informations de l'utilisateur connecté
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await authService.getMyProfile();
+        if (response && response.success) {
+          setUser(response.data);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur lors de la récupération du profil:", err);
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   // Gestion de la fermeture du dropdown lors d'un clic à l'extérieur
   useEffect(() => {
@@ -22,11 +65,12 @@ const RightPanel = () => {
     };
   }, [showDropdown]);
 
-  // Gestion de la touche Échap pour fermer le modal
+  // Gestion de la touche Échap pour fermer les modals
   useEffect(() => {
     const handleEscKey = (event) => {
       if (event.key === 'Escape') {
         setShowAlertDetails(false);
+        setShowModifierMotDePasse(false);
       }
     };
 
@@ -41,18 +85,66 @@ const RightPanel = () => {
   };
 
   const handleModifierProfil = () => {
-    console.log("Modifier profil");
+    console.log("Fonction de modification de profil");
     setShowDropdown(false);
   };
 
-  const handleDesactiverCarte = () => {
-    console.log("Désactiver carte");
+  const handleDesactiverCarte = async () => {
+    try {
+      setError('');
+      setSuccess('');
+      await utilisateurService.desactiverMaCarteRFID();
+      setSuccess('Votre carte RFID a été désactivée avec succès.');
+      // Mettre à jour les infos utilisateur
+      const userData = await authService.getMyProfile();
+      setUser(userData);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erreur lors de la désactivation de la carte RFID');
+    }
     setShowDropdown(false);
   };
 
   const handleModifierMotDePasse = () => {
-    console.log("Modifier mot de passe");
+    setShowModifierMotDePasse(true);
     setShowDropdown(false);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    try {
+      setError('');
+      setSuccess('');
+      
+      // Vérifier que les mots de passe correspondent
+      if (passwordData.nouveauPassword !== passwordData.confirmPassword) {
+        setError('Les mots de passe ne correspondent pas.');
+        return;
+      }
+      
+      await utilisateurService.changerMotDePasse(
+        passwordData.actuelPassword,
+        passwordData.nouveauPassword,
+        passwordData.confirmPassword
+      );
+      
+      setSuccess('Mot de passe modifié avec succès.');
+      setPasswordData({
+        actuelPassword: '',
+        nouveauPassword: '',
+        confirmPassword: ''
+      });
+      setTimeout(() => setShowModifierMotDePasse(false), 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erreur lors de la modification du mot de passe');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({
+      ...passwordData,
+      [name]: value
+    });
   };
 
   const handleViewDetails = (alertType) => {
@@ -60,6 +152,61 @@ const RightPanel = () => {
     setShowAlertDetails(true);
   };
 
+  // Modal de changement de mot de passe
+  const PasswordChangeModal = () => {
+    return (
+      <div className="modal-overlay" onClick={() => setShowModifierMotDePasse(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <h3>Modifier mon mot de passe </h3>
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+          <form onSubmit={handleChangePassword} className="password-form">
+            <div className="form-group">
+              <label htmlFor="actuelPassword">Mot de passe actuel</label>
+              <input 
+                type="password" 
+                id="actuelPassword" 
+                name="actuelPassword" 
+                value={passwordData.actuelPassword}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="nouveauPassword">Nouveau mot de passe</label>
+              <input 
+                type="password" 
+                id="nouveauPassword" 
+                name="nouveauPassword" 
+                value={passwordData.nouveauPassword}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                name="confirmPassword" 
+                value={passwordData.confirmPassword}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-buttons">
+              <button type="submit" className="submit-btn">Modifier</button>
+              <button type="button" className="cancel-btn" onClick={() => setShowModifierMotDePasse(false)}>
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // Modal des détails d'alerte
   const AlertDetailsModal = () => {
     const renderAlertContent = () => {
       switch (selectedAlert) {
@@ -154,8 +301,8 @@ const RightPanel = () => {
               <div className="dropdown-header">
                 <img src="/avatar.png" alt="User" className="dropdown-avatar" />
                 <div className="dropdown-user-info">
-                  <h4>Bamba Thiam</h4>
-                  <p>Administrateur</p>
+                  <h4>{user ? `${user.prenom} ${user.nom}` : 'Chargement...'}</h4>
+                  <p>{user ? formatterRole(user.role) : ''}</p>
                 </div>
               </div>
               <div className="dropdown-divider"></div>
@@ -177,6 +324,10 @@ const RightPanel = () => {
         <h3>Consommation Actuel</h3>
         <div className="consumption-value">50 kWh</div>
         <div className="consumption-date">Lundi 17/2/2025 13:45</div>
+        
+        {/* Messages de succès ou d'erreur */}
+        {error && !showModifierMotDePasse && <div className="error-message floating">{error}</div>}
+        {success && !showModifierMotDePasse && <div className="success-message floating">{success}</div>}
       </div>
 
       {/* Widget Alertes sécurité */}
@@ -247,8 +398,9 @@ const RightPanel = () => {
         </div>
       </div>
 
-      {/* Modal des détails d'alerte */}
+      {/* Modals */}
       {showAlertDetails && <AlertDetailsModal />}
+      {showModifierMotDePasse && <PasswordChangeModal />}
     </div>
   );
 };

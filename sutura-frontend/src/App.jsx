@@ -53,10 +53,10 @@ const App = () => {
                         path="/modifier-utilisateur/:id"
                         element={<ModifierUtilisateur />}
                       />
-                      <Route
+                      {/* <Route
                         path="/modifier-utilisateur/"
                         element={<ModifierUtilisateur />}
-                      />
+                      /> */}
                     </Routes>
                   </div>
                 </div>

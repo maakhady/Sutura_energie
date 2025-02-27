@@ -32,12 +32,6 @@ const UtilisateurSchema = new mongoose.Schema({
       'Le code doit être composé exactement de 4 chiffres'
     ]
   },
-  // password: {
-  //   type: String,
-  //   required: [true, 'Le mot de passe est requis'],
-  //   minlength: [8, 'Le mot de passe doit comporter au moins 8 caractères'],
-  //   select: false // Ne pas inclure dans les requêtes par défaut
-  // },
   password: {
     type: String,
     required: function() {
@@ -52,7 +46,7 @@ const UtilisateurSchema = new mongoose.Schema({
   },
   cardActive: {
     type: Boolean,
-    default: true
+    default: false
   },
   role: {
     type: String,

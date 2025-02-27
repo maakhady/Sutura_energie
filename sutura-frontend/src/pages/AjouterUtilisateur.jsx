@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, Check } from 'lucide-react';
 import CardStat from '../components/CardStat';
 import '../styles/AjouterUtilisateur.css';
+import { utilisateurService } from '../services/utilisateurService';
+import Swal from 'sweetalert2';
+import { useEffect } from 'react';
 
 const AjouterUtilisateur = () => {
   const navigate = useNavigate();
   
+
+  //convertir la photo en string 
+
   // États pour gérer les données du formulaire
   const [formData, setFormData] = useState({
     nom: '',
@@ -27,14 +33,63 @@ const AjouterUtilisateur = () => {
     role: ''
   });
   
+  // État pour les champs valides
+  const [validFields, setValidFields] = useState({
+    nom: false,
+    prenom: false,
+    email: false,
+    telephone: false,
+    photo: false,
+    role: false
+  });
+
+  //stat pour les card de statistiques
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [assignedCards, setAssignedCards] = useState(0);
+
+
+  // Dans AjouterUtilisateur.jsx, ajoutez cet effet pour charger les statistiques au chargement du composant
+useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      // Utiliser le même service mais nous avons juste besoin des stats, pas de la pagination
+      const data = await utilisateurService.obtenirTousUtilisateurs(1, 1000);
+      
+      if (data && data.success) {
+        // Définir le nombre total d'utilisateurs
+        setTotalUsers(data.count || 0);
+        
+        // Si nous avons des données d'utilisateur, calculer les autres statistiques
+        if (Array.isArray(data.data)) {
+          const usersArray = data.data;
+          
+          // Calculer les stats
+          const actifs = usersArray.filter(user => user.actif).length;
+          const cartes = usersArray.filter(user => user.cardActive).length;
+          
+          // Mettre à jour les états
+          setActiveUsers(actifs);
+          setAssignedCards(cartes);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des statistiques:", error);
+      // Optionnel: afficher une notification d'erreur
+    }
+  };
+  
+  fetchStats();
+}, []); // Dépendance vide pour n'exécuter qu'au montage du composant
+ 
   // État pour l'aperçu de l'image
   const [photoPreview, setPhotoPreview] = useState(null);
   
   // Données pour les cartes de statistiques
   const stats = [
-    { title: 'Utilisateurs Totales', value: 9, icon: 'users' },
-    { title: 'Utilisateurs Actifs', value: 6, icon: 'user' },
-    { title: 'Boîtes Assignés', value: 3, icon: 'device' }
+    { title: 'Utilisateurs Totaux', value: totalUsers, icon: 'users' },
+    { title: 'Utilisateurs Actifs', value: activeUsers, icon: 'user' },
+    { title: 'Cartes Assignées', value: assignedCards, icon: 'device' }
   ];
   
   // Validation du numéro de téléphone sénégalais
@@ -70,31 +125,56 @@ const AjouterUtilisateur = () => {
   
   // Formater le numéro de téléphone pour l'affichage
   const formatPhoneNumber = (value) => {
+    if (!value) return '';
+    
     // Supprimer tout sauf les chiffres
     const cleaned = value.replace(/\D/g, '');
     
-    // Limiter à 9 chiffres (format sénégalais)
-    const limited = cleaned.substring(0, 9);
+    // Appliquer le formatage
+    let formatted = '';
     
-    // Formater XX-XXX-XX-XX (format sénégalais)
-    if (limited.length >= 2) {
-      let formatted = limited.substring(0, 2);
-      
-      if (limited.length >= 5) {
-        formatted += '-' + limited.substring(2, 5);
-        
-        if (limited.length >= 7) {
-          formatted += '-' + limited.substring(5, 7);
-          
-          if (limited.length >= 9) {
-            formatted += '-' + limited.substring(7, 9);
-          }
-        }
-      }
-      return formatted;
+    // Premier groupe: 2 chiffres
+    if (cleaned.length > 0) {
+      formatted += cleaned.substring(0, Math.min(2, cleaned.length));
     }
     
-    return limited;
+    // Deuxième groupe: 3 chiffres
+    if (cleaned.length > 2) {
+      formatted += '-' + cleaned.substring(2, Math.min(5, cleaned.length));
+    }
+    
+    // Troisième groupe: 2 chiffres
+    if (cleaned.length > 5) {
+      formatted += '-' + cleaned.substring(5, Math.min(7, cleaned.length));
+    }
+    
+    // Quatrième groupe: 2 chiffres
+    if (cleaned.length > 7) {
+      formatted += '-' + cleaned.substring(7, Math.min(9, cleaned.length));
+    }
+    
+    return formatted;
+  };
+  
+  // Vérifier si le formulaire est vide
+  const isFormEmpty = () => {
+    // Vérifier si tous les champs requis sont remplis
+    return !formData.nom || 
+           !formData.prenom || 
+           !formData.email || 
+           !formData.telephone || 
+           !formData.role;
+  };
+
+  // Vérifier si le formulaire est valide
+  const isFormValid = () => {
+    // Vérifier qu'il n'y a pas d'erreurs et que tous les champs requis sont valides
+    return !Object.values(errors).some(error => error !== '') && 
+           validFields.nom && 
+           validFields.prenom && 
+           validFields.email && 
+           validFields.telephone && 
+           validFields.role;
   };
   
   // Gérer les changements dans le formulaire
@@ -103,19 +183,28 @@ const AjouterUtilisateur = () => {
     
     // Traitement spécial pour le téléphone
     if (name === 'telephone') {
-      // Supprimer les tirets pour le stockage
-      const rawValue = value.replace(/-/g, '');
+      // Obtenir seulement les chiffres de la valeur saisie
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Limiter à 9 chiffres maximum
+      const limitedDigits = digitsOnly.substring(0, 9);
       
       setFormData({
         ...formData,
-        [name]: rawValue
+        [name]: limitedDigits
       });
       
       // Valider le téléphone
-      const phoneError = validatePhone(rawValue);
+      const phoneError = validatePhone(limitedDigits);
       setErrors({
         ...errors,
         [name]: phoneError
+      });
+      
+      // Marquer comme valide si pas d'erreur et on a 9 chiffres
+      setValidFields({
+        ...validFields,
+        [name]: !phoneError && limitedDigits.length === 9
       });
     } 
     // Traitement spécial pour l'email
@@ -131,6 +220,12 @@ const AjouterUtilisateur = () => {
         ...errors,
         [name]: emailError
       });
+      
+      // Marquer comme valide si pas d'erreur
+      setValidFields({
+        ...validFields,
+        [name]: !emailError && value.length > 0
+      });
     }
     // Traitement pour les autres champs
     else {
@@ -141,57 +236,84 @@ const AjouterUtilisateur = () => {
       
       // Validation basique pour les champs requis
       if (['nom', 'prenom', 'role'].includes(name)) {
+        const fieldError = value ? '' : `Le champ ${name} est requis`;
         setErrors({
           ...errors,
-          [name]: value ? '' : `Le champ ${name} est requis`
+          [name]: fieldError
+        });
+        
+        // Marquer comme valide si pas d'erreur
+        setValidFields({
+          ...validFields,
+          [name]: !fieldError && value.length > 0
         });
       }
     }
   };
   
-  // Gérer l'upload de photo
-  const handlePhotoChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+  // Gérer l'upload de photo 
+const handlePhotoChange = (e) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    
+    // Vérifier la taille du fichier (max 5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors({
+        ...errors,
+        photo: "La taille de l'image ne doit pas dépasser 5 MB"
+      });
+      setValidFields({
+        ...validFields,
+        photo: false
+      });
+      return;
+    }
+    
+    // Vérifier le type de fichier
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      setErrors({
+        ...errors,
+        photo: "Seuls les formats JPG et PNG sont acceptés"
+      });
+      setValidFields({
+        ...validFields,
+        photo: false
+      });
+      return;
+    }
+    
+    // Convertir le fichier en chaîne Base64
+    const reader = new FileReader();
+    
+    reader.onloadend = () => {
+      // reader.result contient l'image en Base64 (data:image/jpeg;base64,/9j/4AAQ...)
+      const base64String = reader.result;
       
-      // Vérifier la taille du fichier (max 5 MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors({
-          ...errors,
-          photo: "La taille de l'image ne doit pas dépasser 5 MB"
-        });
-        return;
-      }
-      
-      // Vérifier le type de fichier
-      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (!validTypes.includes(file.type)) {
-        setErrors({
-          ...errors,
-          photo: "Seuls les formats JPG et PNG sont acceptés"
-        });
-        return;
-      }
-      
-      // Si tout est OK, mettre à jour l'état
+      // Mettre à jour le state avec la chaîne Base64
       setFormData({
         ...formData,
-        photo: file
+        photo: base64String
       });
+      
+      // Définir également cette chaîne comme aperçu de l'image
+      setPhotoPreview(base64String);
       
       setErrors({
         ...errors,
         photo: ''
       });
       
-      // Créer un aperçu de l'image
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+      setValidFields({
+        ...validFields,
+        photo: true
+      });
+    };
+    
+    // Lire le fichier en tant que URL de données Base64
+    reader.readAsDataURL(file);
+  }
+};
   
   // Valider tout le formulaire
   const validateForm = () => {
@@ -205,12 +327,24 @@ const AjouterUtilisateur = () => {
     
     setErrors(newErrors);
     
+    // Mettre à jour les champs valides
+    const newValidFields = {
+      nom: !newErrors.nom && formData.nom.length > 0,
+      prenom: !newErrors.prenom && formData.prenom.length > 0,
+      email: !newErrors.email && formData.email.length > 0,
+      telephone: !newErrors.telephone && formData.telephone.length === 9,
+      role: !newErrors.role && formData.role.length > 0,
+      photo: validFields.photo // Garder l'état actuel pour la photo
+    };
+    
+    setValidFields(newValidFields);
+    
     // Vérifier s'il y a des erreurs
     return !Object.values(newErrors).some(error => error);
   };
   
   // Gérer la soumission du formulaire
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Valider le formulaire avant de soumettre
@@ -221,14 +355,38 @@ const AjouterUtilisateur = () => {
         telephone: `+221${formData.telephone}` // Ajouter l'indicatif du Sénégal
       };
       
-      // Ici, vous pouvez ajouter la logique pour envoyer les données au backend
-      console.log('Données du formulaire soumises:', dataToSend);
-      
-      // Simulation de succès et redirection
-      // Remplacez par votre logique d'API réelle
-      alert('Utilisateur ajouté avec succès!');
-      navigate('/utilisateurs'); // Rediriger vers la liste des utilisateurs
-    } else {
+      try {
+        // Appel à l'API
+        const response = await utilisateurService.creerUtilisateur(dataToSend);
+        // gestion des erreurs avec SweetAlert2
+        if (response && response.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Utilisateur ajouté avec succès!',
+            showConfirmButton: false,
+            timer: 1500
+          });
+          // Rediriger vers la liste des utilisateurs
+          setTimeout(() => {
+            navigate('/utilisateurs');
+          }, 1500);
+        } else {
+          // Gérer les erreurs retournées par l'API
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: response?.message || 'Une erreur est survenue'
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: error.response?.data?.message || 'Une erreur est survenue'  
+        });
+      }
+    } else {  
       console.log('Le formulaire contient des erreurs');
     }
   };
@@ -262,13 +420,19 @@ const AjouterUtilisateur = () => {
                 placeholder="Entrez le nom"
                 value={formData.nom}
                 onChange={handleChange}
-                className={errors.nom ? 'input-error' : ''}
+                className={`${errors.nom ? 'input-error' : ''} ${validFields.nom ? 'input-valid' : ''}`}
                 required
               />
               {errors.nom && (
                 <div className="error-message">
                   <AlertCircle size={14} />
                   <span>{errors.nom}</span>
+                </div>
+              )}
+              {validFields.nom && !errors.nom && (
+                <div className="valid-message">
+                  <Check size={14} />
+                  <span>Nom valide</span>
                 </div>
               )}
             </div>
@@ -283,13 +447,19 @@ const AjouterUtilisateur = () => {
                 placeholder="Entrez le prénom"
                 value={formData.prenom}
                 onChange={handleChange}
-                className={errors.prenom ? 'input-error' : ''}
+                className={`${errors.prenom ? 'input-error' : ''} ${validFields.prenom ? 'input-valid' : ''}`}
                 required
               />
               {errors.prenom && (
                 <div className="error-message">
                   <AlertCircle size={14} />
                   <span>{errors.prenom}</span>
+                </div>
+              )}
+              {validFields.prenom && !errors.prenom && (
+                <div className="valid-message">
+                  <Check size={14} />
+                  <span>Prénom valide</span>
                 </div>
               )}
             </div>
@@ -304,7 +474,7 @@ const AjouterUtilisateur = () => {
                 placeholder="exemple@domaine.com"
                 value={formData.email}
                 onChange={handleChange}
-                className={errors.email ? 'input-error' : ''}
+                className={`${errors.email ? 'input-error' : ''} ${validFields.email ? 'input-valid' : ''}`}
                 required
               />
               {errors.email && (
@@ -313,28 +483,40 @@ const AjouterUtilisateur = () => {
                   <span>{errors.email}</span>
                 </div>
               )}
+              {validFields.email && !errors.email && (
+                <div className="valid-message">
+                  <Check size={14} />
+                  <span>Email valide</span>
+                </div>
+              )}
             </div>
             
-            {/* Téléphone */}
+            {/* Téléphone - Version avec validation verte */}
             <div className="form-group">
               <label htmlFor="telephone">Téléphone</label>
               <div className="phone-input-container">
                 <div className="phone-prefix">+221</div>
                 <input
-                  type="tel"
+                  type="text"
                   id="telephone"
                   name="telephone"
                   placeholder="7X-XXX-XX-XX"
                   value={formatPhoneNumber(formData.telephone)}
                   onChange={handleChange}
-                  className={errors.telephone ? 'input-error' : ''}
+                  className={`${errors.telephone ? 'input-error' : ''} ${validFields.telephone ? 'input-valid' : ''}`}
                   required
+                  maxLength={12} // Pour tenir compte des tirets: XX-XXX-XX-XX
                 />
               </div>
               {errors.telephone ? (
                 <div className="error-message">
                   <AlertCircle size={14} />
                   <span>{errors.telephone}</span>
+                </div>
+              ) : validFields.telephone ? (
+                <div className="valid-message">
+                  <Check size={14} />
+                  <span>Numéro valide</span>
                 </div>
               ) : (
                 <div className="helper-text">Format: 7X-XXX-XX-XX (numéro sénégalais)</div>
@@ -351,9 +533,9 @@ const AjouterUtilisateur = () => {
                   name="photo"
                   accept="image/jpeg, image/png"
                   onChange={handlePhotoChange}
-                  className={`photo-input ${errors.photo ? 'input-error' : ''}`}
+                  className={`photo-input ${errors.photo ? 'input-error' : ''} ${validFields.photo ? 'input-valid' : ''}`}
                 />
-                <div className="photo-input-ui">
+                <div className={`photo-input-ui ${validFields.photo ? 'input-valid' : ''}`}>
                   <span>{photoPreview ? 'Changer la photo' : 'Sélectionnez une photo'}</span>
                   <Upload size={18} />
                 </div>
@@ -368,6 +550,11 @@ const AjouterUtilisateur = () => {
                   <AlertCircle size={14} />
                   <span>{errors.photo}</span>
                 </div>
+              ) : validFields.photo ? (
+                <div className="valid-message">
+                  <Check size={14} />
+                  <span>Photo valide</span>
+                </div>
               ) : (
                 <div className="helper-text">JPG ou PNG, 5 MB max.</div>
               )}
@@ -381,11 +568,11 @@ const AjouterUtilisateur = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className={errors.role ? 'input-error' : ''}
+                className={`${errors.role ? 'input-error' : ''} ${validFields.role ? 'input-valid' : ''}`}
                 required
               >
                 <option value="">Sélectionnez le rôle</option>
-                <option value="admin">Admin</option>
+                <option value="admin">Administrateur</option>
                 <option value="utilisateur">Utilisateur</option>
               </select>
               {errors.role && (
@@ -394,15 +581,26 @@ const AjouterUtilisateur = () => {
                   <span>{errors.role}</span>
                 </div>
               )}
+              {validFields.role && !errors.role && (
+                <div className="valid-message">
+                  <Check size={14} />
+                  <span>Rôle sélectionné</span>
+                </div>
+              )}
             </div>
           </div>
           
-          {/* Bouton de soumission */}
+          {/* Bouton de soumission avec état dynamique */}
           <div className="form-submit">
             <button 
               type="submit" 
               className="btn-ajouter"
-              disabled={Object.values(errors).some(error => error !== '')}
+              disabled={isFormEmpty() || !isFormValid()}
+              style={{
+                backgroundColor: isFormValid() ? '#274C77' : '#E5E7EB',
+                color: isFormValid() ? 'white' : '#9CA3AF',
+                cursor: isFormValid() ? 'pointer' : 'not-allowed'
+              }}
             >
               Ajouter
             </button>

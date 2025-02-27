@@ -57,6 +57,12 @@
 
     .consumption-widget {
         margin-top: 50px;
+        
+    }
+
+    .security-alerts {
+
+        overflow: auto;
     }
 
     .camera-image {

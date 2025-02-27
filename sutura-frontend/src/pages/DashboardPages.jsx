@@ -1,9 +1,45 @@
-import  { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import '../styles/dashboard.css';
-import RightPanel from '../components/RightPanel'
+import RightPanel from '../components/RightPanel';
+import { authService } from '../services/authService';
 
-const DashboarPage = () => {
+const DashboardPage = () => {
+  const [utilisateur, setUtilisateur] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fonction pour formatter le rôle
+  const formatterRole = (role) => {
+    if (!role) return '';
+    
+    switch(role.toLowerCase()) {
+      case 'admin':
+        return 'Administrateur';
+      case 'utilisateur':
+        return 'Utilisateur';
+      default:
+        // Première lettre en majuscule pour tout autre rôle
+        return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await authService.getMyProfile();
+        if (response && response.success) {
+          setUtilisateur(response.data);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du profil:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   const [consumptionData] = useState([
     { time: 'Lundi', value: 30 },
     { time: 'Mardi', value: 42 },
@@ -27,12 +63,18 @@ const DashboarPage = () => {
 
   return (
     <div className="dashboard">
-      {/* Welcome Section */}
+      {/* Welcome Section avec formatage du rôle */}
       <div className="welcome-section">
         <div className="user-profile">
           <div className="user-info">
-            <h1>Bonjour Bamba !</h1>
-            <p>Administrateur</p>
+            {loading ? (
+              <p>Chargement...</p>
+            ) : (
+              <>
+                <h1>Bonjour {utilisateur ? `${utilisateur.prenom} ${utilisateur.nom}` : 'Utilisateur'} !</h1>
+                <p>{utilisateur ? formatterRole(utilisateur.role) : 'Non connecté'}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -131,5 +173,4 @@ const DashboarPage = () => {
   );
 };
 
-
-export default DashboarPage;
+export default DashboardPage;

@@ -9,115 +9,6 @@ const { creerHistorique } = require('./historiqueControleur');
  * @route POST /api/utilisateurs
  * @access Private/Admin
  */
-// const creerUtilisateur = async (req, res) => {
-//   try {
-//     // Générer un code unique à 4 chiffres
-//     const code = await Utilisateur.generateUniqueCode();
-    
-//     // Créer l'utilisateur sans mot de passe définitif
-//     // (le système de hachage Mongoose créera un hash temporaire)
-//     const nouvelUtilisateur = await Utilisateur.create({
-//       ...req.body,
-//       code
-//     });
-
-//     // Créer l'historique pour la création réussie
-//     await creerHistorique({
-//       users_id: nouvelUtilisateur._id,
-//       type_entite: 'utilisateur',
-//       type_operation: 'creation',
-//       description: `Création d'un nouvel utilisateur (${nouvelUtilisateur.nom} ${nouvelUtilisateur.prenom})`,
-//       statut: 'succès'
-//     });
-
-//     // Générer un token pour la définition du mot de passe (valide 24h)
-//     const token = genererToken(nouvelUtilisateur._id, '15m');
-
-//     // Envoyer un email de bienvenue avec les identifiants et le lien pour définir le mot de passe
-//     try {
-//       await emailService.envoyerIdentifiants(nouvelUtilisateur, token);
-//       console.log(`Email d'identifiants envoyé à ${nouvelUtilisateur.email}`);
-
-//       // Historique pour l'envoi d'email réussi
-//       await creerHistorique({
-//         users_id: nouvelUtilisateur._id,
-//         type_entite: 'utilisateur',
-//         type_operation: 'creation',
-//         description: `Email d'invitation envoyé avec succès à ${nouvelUtilisateur.email}`,
-//         statut: 'succès'
-//       });
-//     } catch (emailError) {
-//       console.error('Erreur lors de l\'envoi de l\'email d\'invitation:', emailError);
-      
-//       // Historique pour l'échec d'envoi d'email
-//       await creerHistorique({
-//         users_id: nouvelUtilisateur._id,
-//         type_entite: 'utilisateur',
-//         type_operation: 'creation',
-//         description: `Échec de l'envoi d'email d'invitation à ${nouvelUtilisateur.email}: ${emailError.message}`,
-//         statut: 'erreur'
-//       });
-//     }
-
-//     // Ne pas renvoyer le mot de passe dans la réponse
-//     const utilisateurSansMdp = nouvelUtilisateur.toObject();
-//     delete utilisateurSansMdp.password;
-
-//     res.status(201).json({
-//       success: true,
-//       message: 'Utilisateur créé avec succès. Un email d\'invitation a été envoyé pour définir le mot de passe.',
-//       data: utilisateurSansMdp
-//     });
-//   } catch (error) {
-//     console.error('Erreur creerUtilisateur:', error);
-    
-//     let message = 'Erreur lors de la création de l\'utilisateur';
-//     let statusCode = 500;
-    
-//     // Gérer les erreurs de validation
-//     if (error.name === 'ValidationError') {
-//       const messages = Object.values(error.errors).map(val => val.message);
-//       message = messages.join(', ');
-//       statusCode = 400;
-
-//       await creerHistorique({
-//         type_entite: 'utilisateur',
-//         type_operation: 'creation',
-//         description: `Échec de création d'utilisateur - Erreur de validation: ${message}`,
-//         statut: 'erreur'
-//       });
-//     }
-    
-//     // Gérer les erreurs de duplicate (email, téléphone, etc.)
-//     else if (error.code === 11000) {
-//       const champ = Object.keys(error.keyValue)[0];
-//       message = `Ce ${champ} est déjà utilisé`;
-//       statusCode = 400;
-
-//       await creerHistorique({
-//         type_entite: 'utilisateur',
-//         type_operation: 'creation',
-//         description: `Échec de création d'utilisateur - Doublon: ${message}`,
-//         statut: 'erreur'
-//       });
-//     }
-    
-//     // Erreur système
-//     else {
-//       await creerHistorique({
-//         type_entite: 'utilisateur',
-//         type_operation: 'creation',
-//         description: `Erreur système lors de la création d'utilisateur: ${error.message}`,
-//         statut: 'erreur'
-//       });
-//     }
-    
-//     res.status(statusCode).json({
-//       success: false,
-//       message: message
-//     });
-//   }
-// };
 
 const creerUtilisateur = async (req, res) => {
   try {
@@ -425,8 +316,10 @@ const mettreAJourUtilisateur = async (req, res) => {
   }
 };
 
+
+
 /**
- * Supprimer un ou plusieurs utilisateurs (désactivation logique)
+ * Supprimer un ou plusieurs utilisateurs (suppression définitive)
  * @route DELETE /api/utilisateurs
  * @access Private/Admin
  */
@@ -451,23 +344,7 @@ const supprimerUtilisateurs = async (req, res) => {
       });
     }
 
-    // Désactiver tous les utilisateurs indiqués
-    const result = await Utilisateur.updateMany(
-      { _id: { $in: idsArray } },
-      {
-        actif: false,
-        date_modif: Date.now()
-      }
-    );
-
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Aucun utilisateur trouvé avec les IDs fournis'
-      });
-    }
-
-    // Créer un historique pour chaque utilisateur désactivé
+    // Créer un historique pour chaque utilisateur avant sa suppression
     for (const id of idsArray) {
       const utilisateur = await Utilisateur.findById(id);
       if (utilisateur) {
@@ -475,22 +352,32 @@ const supprimerUtilisateurs = async (req, res) => {
           users_id: utilisateur._id,
           type_entite: 'utilisateur',
           type_operation: 'suppression',
-          description: `Désactivation de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
+          description: `Suppression définitive de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
           statut: 'succès'
         });
       }
     }
 
+    // Supprimer définitivement tous les utilisateurs indiqués
+    const result = await Utilisateur.deleteMany({ _id: { $in: idsArray } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Aucun utilisateur trouvé avec les IDs fournis'
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: `${result.modifiedCount} utilisateur(s) désactivé(s) avec succès`,
-      count: result.modifiedCount
+      message: `${result.deletedCount} utilisateur(s) supprimé(s) définitivement`,
+      count: result.deletedCount
     });
   } catch (error) {
     console.error('Erreur supprimerUtilisateurs:', error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la désactivation des utilisateurs'
+      message: 'Erreur lors de la suppression définitive des utilisateurs'
     });
   }
 };

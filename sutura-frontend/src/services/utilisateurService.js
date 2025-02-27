@@ -31,13 +31,33 @@ const obtenirTousUtilisateurs = async (page = 1, limit = 10, filters = {}) => {
   try {
     // Construction des paramètres de requête
     let queryParams = `?page=${page}&limit=${limit}`;
-    
+
     // Ajout des filtres si présents
     if (filters.actif !== undefined) queryParams += `&actif=${filters.actif}`;
     if (filters.role) queryParams += `&role=${filters.role}`;
     if (filters.recherche) queryParams += `&recherche=${filters.recherche}`;
-    
+
     const response = await axios.get(`${API_URL}${queryParams}`, getAuthConfig());
+
+    // Assurer la compatibilité ID entre MongoDB et le front
+    if (response.data) {
+      if (Array.isArray(response.data)) {
+        return response.data.map(user => {
+          if (user._id && !user.id) {
+            return { ...user, id: user._id };
+          }
+          return user;
+        });
+      } else if (response.data.utilisateurs && Array.isArray(response.data.utilisateurs)) {
+        response.data.utilisateurs = response.data.utilisateurs.map(user => {
+          if (user._id && !user.id) {
+            return { ...user, id: user._id };
+          }
+          return user;
+        });
+      }
+    }
+
     return response.data;
   } catch (error) {
     console.error(
@@ -51,7 +71,14 @@ const obtenirTousUtilisateurs = async (page = 1, limit = 10, filters = {}) => {
 // Fonction pour obtenir un utilisateur par son ID
 const obtenirUtilisateur = async (id) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
     const response = await axios.get(`${API_URL}/${id}`, getAuthConfig());
+    // Assurer la compatibilité ID
+    if (response.data && response.data._id && !response.data.id) {
+      response.data.id = response.data._id;
+    }
     return response.data;
   } catch (error) {
     console.error(
@@ -65,6 +92,9 @@ const obtenirUtilisateur = async (id) => {
 // Fonction pour mettre à jour un utilisateur
 const mettreAJourUtilisateur = async (id, userData) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
     const response = await axios.put(`${API_URL}/${id}`, userData, getAuthConfig());
     return response.data;
   } catch (error) {
@@ -76,9 +106,14 @@ const mettreAJourUtilisateur = async (id, userData) => {
   }
 };
 
-// Fonction pour supprimer un ou plusieurs utilisateurs (désactivation logique)
+
+// Fonction pour supprimer un ou plusieurs utilisateurs definitivement
 const supprimerUtilisateurs = async (ids) => {
   try {
+    if (!ids || !ids.length) {
+      throw new Error("Au moins un ID utilisateur est requis");
+    }
+    console.log("Suppression des utilisateurs IDs:", ids);
     const response = await axios.delete(API_URL, {
       ...getAuthConfig(),
       data: { ids }
@@ -92,10 +127,16 @@ const supprimerUtilisateurs = async (ids) => {
     throw error;
   }
 };
+  
+
 
 // Fonction pour activer/désactiver un utilisateur
 const toggleStatutUtilisateur = async (id) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
+    console.log("Toggle statut pour ID:", id);
     const response = await axios.patch(
       `${API_URL}/${id}/toggle-statut`,
       {},
@@ -114,6 +155,12 @@ const toggleStatutUtilisateur = async (id) => {
 // Fonction pour assigner une carte RFID
 const assignerCarteRFID = async (id, cardId) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
+    if (!cardId) {
+      throw new Error("ID de carte requis");
+    }
     const response = await axios.patch(
       `${API_URL}/${id}/assigner-carte`,
       { cardId },
@@ -132,6 +179,9 @@ const assignerCarteRFID = async (id, cardId) => {
 // Fonction pour désassigner une carte RFID
 const desassignerCarteRFID = async (id) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
     const response = await axios.delete(
       `${API_URL}/${id}/desassigner-carte`,
       getAuthConfig()
@@ -149,6 +199,9 @@ const desassignerCarteRFID = async (id) => {
 // Fonction pour réactiver une carte RFID
 const reactiverCarteRFID = async (id) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
     const response = await axios.patch(
       `${API_URL}/${id}/reactiver-carte`,
       {},
@@ -185,6 +238,12 @@ const desactiverMaCarteRFID = async () => {
 // Fonction pour assigner une empreinte digitale
 const assignerEmpreinte = async (id, empreinteID) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
+    if (!empreinteID) {
+      throw new Error("ID d'empreinte requis");
+    }
     const response = await axios.patch(
       `${API_URL}/${id}/assigner-empreinte`,
       { empreinteID },
@@ -203,6 +262,9 @@ const assignerEmpreinte = async (id, empreinteID) => {
 // Fonction pour désassigner une empreinte digitale
 const desassignerEmpreinte = async (id) => {
   try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
     const response = await axios.delete(
       `${API_URL}/${id}/desassigner-empreinte`,
       getAuthConfig()
@@ -220,6 +282,9 @@ const desassignerEmpreinte = async (id) => {
 // Fonction pour demander une réinitialisation de mot de passe
 const demanderReinitialisation = async (email) => {
   try {
+    if (!email) {
+      throw new Error("Email requis");
+    }
     const response = await axios.post(`${API_URL}/demander-reinitialisation`, {
       email
     });
@@ -236,7 +301,10 @@ const demanderReinitialisation = async (email) => {
 // Fonction pour réinitialiser le mot de passe
 const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, confirmPassword) => {
   try {
-    const response = await axios.post(`${API_URL}/reinitialiser-password`, {
+    if (!token) {
+      throw new Error("Token requis");
+    }
+    const response = await axios.post(`${API_URL}/reinitialiser-mot-de-passe`, {
       token,
       actuelPassword,
       nouveauPassword,
@@ -255,8 +323,11 @@ const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, c
 // Fonction pour changer son mot de passe (utilisateur connecté)
 const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPassword) => {
   try {
+    if (!actuelPassword || !nouveauPassword || !confirmPassword) {
+      throw new Error("Tous les champs de mot de passe sont requis");
+    }
     const response = await axios.post(
-      `${API_URL}/changerpassword`,
+      `${API_URL}/changer-mot-de-passe`,
       {
         actuelPassword,
         nouveauPassword,
@@ -290,5 +361,7 @@ export const utilisateurService = {
   desassignerEmpreinte,
   demanderReinitialisation,
   reinitialiserMotDePasse,
-  changerMotDePasse
+  changerMotDePasse,
 };
+
+
