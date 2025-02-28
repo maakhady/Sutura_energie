@@ -14,6 +14,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute"; // Importez votre
 import DashboardListes from "./pages/dashboard-listes";
 import AjouterUtilisateur from "./pages/AjouterUtilisateur";
 import ModifierUtilisateur from "./pages/ModifierUtilisateur";
+import DashboardHistorique from "./pages/Dashboard-historique";
+
 
 const App = () => {
   return (
@@ -40,7 +42,7 @@ const App = () => {
                     <Routes>
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/appareils" element={<AppareilsPage />} />
-                      <Route path="/historiques" element={<DashboardPage />} />
+                      <Route path="/historiques" element={ < DashboardHistorique />} />
                       <Route
                         path="/utilisateurs"
                         element={<DashboardListes />}
