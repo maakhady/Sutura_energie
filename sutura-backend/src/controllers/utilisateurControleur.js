@@ -128,23 +128,26 @@ const creerUtilisateur = async (req, res) => {
  */
 const obtenirTousUtilisateurs = async (req, res) => {
   try {
-    // Construire les filtres de recherche à partir des query params
-    const filtres = {};
+    // Récupérer l'ID de l'utilisateur connecté (admin)
+    const adminConnecteId = req.user._id;
+    
+    // Construire les filtres de base pour le comptage et la recherche
+    const filtresBase = {};
     
     // Filtre sur le statut actif
     if (req.query.actif !== undefined) {
-      filtres.actif = req.query.actif === 'true';
+      filtresBase.actif = req.query.actif === 'true';
     }
     
     // Filtre sur le rôle
     if (req.query.role) {
-      filtres.role = req.query.role;
+      filtresBase.role = req.query.role;
     }
     
     // Recherche textuelle
     if (req.query.recherche) {
       const recherche = req.query.recherche;
-      filtres.$or = [
+      filtresBase.$or = [
         { nom: { $regex: recherche, $options: 'i' } },
         { prenom: { $regex: recherche, $options: 'i' } },
         { email: { $regex: recherche, $options: 'i' } },
@@ -152,21 +155,29 @@ const obtenirTousUtilisateurs = async (req, res) => {
       ];
     }
     
-    // Récupérer les utilisateurs avec pagination
+    // Compter TOUS les utilisateurs (y compris l'admin connecté)
+    const total = await Utilisateur.countDocuments(filtresBase);
+    
+    // Ajouter le filtre pour exclure l'admin connecté pour la requête de recherche
+    const filtresRecherche = {
+      ...filtresBase,
+      _id: { $ne: adminConnecteId }
+    };
+    
+    // Récupérer les utilisateurs avec pagination (sans l'admin connecté)
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const startIndex = (page - 1) * limit;
     
-    const total = await Utilisateur.countDocuments(filtres);
     const utilisateurs = await Utilisateur
-      .find(filtres)
+      .find(filtresRecherche)
       .sort({ date_creation: -1 })
       .skip(startIndex)
       .limit(limit);
     
     res.status(200).json({
       success: true,
-      count: utilisateurs.length,
+      count: total,
       pagination: {
         total,
         page,
