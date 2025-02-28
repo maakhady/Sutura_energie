@@ -6,10 +6,8 @@ import { authService } from "../../services/authService"; // Assure-toi d'import
 
 const ResetPassword = () => {
   const { token } = useParams(); // Récupérer le token depuis l'URL
-  const [actuelPassword, setActuelPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showActuelPassword, setShowActuelPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
@@ -27,7 +25,6 @@ const ResetPassword = () => {
     try {
       // Appeler le service pour réinitialiser le mot de passe
       const response = await authService.reinitialiserMotDePasse(token, {
-        actuelPassword,
         nouveauPassword: newPassword,
         confirmPassword,
       });
@@ -68,35 +65,7 @@ const ResetPassword = () => {
           </h4>
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label primary-text">
-                Mot de passe actuel
-              </label>
-              <div className="input-group">
-                <span className="input-group-text">
-                  <Lock size={16} />
-                </span>
-                <input
-                  type={showActuelPassword ? "text" : "password"}
-                  className="form-control border-primary"
-                  placeholder="Entrez votre mot de passe actuel"
-                  value={actuelPassword}
-                  onChange={(e) => setActuelPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowActuelPassword(!showActuelPassword)}
-                >
-                  {showActuelPassword ? (
-                    <Eye size={16} />
-                  ) : (
-                    <EyeClosed size={16} />
-                  )}
-                </button>
-              </div>
-            </div>
+            <div className="mb-3"></div>
 
             <div className="mb-3">
               <label className="form-label primary-text">

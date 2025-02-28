@@ -1,340 +1,237 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Lightbulb, Tv, Cog, Plus, Users } from "lucide-react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarAlt, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import { useState, useEffect } from "react";
+import { Row, Col, Button } from "react-bootstrap";
+import { Plus } from "lucide-react";
+import CardStat from "../components/CardStat";
+import MiniRightPanel from "../components/MiniRightPanel";
+import RoomCard from "../components/pieces/RoomCard";
+import AddRoomModal from "../components/pieces/AddRoomModal";
+import PieceService from "../services/PieceService";
+import AppareilService from "../services/AppareilService";
+import Swal from "sweetalert2";
+import "../styles/Appareils.css";
 
 const AppareilsPage = () => {
-  const [rooms, setRooms] = useState([
-    {
-      name: "Salon",
-      energy: "60kWh",
-      devices: [
-        { name: "Lampe 1", conso: "9W", type: "light", status: "on" },
-        { name: "Lampe 2", conso: "9W", type: "light", status: "on" },
-        { name: "Ventilateur", conso: "9W", type: "fan", status: "off" },
-        { name: "Télévision", conso: "15W", type: "tv", status: "on" },
-      ],
-    },
-    {
-      name: "Chambre 1",
-      energy: "23kWh",
-      devices: [
-        { name: "Lampe 1", conso: "9W", type: "light", status: "on" },
-        { name: "Lampe 2", conso: "9W", type: "light", status: "on" },
-        { name: "Climatiseur", conso: "15W", type: "ac", status: "on" },
-      ],
-    },
-  ]);
+  const [rooms, setRooms] = useState([]);
+  const [showAddRoomModal, setShowAddRoomModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const roomsPerPage = 2;
 
-  const toggleDevice = (roomIndex, deviceIndex) => {
-    const updatedRooms = [...rooms];
-    const newStatus =
-      updatedRooms[roomIndex].devices[deviceIndex].status === "on"
-        ? "off"
-        : "on";
-    updatedRooms[roomIndex].devices[deviceIndex].status = newStatus;
-    setRooms(updatedRooms);
-  };
+  const handleAddRoom = async (roomName) => {
+    try {
+      const newRoom = {
+        nom_piece: roomName,
+        actif: true,
+      };
+      setRooms([...rooms, newRoom]);
 
-  return (
-    <Container fluid className="p-4 bg-light min-vh-100">
-      {/* En-tête des statistiques */}
-      <Row className="mb-4">
-        <Col>
-          <Card className="shadow-sm rounded-lg">
-            <Card.Body className="py-4">
-              <Row>
-                <StatCard
-                  icon={<Users size={24} />}
-                  label="Pièces Totales"
-                  value="4"
-                />
-                <StatCard
-                  icon={<Lightbulb size={24} />}
-                  label="Appareils Actifs"
-                  value="8"
-                />
-                <StatCard
-                  icon={<Lightbulb size={24} />}
-                  label="Appareils Inactifs"
-                  value="3"
-                />
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Section du titre et bouton d'ajout */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h5 className="text-gray-700 mb-0">Gestion des Appareils par Pièce</h5>
-        <Button variant="primary" className="rounded px-3 py-2">
-          <Plus size={16} className="me-1" />
-          Ajouter une Pièce
-        </Button>
-      </div>
-
-      {/* Liste des pièces */}
-      <Row className="g-4 mb-4">
-        {rooms.map((room, roomIndex) => (
-          <Col key={roomIndex} md={6} className="mb-4">
-            <RoomCard
-              room={room}
-              roomIndex={roomIndex}
-              toggleDevice={toggleDevice}
-            />
-          </Col>
-        ))}
-      </Row>
-
-      {/* Pagination */}
-      <div className="d-flex justify-content-between align-items-center mt-4">
-        <Button variant="outline-primary" className="px-3">
-          ← Précédent
-        </Button>
-        <div className="d-flex gap-2">
-          {[1, 2, 3, "...", 8, 9, 10].map((page, i) => (
-            <Button
-              key={`page-${i}`}
-              variant={page === 1 ? "primary" : "light"}
-              className="rounded-circle"
-              style={{ width: "40px", height: "40px" }}
-            >
-              {page}
-            </Button>
-          ))}
-        </div>
-        <Button variant="outline-primary" className="px-3">
-          Suivant →
-        </Button>
-      </div>
-    </Container>
-  );
-};
-
-// Composant StatCard
-const StatCard = ({ icon, label, value }) => (
-  <Col md={4} className="text-center">
-    <div className="d-flex justify-content-center mb-2">{icon}</div>
-    <div>
-      <h4 className="fw-bold mb-0">{value}</h4>
-      <p className="text-muted small">{label}</p>
-    </div>
-  </Col>
-);
-
-StatCard.propTypes = {
-  icon: PropTypes.element.isRequired,
-  label: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-};
-
-// Composant RoomCard
-const RoomCard = ({ room, roomIndex, toggleDevice }) => {
-  return (
-    <Card className="shadow-sm border-0 h-100">
-      <Card.Body className="p-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5 className="fw-bold text-gray-800">{room.name}</h5>
-          <div className="d-flex gap-2">
-            <Button variant="light" size="sm" className="rounded-circle p-1">
-              <Plus size={18} />
-            </Button>
-            <Button variant="light" size="sm" className="rounded-circle p-1">
-              <Cog size={18} />
-            </Button>
-          </div>
-        </div>
-
-        <div className="d-flex align-items-center mb-4">
-          <span className="text-warning me-2">⚡</span>
-          <h5 className="text-warning mb-0">{room.energy}</h5>
-        </div>
-
-        <Row className="g-3">
-          {room.devices.map((device, deviceIndex) => (
-            <Col key={deviceIndex} xs={6} className="mb-3">
-              <DeviceCard
-                device={device}
-                onToggle={() => toggleDevice(roomIndex, deviceIndex)}
-              />
-            </Col>
-          ))}
-        </Row>
-      </Card.Body>
-    </Card>
-  );
-};
-
-RoomCard.propTypes = {
-  room: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    energy: PropTypes.string.isRequired,
-    devices: PropTypes.arrayOf(
-      PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        conso: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
-        status: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-  }).isRequired,
-  roomIndex: PropTypes.number.isRequired,
-  toggleDevice: PropTypes.func.isRequired,
-};
-
-// Composant DeviceCard
-const DeviceCard = ({ device, onToggle }) => {
-  const getDeviceIcon = (type) => {
-    switch (type) {
-      case "light":
-        return <Lightbulb size={24} />;
-      case "tv":
-        return <Tv size={24} />;
-      case "fan":
-        return (
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 5C12 3.34 10.66 2 9 2C7.34 2 6 3.34 6 5C6 6.66 7.34 8 9 8H12V5Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M19 12C20.66 12 22 10.66 22 9C22 7.34 20.66 6 19 6C17.34 6 16 7.34 16 9V12H19Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M12 19C12 20.66 10.66 22 9 22C7.34 22 6 20.66 6 19C6 17.34 7.34 16 9 16H12V19Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M5 12C3.34 12 2 10.66 2 9C2 7.34 3.34 6 5 6C6.66 6 8 7.34 8 9V12H5Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        );
-      case "ac":
-        return (
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="2"
-              y="6"
-              width="20"
-              height="12"
-              rx="2"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-            <path
-              d="M6 10H18"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M7 14H9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M12 14H14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        );
-      default:
-        return <Lightbulb size={24} />;
+      Swal.fire({
+        title: "Succès!",
+        text: `La pièce "${roomName}" a été ajoutée avec succès.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de la pièce :", error);
+      Swal.fire({
+        title: "Erreur!",
+        text: "Une erreur est survenue lors de l'ajout de la pièce.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     }
   };
 
-  const getConsoColor = (wattage) => {
-    if (wattage.includes("15")) return "text-warning";
-    return "text-warning";
+  const handleDeleteRoom = async (roomId) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimez-le!",
+      cancelButtonText: "Annuler",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await PieceService.supprimerPiece(roomId);
+          setRooms(rooms.filter((room) => room._id !== roomId));
+          Swal.fire({
+            title: "Supprimé!",
+            text: "La pièce a été supprimée.",
+            icon: "success",
+          });
+        } catch (error) {
+          Swal.fire({
+            title: "Erreur!",
+            text: "Une erreur est survenue lors de la suppression de la pièce.",
+            icon: "error",
+          });
+          console.error("Erreur lors de la suppression de la pièce :", error);
+        }
+      }
+    });
   };
 
+  const handleUpdateRoom = async (roomId, newName) => {
+    try {
+      const updatedRoom = await PieceService.mettreAJourPiece(roomId, {
+        nom_piece: newName,
+      });
+      setRooms(rooms.map((room) => (room._id === roomId ? updatedRoom : room)));
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la pièce :", error);
+    }
+  };
+
+  const handleAddDevice = async (roomId, appareilData) => {
+    try {
+      const newDevice = await AppareilService.creerAppareil({
+        pieces_id: roomId,
+        nom_app: appareilData.nom_app,
+      });
+  
+      const updatedRooms = rooms.map((room) => {
+        if (room._id === roomId) {
+          return { ...room, devices: [...room.devices, newDevice] };
+        }
+        return room;
+      });
+      setRooms(updatedRooms);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'appareil :", error);
+      Swal.fire({
+        title: "Erreur!",
+        text: "Une erreur est survenue lors de l'ajout de l'appareil.",
+        icon: "error",
+      });
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      const pieces = await PieceService.obtenirToutesPieces();
+      const formattedRooms = pieces.map((item) => ({
+        ...item.piece,
+        devices: item.appareils,
+      }));
+      setRooms(formattedRooms);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des pièces :", error);
+    }
+  };
+
+  const indexOfLastRoom = currentPage * roomsPerPage;
+  const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
+  const currentRooms = rooms.slice(indexOfFirstRoom, indexOfLastRoom);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const stats = [
+    { title: "Pièces Totales", value: rooms.length, icon: "device" },
+    { title: "Appareils Actifs", value: 10, icon: "light" },
+    { title: "Appareils Inactifs", value: 7, icon: "device" },
+  ];
+
   return (
-    <Card
-      className={`border-0 h-100 ${
-        device.status === "on" ? "bg-blue-100" : "bg-light"
-      }`}
-      style={{ borderRadius: "10px" }}
-    >
-      <Card.Body className="p-3">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <div
-            className={
-              device.status === "on" ? "text-primary" : "text-secondary"
-            }
-          >
-            {getDeviceIcon(device.type)}
+    <div className="appareil">
+      <div className="content-wrapper2">
+        <div className="main-content2">
+          <div className="stats-cards">
+            <Row>
+              <Col>
+                <CardStat stats={stats} />
+              </Col>
+            </Row>
           </div>
-          <div className="d-flex align-items-center">
-            <div className="form-check form-switch me-1">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                checked={device.status === "on"}
-                onChange={onToggle}
-              />
-            </div>
-            <Button variant="light" size="sm" className="p-0 me-1">
-              <FontAwesomeIcon
-                icon={faCalendarAlt}
-                className="text-secondary"
-              />
+
+          <div className="appareil-header">
+            <h5 className="section-title">Gestion des Appareils par Pièce</h5>
+            <Button
+              variant="primary"
+              className="add-button rounded px-3 py-2"
+              onClick={() => setShowAddRoomModal(true)}
+            >
+              <Plus size={16} className="me-1" />
+              Ajouter une Pièce
             </Button>
-            <Button variant="light" size="sm" className="p-0">
-              <FontAwesomeIcon icon={faEllipsisV} className="text-secondary" />
-            </Button>
+          </div>
+
+          <AddRoomModal
+            show={showAddRoomModal}
+            handleClose={() => setShowAddRoomModal(false)}
+            handleAddRoom={handleAddRoom}
+          />
+
+          <div className="rooms-liste">
+            {rooms.length === 0 ? (
+              <div className="text-center">
+                <p>Aucune pièce actuellement</p>
+              </div>
+            ) : (
+              <>
+                <Row className="g-4">
+                  {currentRooms.map((room, roomIndex) => (
+                    <Col key={roomIndex} md={6} className="mb-4">
+                      <RoomCard
+                        room={room}
+                        roomIndex={roomIndex}
+                        handleDeleteRoom={handleDeleteRoom}
+                        handleEditRoom={handleUpdateRoom}
+                        handleAddDevice={handleAddDevice} // Passer handleAddDevice ici
+                      />
+                    </Col>
+                  ))}
+                </Row>
+
+                <div className="pagination-container">
+                  <Button
+                    variant="outline-primary"
+                    className="pagination-btn"
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    ← Précédent
+                  </Button>
+                  <div className="pagination-numbers">
+                    {[...Array(Math.ceil(rooms.length / roomsPerPage))].map(
+                      (_, i) => (
+                        <Button
+                          key={i}
+                          variant={currentPage === i + 1 ? "primary" : "light"}
+                          className="pagination-item"
+                          onClick={() => paginate(i + 1)}
+                        >
+                          {i + 1}
+                        </Button>
+                      )
+                    )}
+                  </div>
+                  <Button
+                    variant="outline-primary"
+                    className="pagination-btn"
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={
+                      currentPage === Math.ceil(rooms.length / roomsPerPage)
+                    }
+                  >
+                    Suivant →
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <p className="text-gray-700 mb-1 mt-2">{device.name}</p>
-        <p className="text-gray-500 mb-0 small">
-          Conso:{" "}
-          <span className={getConsoColor(device.conso)}>{device.conso}</span>
-        </p>
-      </Card.Body>
-    </Card>
-  );
-};
 
-DeviceCard.propTypes = {
-  device: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    conso: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-  }).isRequired,
-  onToggle: PropTypes.func.isRequired,
+        <MiniRightPanel />
+      </div>
+    </div>
+  );
 };
 
 export default AppareilsPage;

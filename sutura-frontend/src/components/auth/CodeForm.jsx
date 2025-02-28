@@ -75,6 +75,7 @@ const CodeForm = ({ setPage }) => {
       if (response.success) {
         setCodeError("");
         localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.utilisateur));
         console.log("Code valide !");
         navigate("/dashboard");
       } else {

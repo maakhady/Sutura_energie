@@ -28,6 +28,8 @@ const LoginForm = ({ setPage }) => {
       if (response.success) {
         // Stocker le token dans le localStorage
         localStorage.setItem("token", response.token);
+        // Stocker l'utilisateur dans le localStorage
+        localStorage.setItem("user", JSON.stringify(response.utilisateur));
 
         if (response.passwordChangeRequired) {
           // Rediriger vers la page de changement de mot de passe initial

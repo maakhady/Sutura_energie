@@ -1,8 +1,7 @@
-const Utilisateur = require('../models/Utilisateur');
-const emailService = require('../services/emailService');
-const jwt = require('jsonwebtoken'); // Ajoutez cette ligne pour importer jsonwebtoken
-const { creerHistorique } = require('./historiqueControleur');
-
+const Utilisateur = require("../models/Utilisateur");
+const emailService = require("../services/emailService");
+const jwt = require("jsonwebtoken"); // Ajoutez cette ligne pour importer jsonwebtoken
+const { creerHistorique } = require("./historiqueControleur");
 
 /**
  * Créer un nouvel utilisateur
@@ -14,24 +13,24 @@ const creerUtilisateur = async (req, res) => {
   try {
     // Générer un code unique à 4 chiffres
     const code = await Utilisateur.generateUniqueCode();
-    
+
     // Créer l'utilisateur
     const nouvelUtilisateur = await Utilisateur.create({
       ...req.body,
-      code
+      code,
     });
 
     // Créer l'historique pour la création réussie
     await creerHistorique({
       users_id: nouvelUtilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'creation',
+      type_entite: "utilisateur",
+      type_operation: "creation",
       description: `Création d'un nouvel utilisateur (${nouvelUtilisateur.nom} ${nouvelUtilisateur.prenom})`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     // Générer un token pour la définition du mot de passe (valide 15 minutes)
-    const token = genererToken(nouvelUtilisateur._id, '15m');
+    const token = genererToken(nouvelUtilisateur._id, "15m");
 
     // Envoyer un email de bienvenue avec les identifiants et le lien
     try {
@@ -41,21 +40,24 @@ const creerUtilisateur = async (req, res) => {
       // Historique pour l'envoi d'email réussi
       await creerHistorique({
         users_id: nouvelUtilisateur._id,
-        type_entite: 'utilisateur',
-        type_operation: 'creation',
+        type_entite: "utilisateur",
+        type_operation: "creation",
         description: `Email d'invitation envoyé avec succès à ${nouvelUtilisateur.email}`,
-        statut: 'succès'
+        statut: "succès",
       });
     } catch (emailError) {
-      console.error('Erreur lors de l\'envoi de l\'email d\'invitation:', emailError);
-      
+      console.error(
+        "Erreur lors de l'envoi de l'email d'invitation:",
+        emailError
+      );
+
       // Historique pour l'échec d'envoi d'email
       await creerHistorique({
         users_id: nouvelUtilisateur._id,
-        type_entite: 'utilisateur',
-        type_operation: 'creation',
+        type_entite: "utilisateur",
+        type_operation: "creation",
         description: `Échec de l'envoi d'email d'invitation à ${nouvelUtilisateur.email}: ${emailError.message}`,
-        statut: 'erreur'
+        statut: "erreur",
       });
     }
 
@@ -66,30 +68,31 @@ const creerUtilisateur = async (req, res) => {
     // Inclure le token dans la réponse pour les tests
     res.status(201).json({
       success: true,
-      message: 'Utilisateur créé avec succès. Un email d\'invitation a été envoyé pour définir le mot de passe.',
+      message:
+        "Utilisateur créé avec succès. Un email d'invitation a été envoyé pour définir le mot de passe.",
       data: utilisateurSansMdp,
-      token_for_testing: token // Ajouter cette ligne pour les tests
+      token_for_testing: token, // Ajouter cette ligne pour les tests
     });
   } catch (error) {
-    console.error('Erreur creerUtilisateur:', error);
-    
-    let message = 'Erreur lors de la création de l\'utilisateur';
+    console.error("Erreur creerUtilisateur:", error);
+
+    let message = "Erreur lors de la création de l'utilisateur";
     let statusCode = 500;
-    
+
     // Gérer les erreurs de validation
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(val => val.message);
-      message = messages.join(', ');
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((val) => val.message);
+      message = messages.join(", ");
       statusCode = 400;
 
       await creerHistorique({
-        type_entite: 'utilisateur',
-        type_operation: 'creation',
+        type_entite: "utilisateur",
+        type_operation: "creation",
         description: `Échec de création d'utilisateur - Erreur de validation: ${message}`,
-        statut: 'erreur'
+        statut: "erreur",
       });
     }
-    
+
     // Gérer les erreurs de duplicate (email, téléphone, etc.)
     else if (error.code === 11000) {
       const champ = Object.keys(error.keyValue)[0];
@@ -97,26 +100,26 @@ const creerUtilisateur = async (req, res) => {
       statusCode = 400;
 
       await creerHistorique({
-        type_entite: 'utilisateur',
-        type_operation: 'creation',
+        type_entite: "utilisateur",
+        type_operation: "creation",
         description: `Échec de création d'utilisateur - Doublon: ${message}`,
-        statut: 'erreur'
+        statut: "erreur",
       });
     }
-    
+
     // Erreur système
     else {
       await creerHistorique({
-        type_entite: 'utilisateur',
-        type_operation: 'creation',
+        type_entite: "utilisateur",
+        type_operation: "creation",
         description: `Erreur système lors de la création d'utilisateur: ${error.message}`,
-        statut: 'erreur'
+        statut: "erreur",
       });
     }
-    
+
     res.status(statusCode).json({
       success: false,
-      message: message
+      message: message,
     });
   }
 };
@@ -130,55 +133,54 @@ const obtenirTousUtilisateurs = async (req, res) => {
   try {
     // Construire les filtres de recherche à partir des query params
     const filtres = {};
-    
+
     // Filtre sur le statut actif
     if (req.query.actif !== undefined) {
-      filtres.actif = req.query.actif === 'true';
+      filtres.actif = req.query.actif === "true";
     }
-    
+
     // Filtre sur le rôle
     if (req.query.role) {
       filtres.role = req.query.role;
     }
-    
+
     // Recherche textuelle
     if (req.query.recherche) {
       const recherche = req.query.recherche;
       filtres.$or = [
-        { nom: { $regex: recherche, $options: 'i' } },
-        { prenom: { $regex: recherche, $options: 'i' } },
-        { email: { $regex: recherche, $options: 'i' } },
-        { code: { $regex: recherche, $options: 'i' } }
+        { nom: { $regex: recherche, $options: "i" } },
+        { prenom: { $regex: recherche, $options: "i" } },
+        { email: { $regex: recherche, $options: "i" } },
+        { code: { $regex: recherche, $options: "i" } },
       ];
     }
-    
+
     // Récupérer les utilisateurs avec pagination
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const startIndex = (page - 1) * limit;
-    
+
     const total = await Utilisateur.countDocuments(filtres);
-    const utilisateurs = await Utilisateur
-      .find(filtres)
+    const utilisateurs = await Utilisateur.find(filtres)
       .sort({ date_creation: -1 })
       .skip(startIndex)
       .limit(limit);
-    
+
     res.status(200).json({
       success: true,
       count: utilisateurs.length,
       pagination: {
         total,
         page,
-        pages: Math.ceil(total / limit)
+        pages: Math.ceil(total / limit),
       },
-      data: utilisateurs
+      data: utilisateurs,
     });
   } catch (error) {
-    console.error('Erreur obtenirTousUtilisateurs:', error);
+    console.error("Erreur obtenirTousUtilisateurs:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la récupération des utilisateurs'
+      message: "Erreur lors de la récupération des utilisateurs",
     });
   }
 };
@@ -191,23 +193,23 @@ const obtenirTousUtilisateurs = async (req, res) => {
 const obtenirUtilisateur = async (req, res) => {
   try {
     const utilisateur = await Utilisateur.findById(req.params.id);
-    
+
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
-    
+
     res.status(200).json({
       success: true,
-      data: utilisateur
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur obtenirUtilisateur:', error);
+    console.error("Erreur obtenirUtilisateur:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la récupération de l\'utilisateur'
+      message: "Erreur lors de la récupération de l'utilisateur",
     });
   }
 };
@@ -224,15 +226,15 @@ const mettreAJourUtilisateur = async (req, res) => {
     if (!ancienUtilisateur) {
       await creerHistorique({
         users_id: req.params.id,
-        type_entite: 'utilisateur',
-        type_operation: 'modif',
+        type_entite: "utilisateur",
+        type_operation: "modif",
         description: `Tentative de modification d'un utilisateur inexistant (ID: ${req.params.id})`,
-        statut: 'erreur'
+        statut: "erreur",
       });
 
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
@@ -250,73 +252,76 @@ const mettreAJourUtilisateur = async (req, res) => {
     // Créer l'historique des modifications
     await creerHistorique({
       users_id: utilisateurMaj._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Modification de l'utilisateur ${utilisateurMaj.nom} ${utilisateurMaj.prenom}`,
-      statut: 'succès',
+      statut: "succès",
       details: {
         ancien_etat: ancienUtilisateur.toObject(),
-        nouvel_etat: utilisateurMaj.toObject()
-      }
+        nouvel_etat: utilisateurMaj.toObject(),
+      },
     });
 
     res.status(200).json({
       success: true,
-      message: 'Utilisateur mis à jour avec succès',
-      data: utilisateurMaj
+      message: "Utilisateur mis à jour avec succès",
+      data: utilisateurMaj,
     });
-
   } catch (error) {
-    console.error('Erreur mettreAJourUtilisateur:', error);
+    console.error("Erreur mettreAJourUtilisateur:", error);
 
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       await creerHistorique({
         users_id: req.params.id,
-        type_entite: 'utilisateur',
-        type_operation: 'modif',
-        description: `Échec de modification - Erreur de validation: ${Object.values(error.errors).map(e => e.message).join(', ')}`,
-        statut: 'erreur'
+        type_entite: "utilisateur",
+        type_operation: "modif",
+        description: `Échec de modification - Erreur de validation: ${Object.values(
+          error.errors
+        )
+          .map((e) => e.message)
+          .join(", ")}`,
+        statut: "erreur",
       });
 
       return res.status(400).json({
         success: false,
-        message: Object.values(error.errors).map(val => val.message).join(', ')
+        message: Object.values(error.errors)
+          .map((val) => val.message)
+          .join(", "),
       });
     }
 
     if (error.code === 11000) {
       const champ = Object.keys(error.keyValue)[0];
-      
+
       await creerHistorique({
         users_id: req.params.id,
-        type_entite: 'utilisateur',
-        type_operation: 'modif',
+        type_entite: "utilisateur",
+        type_operation: "modif",
         description: `Échec de modification - Doublon: ${champ} déjà utilisé`,
-        statut: 'erreur'
+        statut: "erreur",
       });
 
       return res.status(400).json({
         success: false,
-        message: `Ce ${champ} est déjà utilisé`
+        message: `Ce ${champ} est déjà utilisé`,
       });
     }
 
     await creerHistorique({
       users_id: req.params.id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Erreur système lors de la modification: ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la mise à jour de l\'utilisateur'
+      message: "Erreur lors de la mise à jour de l'utilisateur",
     });
   }
 };
-
-
 
 /**
  * Supprimer un ou plusieurs utilisateurs (suppression définitive)
@@ -330,7 +335,7 @@ const supprimerUtilisateurs = async (req, res) => {
     if (!ids) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir les IDs des utilisateurs à supprimer'
+        message: "Veuillez fournir les IDs des utilisateurs à supprimer",
       });
     }
 
@@ -340,7 +345,7 @@ const supprimerUtilisateurs = async (req, res) => {
     if (idsArray.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Aucun ID d\'utilisateur fourni'
+        message: "Aucun ID d'utilisateur fourni",
       });
     }
 
@@ -350,10 +355,10 @@ const supprimerUtilisateurs = async (req, res) => {
       if (utilisateur) {
         await creerHistorique({
           users_id: utilisateur._id,
-          type_entite: 'utilisateur',
-          type_operation: 'suppression',
+          type_entite: "utilisateur",
+          type_operation: "suppression",
           description: `Suppression définitive de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-          statut: 'succès'
+          statut: "succès",
         });
       }
     }
@@ -364,24 +369,23 @@ const supprimerUtilisateurs = async (req, res) => {
     if (result.deletedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Aucun utilisateur trouvé avec les IDs fournis'
+        message: "Aucun utilisateur trouvé avec les IDs fournis",
       });
     }
 
     res.status(200).json({
       success: true,
       message: `${result.deletedCount} utilisateur(s) supprimé(s) définitivement`,
-      count: result.deletedCount
+      count: result.deletedCount,
     });
   } catch (error) {
-    console.error('Erreur supprimerUtilisateurs:', error);
+    console.error("Erreur supprimerUtilisateurs:", error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la suppression définitive des utilisateurs'
+      message: "Erreur lors de la suppression définitive des utilisateurs",
     });
   }
 };
-
 
 /**
  * Activer/Désactiver un utilisateur
@@ -395,7 +399,7 @@ const toggleStatutUtilisateur = async (req, res) => {
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
@@ -404,41 +408,40 @@ const toggleStatutUtilisateur = async (req, res) => {
     utilisateur.date_modif = Date.now();
     await utilisateur.save();
 
-    const statut = utilisateur.actif ? 'activé' : 'désactivé';
+    const statut = utilisateur.actif ? "activé" : "désactivé";
 
     // Créer l'historique pour le changement de statut
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'change_etat',
+      type_entite: "utilisateur",
+      type_operation: "change_etat",
       description: `Utilisateur ${utilisateur.nom} ${utilisateur.prenom} a été ${statut}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
       message: `Utilisateur ${statut} avec succès`,
-      data: utilisateur
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur toggleStatutUtilisateur:', error);
+    console.error("Erreur toggleStatutUtilisateur:", error);
 
     // Créer l'historique pour l'échec du changement de statut
     await creerHistorique({
       users_id: req.params.id,
-      type_entite: 'utilisateur',
-      type_operation: 'change_etat',
+      type_entite: "utilisateur",
+      type_operation: "change_etat",
       description: `Échec du changement de statut pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors du changement de statut de l\'utilisateur'
+      message: "Erreur lors du changement de statut de l'utilisateur",
     });
   }
 };
-
 
 /**
  * Assigner une carte RFID à un utilisateur
@@ -452,16 +455,19 @@ const assignerCarteRFID = async (req, res) => {
     if (!cardId) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir un identifiant de carte RFID'
+        message: "Veuillez fournir un identifiant de carte RFID",
       });
     }
 
     // Vérifier si la carte est déjà assignée à un autre utilisateur
     const utilisateurExistant = await Utilisateur.findOne({ cardId });
-    if (utilisateurExistant && utilisateurExistant._id.toString() !== req.params.id) {
+    if (
+      utilisateurExistant &&
+      utilisateurExistant._id.toString() !== req.params.id
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Cette carte RFID est déjà assignée à un autre utilisateur'
+        message: "Cette carte RFID est déjà assignée à un autre utilisateur",
       });
     }
 
@@ -470,7 +476,7 @@ const assignerCarteRFID = async (req, res) => {
       {
         cardId,
         cardActive: true, // Initialiser la carte comme active
-        date_modif: Date.now()
+        date_modif: Date.now(),
       },
       { new: true }
     );
@@ -478,39 +484,39 @@ const assignerCarteRFID = async (req, res) => {
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     // Créer l'historique pour l'assignation de la carte RFID
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Carte RFID ${cardId} assignée à l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Carte RFID assignée avec succès',
-      data: utilisateur
+      message: "Carte RFID assignée avec succès",
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur assignerCarteRFID:', error);
+    console.error("Erreur assignerCarteRFID:", error);
 
     // Créer l'historique pour l'échec de l'assignation de la carte RFID
     await creerHistorique({
       users_id: req.params.id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de l'assignation de la carte RFID à l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de l\'assignation de la carte RFID'
+      message: "Erreur lors de l'assignation de la carte RFID",
     });
   }
 };
@@ -527,14 +533,14 @@ const desassignerCarteRFID = async (req, res) => {
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     if (!utilisateur.cardId) {
       return res.status(400).json({
         success: false,
-        message: 'Cet utilisateur n\'a pas de carte RFID assignée'
+        message: "Cet utilisateur n'a pas de carte RFID assignée",
       });
     }
 
@@ -546,36 +552,35 @@ const desassignerCarteRFID = async (req, res) => {
     // Créer l'historique pour la désassignation de la carte RFID
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Carte RFID désassignée de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Carte RFID désassignée avec succès',
-      data: utilisateur
+      message: "Carte RFID désassignée avec succès",
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur desassignerCarteRFID:', error);
+    console.error("Erreur desassignerCarteRFID:", error);
 
     // Créer l'historique pour l'échec de la désassignation de la carte RFID
     await creerHistorique({
       users_id: req.params.id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de la désassignation de la carte RFID pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la désassignation de la carte RFID'
+      message: "Erreur lors de la désassignation de la carte RFID",
     });
   }
 };
-
 
 /**
  * Assigner une empreinte digitale à un utilisateur
@@ -589,16 +594,20 @@ const assignerEmpreinte = async (req, res) => {
     if (!empreinteID) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir un identifiant d\'empreinte digitale'
+        message: "Veuillez fournir un identifiant d'empreinte digitale",
       });
     }
 
     // Vérifier si l'empreinte est déjà assignée à un autre utilisateur
     const utilisateurExistant = await Utilisateur.findOne({ empreinteID });
-    if (utilisateurExistant && utilisateurExistant._id.toString() !== req.params.id) {
+    if (
+      utilisateurExistant &&
+      utilisateurExistant._id.toString() !== req.params.id
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Cette empreinte digitale est déjà assignée à un autre utilisateur'
+        message:
+          "Cette empreinte digitale est déjà assignée à un autre utilisateur",
       });
     }
 
@@ -606,7 +615,7 @@ const assignerEmpreinte = async (req, res) => {
       req.params.id,
       {
         empreinteID,
-        date_modif: Date.now()
+        date_modif: Date.now(),
       },
       { new: true }
     );
@@ -614,43 +623,42 @@ const assignerEmpreinte = async (req, res) => {
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     // Créer l'historique pour l'assignation de l'empreinte digitale
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Empreinte digitale ${empreinteID} assignée à l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Empreinte digitale assignée avec succès',
-      data: utilisateur
+      message: "Empreinte digitale assignée avec succès",
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur assignerEmpreinte:', error);
+    console.error("Erreur assignerEmpreinte:", error);
 
     // Créer l'historique pour l'échec de l'assignation de l'empreinte digitale
     await creerHistorique({
       users_id: req.params.id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de l'assignation de l'empreinte digitale à l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de l\'assignation de l\'empreinte digitale'
+      message: "Erreur lors de l'assignation de l'empreinte digitale",
     });
   }
 };
-
 
 /**
  * Désassigner une empreinte digitale d'un utilisateur
@@ -664,14 +672,14 @@ const desassignerEmpreinte = async (req, res) => {
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     if (!utilisateur.empreinteID) {
       return res.status(400).json({
         success: false,
-        message: 'Cet utilisateur n\'a pas d\'empreinte digitale assignée'
+        message: "Cet utilisateur n'a pas d'empreinte digitale assignée",
       });
     }
 
@@ -682,36 +690,35 @@ const desassignerEmpreinte = async (req, res) => {
     // Créer l'historique pour la désassignation de l'empreinte digitale
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Empreinte digitale désassignée de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Empreinte digitale désassignée avec succès',
-      data: utilisateur
+      message: "Empreinte digitale désassignée avec succès",
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur desassignerEmpreinte:', error);
+    console.error("Erreur desassignerEmpreinte:", error);
 
     // Créer l'historique pour l'échec de la désassignation de l'empreinte digitale
     await creerHistorique({
       users_id: req.params.id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de la désassignation de l'empreinte digitale pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la désassignation de l\'empreinte digitale'
+      message: "Erreur lors de la désassignation de l'empreinte digitale",
     });
   }
 };
-
 
 /**
  * Demander la réinitialisation du mot de passe
@@ -727,63 +734,62 @@ const demanderReinitialisation = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir un email'
+        message: "Veuillez fournir un email",
       });
     }
 
-    console.log('Recherche de l\'utilisateur avec l\'email:', email);
+    console.log("Recherche de l'utilisateur avec l'email:", email);
     const utilisateur = await Utilisateur.findOne({ email });
 
     if (!utilisateur) {
-      console.log('Utilisateur non trouvé pour l\'email:', email);
+      console.log("Utilisateur non trouvé pour l'email:", email);
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     // Générer un token de réinitialisation
-    const token = jwt.sign({ id: utilisateur._id }, process.env.JWT_SECRET, { expiresIn: '5m' });
-    console.log('Token de réinitialisation généré:', token);
+    const token = jwt.sign({ id: utilisateur._id }, process.env.JWT_SECRET, {
+      expiresIn: "5m",
+    });
+    console.log("Token de réinitialisation généré:", token);
 
     // Envoyer l'email avec le lien de réinitialisation
     await emailService.envoyerLienReinitialisation(utilisateur, token);
-    console.log('Email de réinitialisation envoyé à:', utilisateur.email);
+    console.log("Email de réinitialisation envoyé à:", utilisateur.email);
 
     // Créer l'historique pour la demande de réinitialisation
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Demande de réinitialisation de mot de passe pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Email de réinitialisation envoyé'
+      message: "Email de réinitialisation envoyé",
     });
   } catch (error) {
-    console.error('Erreur demanderReinitialisation:', error);
+    console.error("Erreur demanderReinitialisation:", error);
 
     // Créer l'historique pour l'échec de la demande de réinitialisation
     await creerHistorique({
       users_id: req.body.email, // Utiliser l'email pour identifier l'utilisateur en cas d'échec
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de la demande de réinitialisation de mot de passe pour l'email ${req.body.email}: ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la demande de réinitialisation du mot de passe'
+      message: "Erreur lors de la demande de réinitialisation du mot de passe",
     });
   }
 };
-
-  
-  
 
 /**
  * Réinitialiser le mot de passe
@@ -796,13 +802,13 @@ const demanderReinitialisation = async (req, res) => {
  */
 const reinitialiserMotDePasse = async (req, res) => {
   try {
-    const { token, actuelPassword, nouveauPassword, confirmPassword } = req.body;
+    const { token, nouveauPassword, confirmPassword } = req.body;
 
     // Validation des données d'entrée
-    if (!token || !actuelPassword || !nouveauPassword || !confirmPassword) {
+    if (!token || !nouveauPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: 'Veuillez fournir toutes les informations nécessaires'
+        message: "Veuillez fournir toutes les informations nécessaires",
       });
     }
 
@@ -810,32 +816,34 @@ const reinitialiserMotDePasse = async (req, res) => {
     if (nouveauPassword !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: 'Les nouveaux mots de passe ne correspondent pas'
+        message: "Les nouveaux mots de passe ne correspondent pas",
       });
     }
 
     // Vérifier le token de réinitialisation
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token décodé:', decoded);
+    console.log("Token décodé:", decoded);
 
-    const utilisateur = await Utilisateur.findById(decoded.id).select('+password');
-    console.log('Utilisateur trouvé:', utilisateur);
+    const utilisateur = await Utilisateur.findById(decoded.id).select(
+      "+password"
+    );
+    console.log("Utilisateur trouvé:", utilisateur);
 
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     // Vérifier le mot de passe actuel
     const isMatch = await utilisateur.comparePassword(actuelPassword);
-    console.log('Mot de passe correspond:', isMatch);
+    console.log("Mot de passe correspond:", isMatch);
 
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: 'Mot de passe actuel incorrect'
+        message: "Mot de passe actuel incorrect",
       });
     }
 
@@ -850,37 +858,36 @@ const reinitialiserMotDePasse = async (req, res) => {
     // Créer l'historique pour la réinitialisation du mot de passe
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Mot de passe réinitialisé pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Mot de passe réinitialisé avec succès'
+      message: "Mot de passe réinitialisé avec succès",
     });
   } catch (error) {
-    console.error('Erreur reinitialiserMotDePasse:', error);
+    console.error("Erreur reinitialiserMotDePasse:", error);
 
     // Créer l'historique pour l'échec de la réinitialisation du mot de passe
     await creerHistorique({
-      users_id: req.body.token ? jwt.verify(req.body.token, process.env.JWT_SECRET).id : null,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      users_id: req.body.token
+        ? jwt.verify(req.body.token, process.env.JWT_SECRET).id
+        : null,
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de la réinitialisation du mot de passe: ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la réinitialisation du mot de passe'
+      message: "Erreur lors de la réinitialisation du mot de passe",
     });
   }
 };
-
-  
-  
 
 /**
  * Désactiver une carte RFID par l'utilisateur lui-même
@@ -895,14 +902,14 @@ const desactiverMaCarteRFID = async (req, res) => {
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
-        message: 'Utilisateur non trouvé'
+        message: "Utilisateur non trouvé",
       });
     }
 
     if (!utilisateur.cardId) {
       return res.status(400).json({
         success: false,
-        message: 'Vous n\'avez pas de carte RFID assignée'
+        message: "Vous n'avez pas de carte RFID assignée",
       });
     }
 
@@ -914,132 +921,126 @@ const desactiverMaCarteRFID = async (req, res) => {
     // Créer l'historique pour la désactivation de la carte RFID
     await creerHistorique({
       users_id: utilisateur._id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Carte RFID désactivée par l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: 'succès'
+      statut: "succès",
     });
 
     res.status(200).json({
       success: true,
-      message: 'Votre carte RFID a été désactivée avec succès',
-      data: utilisateur
+      message: "Votre carte RFID a été désactivée avec succès",
+      data: utilisateur,
     });
   } catch (error) {
-    console.error('Erreur desactiverMaCarteRFID:', error);
+    console.error("Erreur desactiverMaCarteRFID:", error);
 
     // Créer l'historique pour l'échec de la désactivation de la carte RFID
     await creerHistorique({
       users_id: req.user.id,
-      type_entite: 'utilisateur',
-      type_operation: 'modif',
+      type_entite: "utilisateur",
+      type_operation: "modif",
       description: `Échec de la désactivation de la carte RFID pour l'utilisateur (ID: ${req.user.id}): ${error.message}`,
-      statut: 'erreur'
+      statut: "erreur",
     });
 
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la désactivation de votre carte RFID'
+      message: "Erreur lors de la désactivation de votre carte RFID",
     });
   }
 };
 
-  
-  /**
-   * Réactiver la carte RFID d'un utilisateur (réservé à l'admin)
-   * @route PATCH /api/utilisateurs/:id/reactiver-carte
-   * @access Private/Admin
-   */
-  const reactiverCarteRFID = async (req, res) => {
-    try {
-      const utilisateur = await Utilisateur.findById(req.params.id);
-  
-      if (!utilisateur) {
-        return res.status(404).json({
-          success: false,
-          message: 'Utilisateur non trouvé'
-        });
-      }
-  
-      if (!utilisateur.cardId) {
-        return res.status(400).json({
-          success: false,
-          message: 'Cet utilisateur n\'a pas de carte RFID assignée'
-        });
-      }
-  
-      if (utilisateur.cardActive) {
-        return res.status(400).json({
-          success: false,
-          message: 'La carte RFID de cet utilisateur est déjà active'
-        });
-      }
-  
-      utilisateur.cardActive = true;
-      utilisateur.date_modif = Date.now();
-      await utilisateur.save();
-  
-      // Créer l'historique pour la réactivation de la carte RFID
-      await creerHistorique({
-        users_id: utilisateur._id,
-        type_entite: 'utilisateur',
-        type_operation: 'modif',
-        description: `Carte RFID réactivée pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-        statut: 'succès'
-      });
-  
-      res.status(200).json({
-        success: true,
-        message: 'Carte RFID réactivée avec succès',
-        data: utilisateur
-      });
-    } catch (error) {
-      console.error('Erreur reactiverCarteRFID:', error);
-  
-      // Créer l'historique pour l'échec de la réactivation de la carte RFID
-      await creerHistorique({
-        users_id: req.params.id,
-        type_entite: 'utilisateur',
-        type_operation: 'modif',
-        description: `Échec de la réactivation de la carte RFID pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-        statut: 'erreur'
-      });
-  
-      res.status(500).json({
+/**
+ * Réactiver la carte RFID d'un utilisateur (réservé à l'admin)
+ * @route PATCH /api/utilisateurs/:id/reactiver-carte
+ * @access Private/Admin
+ */
+const reactiverCarteRFID = async (req, res) => {
+  try {
+    const utilisateur = await Utilisateur.findById(req.params.id);
+
+    if (!utilisateur) {
+      return res.status(404).json({
         success: false,
-        message: 'Erreur lors de la réactivation de la carte RFID'
+        message: "Utilisateur non trouvé",
       });
     }
-  };
 
-  /**
-   * Fonction utilitaire pour générer un token JWT
-   * @param {string} id - ID de l'utilisateur
-   * @param {string} expiresIn - Durée de validité du token
-   * @returns {string} Token JWT
-   */
-  const genererToken = (id, expiresIn = process.env.JWT_EXPIRE) => {
-      return jwt.sign(
-        { id },
-        process.env.JWT_SECRET,
-        { expiresIn }
-      );
-  };
-  
+    if (!utilisateur.cardId) {
+      return res.status(400).json({
+        success: false,
+        message: "Cet utilisateur n'a pas de carte RFID assignée",
+      });
+    }
+
+    if (utilisateur.cardActive) {
+      return res.status(400).json({
+        success: false,
+        message: "La carte RFID de cet utilisateur est déjà active",
+      });
+    }
+
+    utilisateur.cardActive = true;
+    utilisateur.date_modif = Date.now();
+    await utilisateur.save();
+
+    // Créer l'historique pour la réactivation de la carte RFID
+    await creerHistorique({
+      users_id: utilisateur._id,
+      type_entite: "utilisateur",
+      type_operation: "modif",
+      description: `Carte RFID réactivée pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
+      statut: "succès",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Carte RFID réactivée avec succès",
+      data: utilisateur,
+    });
+  } catch (error) {
+    console.error("Erreur reactiverCarteRFID:", error);
+
+    // Créer l'historique pour l'échec de la réactivation de la carte RFID
+    await creerHistorique({
+      users_id: req.params.id,
+      type_entite: "utilisateur",
+      type_operation: "modif",
+      description: `Échec de la réactivation de la carte RFID pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
+      statut: "erreur",
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la réactivation de la carte RFID",
+    });
+  }
+};
+
+/**
+ * Fonction utilitaire pour générer un token JWT
+ * @param {string} id - ID de l'utilisateur
+ * @param {string} expiresIn - Durée de validité du token
+ * @returns {string} Token JWT
+ */
+const genererToken = (id, expiresIn = process.env.JWT_EXPIRE) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn });
+};
 
 module.exports = {
   creerUtilisateur,
   obtenirTousUtilisateurs,
   obtenirUtilisateur,
   mettreAJourUtilisateur,
-  supprimerUtilisateurs,  
+  supprimerUtilisateurs,
   toggleStatutUtilisateur,
   assignerCarteRFID,
   desassignerCarteRFID,
   assignerEmpreinte,
   desassignerEmpreinte,
   reinitialiserMotDePasse,
-  desactiverMaCarteRFID, 
-  reactiverCarteRFID, 
+  desactiverMaCarteRFID,
+  reactiverCarteRFID,
   demanderReinitialisation,
 };

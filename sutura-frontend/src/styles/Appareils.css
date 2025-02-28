@@ -1,0 +1,465 @@
+/* AppareilsPage.css */
+
+/* Structure principale */
+.appareil {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Stat card */
+.appareil .stats-cards .stat-card {
+  padding-right: 2px;
+  width: 431px;
+  margin-right: 1px;
+  border: #274c77;
+}
+.content-wrapper2 {
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 20px;
+}
+
+.main-content2 {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Section des statistiques */
+.stats-cards {
+  margin-bottom: 5px;
+  width: 100%; /* Étendre sur toute la largeur de la page */
+  border: #274c77;
+}
+
+.appareil-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.add-button {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+/* Liste des pièces */
+.rooms-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.room-card {
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  height: 100%;
+  transition: transform 0.2s;
+  width: 100%; /* Largeur maximale pour les blocs des pièces */
+  display: flex;
+  flex-direction: column;
+}
+
+.room-card:hover {
+  transform: translateY(-3px);
+}
+
+.room-card-body {
+  padding: 20px !important;
+  background-color: white;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Ajoute un défilement vertical si nécessaire */
+  border: 1px solid #274c77;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  height: 100%;
+  transition: transform 0.2s;
+  width: 100%; /* Largeur maximale pour les blocs des pièces */
+  display: flex;
+  flex-direction: column;
+}
+
+.device-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-height: calc(2 * 120px + 24px); /* Hauteur pour deux lignes d'appareils */
+  width: 100%; /* Occupe toute la largeur disponible */
+  overflow-y: auto; /* Ajoute un défilement vertical si nécessaire */
+  overflow-x: hidden; /* Empêche le défilement horizontal */
+  padding-right: 0; /* Supprime le padding pour éviter le débordement */
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.room-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  border-radius: 50% !important;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  transition: background-color 0.2s;
+}
+
+.room-energy {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.energy-icon {
+  color: #ffc107;
+  font-size: 1.2rem;
+  margin-right: 10px;
+}
+
+.energy-value {
+  color: #ffc107;
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+/* Style de la scrollbar pour le conteneur d'appareils */
+.device-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.device-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.device-container::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.device-container::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+.device-item {
+  width: 100%;
+}
+/* les appareils occupent toute la largeur du conteneur */
+.device-card-body {
+  padding: 12px !important;
+}
+
+/* Cartes d'appareils - forme rectangulaire */
+.device-card {
+  border: none !important;
+  border-radius: 8px !important;
+  height: 100%;
+  transition: all 0.2s;
+}
+
+.device-on {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.device-off {
+  background-color: #f8f9fa !important;
+}
+
+.device-card-body {
+  padding: 12px !important;
+}
+
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.device-icon {
+  transition: color 0.2s;
+}
+
+.icon-on {
+  color: #0d6efd;
+}
+
+.icon-off {
+  color: #6c757d;
+}
+
+.device-controls {
+  display: flex;
+  align-items: center;
+}
+
+.device-btn {
+  border: none;
+  background-color: transparent;
+  padding: 0 5px !important;
+  font-size: 0.9rem;
+}
+
+.device-name {
+  font-size: 0.9rem;
+  margin-bottom: 3px;
+  margin-top: 6px;
+  color: #495057;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-conso {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-bottom: 0;
+}
+
+/* Pagination intégrée dans rooms-liste */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 5px;
+}
+
+.pagination-item {
+  width: 35px;
+  height: 35px;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  font-size: 0.85rem;
+}
+
+.pagination-btn {
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem;
+}
+
+/* Panel latéral */
+.mini-right-panel {
+  height: 100%;
+}
+
+.panel-card {
+  height: 100%;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.panel-title {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 15px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .content-wrapper2 {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-right-panel {
+    order: -1;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .device-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .pagination-numbers {
+    order: -1;
+  }
+}
+
+@media (max-width: 576px) {
+  .device-container {
+    grid-template-columns: 1fr;
+  }
+
+  .appareil-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+/* Device card body */
+.d-flex
+  .flex-grow-1
+  .appareil
+  .content-wrapper2
+  .main-content2
+  .rooms-liste
+  .row
+  .mb-4
+  .room-card-body
+  .device-container
+  .device-item
+  .device-card
+  .device-card-body {
+  width: 111% !important;
+}
+
+/* Device controls */
+.rooms-liste .mb-4 .device-controls {
+  transform: translatex(8px) translatey(-12px);
+}
+
+/* Device card body */
+.rooms-liste .mb-4 .device-card-body {
+  min-height: 107px;
+}
+
+/* Device conso */
+.rooms-liste .mb-4 .device-conso {
+  transform: translatex(4px) translatey(16px);
+}
+
+/* Device name */
+.rooms-liste .mb-4 .device-name {
+  transform: translatex(0px) translatey(19px);
+}
+
+/* Lucide */
+.rooms-liste .device-item .lucide {
+  display: inline-block;
+  transform: translatex(11px) translatey(6px);
+}
+/* Lucide */
+.rooms-liste .device-item .lucide {
+  transform: translatex(6px) translatey(-12px);
+  min-height: 38px;
+}
+
+/* Lucide */
+.d-flex
+  .flex-grow-1
+  .appareil
+  .content-wrapper2
+  .main-content2
+  .rooms-liste
+  .row
+  .mb-4
+  .room-card-body
+  .device-container
+  .device-item
+  .device-card
+  .device-card-body
+  .device-header
+  .device-icon
+  .lucide {
+  width: 136% !important;
+}
+
+/* Device name */
+.rooms-liste .mb-4 .device-name {
+  transform: translatex(7px) translatey(-10px);
+  width: 86px;
+}
+
+/* Device conso */
+.rooms-liste .mb-4 .device-conso {
+  display: inline-block;
+  min-height: 20px;
+  font-weight: 500;
+  font-size: 16px;
+  width: 89px;
+}
+
+/* Device card */
+.rooms-liste .mb-4 .device-card {
+  height: 123px;
+}
+
+/* Device conso */
+.d-flex
+  .flex-grow-1
+  .appareil
+  .content-wrapper2
+  .main-content2
+  .rooms-liste
+  .row
+  .mb-4
+  .room-card-body
+  .device-container
+  .device-item
+  .device-card
+  .device-card-body
+  .device-conso {
+  transform: translatex(86px) translatey(-14px) !important;
+}
+.no-devices-message {
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+/* Device conso */
+.d-flex
+  .flex-grow-1
+  .appareil
+  .content-wrapper2
+  .main-content2
+  .rooms-liste
+  .row
+  .mb-4
+  .room-card-body
+  .device-container
+  .device-item
+  .device-card
+  .device-card-body
+  .device-conso {
+  transform: translatex(38px) translatey(-16px) !important;
+  width: 117px !important;
+}
+/* Room card body */
+.rooms-liste .mb-4 .room-card-body {
+  min-height: 380px;
+}

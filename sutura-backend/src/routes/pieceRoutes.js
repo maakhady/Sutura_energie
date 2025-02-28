@@ -11,7 +11,7 @@ const {
 } = require("../controllers/pieceControleur");
 
 // Routes nécessitant un rôle admin
-router.post("/", auth, verifRole(["admin"]), creerPiece);
+router.post("/creer", auth, verifRole(["admin"]), creerPiece);
 router.get("/allpieces", auth, verifRole(["admin"]), obtenirToutesPieces);
 
 // Routes accessibles par l'admin et l'utilisateur concerné
