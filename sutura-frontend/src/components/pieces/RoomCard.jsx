@@ -5,17 +5,65 @@ import DeviceCard from "../appareil/DeviceCard";
 import EditRoomModal from "./EditRoomModal";
 import AddDeviceModal from "../appareil/AddDeviceModal";
 import { useState } from "react";
+import Swal from "sweetalert2"; // Import de Swal
+import PieceService from "../../services/PieceService"; // Import du service API
 
 const RoomCard = ({
   room,
   roomIndex,
   toggleDevice,
-  handleAddDevice,
   handleEditRoom,
-  handleDeleteRoom,
+  rooms,
+  setRooms,
+  currentPage,
+  setCurrentPage,
+  roomsPerPage,
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
+
+  // 🗑️ Fonction pour supprimer une pièce
+  const handleDeleteRoom = async (roomId) => {
+    Swal.fire({
+      title: "Êtes-vous sûr?",
+      text: "Vous ne pourrez pas revenir en arrière!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, supprimez-la!",
+      cancelButtonText: "Annuler",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await PieceService.supprimerPiece(roomId);
+
+          // Met à jour la liste des pièces après suppression
+          const updatedRooms = rooms.filter((room) => room._id !== roomId);
+          setRooms(updatedRooms);
+
+          // Vérifie si la page actuelle est vide après suppression
+          const totalPages = Math.ceil(updatedRooms.length / roomsPerPage);
+          if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages); // Revient à la dernière page disponible
+          }
+
+          Swal.fire({
+            title: "Supprimé!",
+            text: "La pièce a été supprimée.",
+            icon: "success",
+          });
+        } catch (error) {
+          Swal.fire({
+            title: "Erreur!",
+            text: "Une erreur est survenue lors de la suppression de la pièce.",
+            icon: error,
+          });
+          console.error("Erreur lors de la suppression de la pièce :", error);
+        }
+      }
+    });
+  };
 
   return (
     <>
@@ -43,7 +91,7 @@ const RoomCard = ({
               variant="light"
               size="sm"
               className="action-btn"
-              onClick={() => handleDeleteRoom(room._id)}
+              onClick={() => handleDeleteRoom(room._id)} // 🔥 Appel de la fonction de suppression
             >
               <Trash size={18} />
             </Button>
@@ -74,15 +122,16 @@ const RoomCard = ({
       <AddDeviceModal
         show={showAddDeviceModal}
         handleClose={() => setShowAddDeviceModal(false)}
-        handleAddDevice={handleAddDevice} // Passez la fonction ici
         roomId={room._id}
+        rooms={rooms} // On passe la liste des pièces
+        setRooms={setRooms} // Pour mettre à jour l'état après l'ajout d'un appareil
       />
 
       <EditRoomModal
         show={showEditModal}
         handleClose={() => setShowEditModal(false)}
         room={room}
-        handleUpdateRoom={handleEditRoom}
+        onRoomUpdated={handleEditRoom}
       />
     </>
   );
@@ -92,21 +141,25 @@ RoomCard.propTypes = {
   room: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     nom_piece: PropTypes.string.isRequired,
-    energy: PropTypes.string.isRequired,
+    energy: PropTypes.string,
     devices: PropTypes.arrayOf(
       PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        conso: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
-        status: PropTypes.string.isRequired,
+        name: PropTypes.string,
+        conso: PropTypes.string,
+        type: PropTypes.string,
+        status: PropTypes.string,
       })
-    ).isRequired,
+    ),
   }).isRequired,
   roomIndex: PropTypes.number.isRequired,
   toggleDevice: PropTypes.func.isRequired,
   handleAddDevice: PropTypes.func.isRequired,
   handleEditRoom: PropTypes.func.isRequired,
-  handleDeleteRoom: PropTypes.func.isRequired,
+  rooms: PropTypes.array.isRequired, // Ajout pour gérer les pièces
+  setRooms: PropTypes.func.isRequired, // Ajout pour mettre à jour l'état
+  currentPage: PropTypes.number.isRequired, // Ajout pour gérer la pagination
+  setCurrentPage: PropTypes.func.isRequired, // Ajout pour naviguer après suppression
+  roomsPerPage: PropTypes.number.isRequired, // Ajout pour recalculer la pagination
 };
 
 export default RoomCard;

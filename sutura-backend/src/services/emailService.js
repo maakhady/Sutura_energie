@@ -52,10 +52,11 @@ const emailService = {
    * @returns {Promise<object>} Résultat de l'envoi
    */
   envoyerIdentifiants: async function (utilisateur, token) {
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173/firstlogin";
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const definirMdpUrl = `${frontendUrl}/firstlogin/definir-mot-de-passe/${token}`;
 
-    const sujet = "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
+    const sujet =
+      "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
 
     const texte = `
       Bonjour ${utilisateur.prenom} ${utilisateur.nom},

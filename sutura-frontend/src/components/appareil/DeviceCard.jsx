@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { Card, Button } from "react-bootstrap";
 import {
@@ -11,8 +12,22 @@ import {
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarAlt, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import AppareilService from "../../services/AppareilService";
 
-const DeviceCard = ({ device, onToggle }) => {
+const DeviceCard = ({ device }) => {
+  const [status, setStatus] = useState(device.status === "on"); // État local
+
+  // Fonction pour activer/désactiver l'appareil
+  const handleToggle = async () => {
+    try {
+      const newStatus = !status; // Inverse l'état actuel
+      await AppareilService.activerDesactiverAppareil(device._id); // Appel API
+      setStatus(newStatus); // Met à jour l'état après succès
+    } catch (error) {
+      console.error("Erreur lors de l'activation/désactivation :", error);
+    }
+  };
+
   const getDeviceIcon = (nom_app) => {
     switch (nom_app.toLowerCase()) {
       case "télévision":
@@ -42,18 +57,10 @@ const DeviceCard = ({ device, onToggle }) => {
   };
 
   return (
-    <Card
-      className={`device-card ${
-        device.status === "on" ? "device-on" : "device-off"
-      }`}
-    >
+    <Card className={`device-card ${status ? "device-on" : "device-off"}`}>
       <Card.Body className="device-card-body">
         <div className="device-header">
-          <div
-            className={`device-icon ${
-              device.status === "on" ? "icon-on" : "icon-off"
-            }`}
-          >
+          <div className={`device-icon ${status ? "icon-on" : "icon-off"}`}>
             {getDeviceIcon(device.nom_app)}
           </div>
           <div className="device-controls">
@@ -62,8 +69,8 @@ const DeviceCard = ({ device, onToggle }) => {
                 className="form-check-input"
                 type="checkbox"
                 role="switch"
-                checked={device.status === "on"}
-                onChange={onToggle}
+                checked={status}
+                onChange={handleToggle} // 🔥 Appel de la fonction
               />
             </div>
             <Button variant="light" size="sm" className="device-btn">
@@ -88,12 +95,12 @@ const DeviceCard = ({ device, onToggle }) => {
 
 DeviceCard.propTypes = {
   device: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
     nom_app: PropTypes.string.isRequired,
     conso: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
   }).isRequired,
-  onToggle: PropTypes.func.isRequired,
 };
 
 export default DeviceCard;

@@ -1,22 +1,45 @@
 import { useState } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 import PropTypes from "prop-types";
-import PieceService from "../../services/PieceService"; // Importez le service
+import PieceService from "../../services/PieceService";
+import Swal from "sweetalert2";
 
-const AddRoomModal = ({ show, handleClose, handleAddRoom }) => {
+const AddRoomModal = ({ show, handleClose, onRoomAdded }) => {
   const [roomName, setRoomName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!roomName.trim()) return;
+
+    setLoading(true);
     try {
-      console.log("Création d'une nouvelle pièce avec le nom :", roomName);
-      await PieceService.creerPiece({ nom_piece: roomName });
-      console.log("Nouvelle pièce créée avec le nom :", roomName);
-      handleAddRoom(roomName); // Passez uniquement le nom de la pièce
+      console.log("Création d'une nouvelle pièce :", roomName);
+      const newRoom = await PieceService.creerPiece({ nom_piece: roomName });
+      console.log("Nouvelle pièce créée :", newRoom);
+
+      // Notifier `AppareilsPage` qu'une nouvelle pièce est ajoutée
+      onRoomAdded(newRoom);
+
+      Swal.fire({
+        title: "Succès!",
+        text: `La pièce "${roomName}" a été ajoutée avec succès.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
       setRoomName("");
       handleClose();
     } catch (error) {
       console.error("Erreur lors de la création de la pièce :", error);
+      Swal.fire({
+        title: "Erreur!",
+        text: "Une erreur est survenue lors de l'ajout de la pièce.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,8 +60,13 @@ const AddRoomModal = ({ show, handleClose, handleAddRoom }) => {
               required
             />
           </Form.Group>
-          <Button variant="primary" type="submit" className="w-100 mt-3">
-            Ajouter
+          <Button
+            variant="primary"
+            type="submit"
+            className="w-100 mt-3"
+            disabled={loading}
+          >
+            {loading ? "Ajout..." : "Ajouter"}
           </Button>
         </Form>
       </Modal.Body>
@@ -49,7 +77,7 @@ const AddRoomModal = ({ show, handleClose, handleAddRoom }) => {
 AddRoomModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
-  handleAddRoom: PropTypes.func.isRequired,
+  onRoomAdded: PropTypes.func.isRequired, // Nouvelle fonction
 };
 
 export default AddRoomModal;

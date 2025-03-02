@@ -12,6 +12,7 @@ const AppareilSchema = new mongoose.Schema(
       ref: "Piece",
       required: [true, "L'identifiant de la pièce est requis"],
     },
+
     nom_app: {
       type: String,
       required: [true, "Le nom de l'appareil est requis"],

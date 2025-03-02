@@ -8,6 +8,32 @@
   flex-direction: column;
 }
 
+.devices-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+}
+
+.device-card {
+  min-width: 150px; /* Ajustez cette valeur selon vos besoins */
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.device-icon {
+  margin-bottom: 10px;
+}
+
+.device-text {
+  font-size: 14px;
+}
+
+.power {
+  color: #555;
+}
+
 /* Header */
 .welcome-section {
   display: flex;
@@ -255,5 +281,3 @@ input:checked + .slider:before {
     padding: 16px;
   }
 }
-
-

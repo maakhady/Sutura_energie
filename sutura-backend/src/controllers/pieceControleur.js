@@ -2,14 +2,15 @@ const Piece = require("../models/Piece");
 const Appareil = require("../models/Appareil"); // Assurez-vous d'importer le modèle Appareil
 const { creerHistorique } = require("./historiqueControleur");
 
-// Créer une nouvelle pièce (admin seulement)
 exports.creerPiece = async (req, res) => {
   try {
     const piece = new Piece({
-      users_id: req.user._id, // Utiliser l'ID de l'utilisateur authentifié
+      users_id: req.user._id,
       nom_piece: req.body.nom_piece,
       actif: req.body.actif,
     });
+
+    const nouvellePiece = await piece.save();
 
     // Créer un historique
     await creerHistorique({
@@ -20,15 +21,14 @@ exports.creerPiece = async (req, res) => {
       statut: "succès",
     });
 
-    const nouvellePiece = await piece.save();
-    res.status(201).json(nouvellePiece);
+    res.status(201).json(nouvellePiece); // Retourner la pièce créée avec son ID
   } catch (error) {
     res.status(400).json({
       message: "Erreur lors de la création de la pièce",
       error: error.message,
     });
 
-    // Créer un historique en cas d
+    // Créer un historique en cas d'erreur
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "pieces",
@@ -132,24 +132,26 @@ exports.mettreAJourPiece = async (req, res) => {
       message: "Erreur lors de la mise à jour de la pièce",
       error: error.message,
     });
-
-    // Créer un historique en cas d
-    await creerHistorique({
-      users_id: req.user._id,
-      type_entite: "pieces",
-      type_operation: "modif",
-      description: `Erreur lors de la modification de la pièce ${pieceModifiee.nom_piece}`,
-      statut: "erreur",
-    });
   }
 };
 
-// Supprimer une pièce (suppression logique)
+// Supprimer une pièce définitivement de la base de données
 exports.supprimerPiece = async (req, res) => {
   try {
     const piece = await Piece.findById(req.params.id);
     if (!piece) {
       return res.status(404).json({ message: "Pièce non trouvée" });
+    }
+
+    // verifier si la piece est utilisée par un appareil
+    const appareils = await Appareil.find({ pieces_id: piece._id });
+    if (appareils.length > 0) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Impossible de supprimer cette pièce car elle est utilisée par un ou plusieurs appareils",
+        });
     }
 
     // Vérifier si l'utilisateur a le droit de supprimer cette pièce
@@ -160,28 +162,20 @@ exports.supprimerPiece = async (req, res) => {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
 
-    // Vérifier si la pièce contient des appareils
-    const appareils = await Appareil.find({ pieces_id: piece._id });
-    if (appareils.length > 0) {
-      return res.status(403).json({
-        message: "Impossible de supprimer une pièce contenant des appareils",
-      });
-    }
+    await Piece.deleteOne({ _id: req.params.id });
+
     // Créer un historique
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "pieces",
       type_operation: "suppression",
       description: `Suppression de la pièce ${piece.nom_piece}`,
-      statut: "erreur",
+      statut: "succès",
     });
-    // Désactiver la pièce
-    piece.actif = false;
-    await piece.save();
 
-    res.status(200).json({ message: "Pièce désactivée avec succès" });
+    res.status(200).json({ message: "Pièce supprimée avec succès" });
   } catch (error) {
-    res.status(500).json({
+    res.status(400).json({
       message: "Erreur lors de la suppression de la pièce",
       error: error.message,
     });

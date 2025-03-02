@@ -199,6 +199,7 @@ exports.activerDesactiverAppareil = async (req, res) => {
     }
 
     appareil.actif = req.body.actif;
+    console.log;
     await appareil.save();
 
     // Créer un historique

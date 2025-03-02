@@ -1,14 +1,55 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import PropTypes from "prop-types";
+import PieceService from "../../services/PieceService";
+import Swal from "sweetalert2";
 
-const EditRoomModal = ({ show, handleClose, room, handleUpdateRoom }) => {
-  const [roomName, setRoomName] = useState(room.nom_piece);
+const EditRoomModal = ({ show, handleClose, room, onRoomUpdated }) => {
+  const [roomName, setRoomName] = useState("");
 
-  const handleSubmit = (e) => {
+  // 🔥 Met à jour le nom dans la modale quand `room` change
+  useEffect(() => {
+    if (room) {
+      setRoomName(room.nom_piece);
+    }
+  }, [room]);
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    handleUpdateRoom(room._id, roomName);
-    handleClose();
+    if (!roomName.trim()) return;
+
+    setLoading(true);
+    try {
+      console.log("Mise à jour de la pièce :", room._id, "→", roomName);
+      const updatedRoom = await PieceService.mettreAJourPiece(room._id, {
+        nom_piece: roomName,
+      });
+
+      console.log("Pièce mise à jour :", updatedRoom);
+
+      // Notifier `RoomCard` que la pièce a été mise à jour
+      onRoomUpdated(updatedRoom);
+
+      Swal.fire({
+        title: "Succès!",
+        text: `La pièce a été mise à jour avec succès.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      handleClose();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la pièce :", error);
+      Swal.fire({
+        title: "Erreur!",
+        text: "Une erreur est survenue lors de la modification de la pièce.",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,8 +69,13 @@ const EditRoomModal = ({ show, handleClose, room, handleUpdateRoom }) => {
               required
             />
           </Form.Group>
-          <Button variant="primary" type="submit" className="w-100 mt-3">
-            Modifier
+          <Button
+            variant="primary"
+            type="submit"
+            className="w-100 mt-3"
+            disabled={loading}
+          >
+            {loading ? "Modification..." : "Modifier"}
           </Button>
         </Form>
       </Modal.Body>
@@ -41,7 +87,7 @@ EditRoomModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   room: PropTypes.object.isRequired,
-  handleUpdateRoom: PropTypes.func.isRequired,
+  onRoomUpdated: PropTypes.func.isRequired, // Nouvelle fonction
 };
 
 export default EditRoomModal;

@@ -35,27 +35,34 @@ const loginWithCode = async (code) => {
 };
 
 // Fonction pour changer le mot de passe initial
-const changeInitialPassword = async (data, token) => {
+const definirMotDePasseInitial = async (data, token) => {
   try {
     const response = await axios.post(
-      `${API_URL}/changer-password`,
+      `${API_URL}/definir-mot-de-passe/${token}`,
       {
-        nouveauPassword: data.newPassword,
+        nouveauPassword: data.newPassword, // Utiliser la clé attendue par le backend
         confirmPassword: data.confirmPassword,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       }
     );
-    return response.data;
+
+    // Retourner la réponse du backend
+    return {
+      success: response.data.success,
+      message: response.data.message,
+    };
   } catch (error) {
+    // Capturer les erreurs spécifiques du backend
+    const errorMessage =
+      error.response?.data?.message ||
+      "Erreur lors de la définition du mot de passe";
+
     console.error(
-      "Erreur lors du changement de mot de passe:",
-      error.response?.data?.message || error.message
+      "Erreur lors de la définition du mot de passe:",
+      errorMessage
     );
-    throw error;
+
+    // Propager l'erreur pour une gestion côté frontend
+    throw new Error(errorMessage);
   }
 };
 
@@ -135,7 +142,7 @@ const reinitialiserMotDePasse = async (token, data) => {
 export const authService = {
   loginWithEmail,
   loginWithCode,
-  changeInitialPassword,
+  definirMotDePasseInitial,
   logout,
   getMyProfile,
   demanderReinitialisation,
