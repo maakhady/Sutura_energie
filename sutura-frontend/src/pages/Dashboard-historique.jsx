@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import '../styles/historique.css';
 import RightPanel from '../components/RightPanel';
 import { authService } from '../services/authService';
+import {  FileUpIcon,  LineChartIcon, LogsIcon } from 'lucide-react';
 
 const DashboardHistorique = () => {
   const [utilisateur, setUtilisateur] = useState(null);
@@ -142,18 +143,16 @@ const DashboardHistorique = () => {
                 className={`tab-btn ${activeTab === 'consommation' ? 'active' : ''}`}
                 onClick={() => setActiveTab('consommation')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                  <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" fill="currentColor"/>
-                </svg>
+                {/*chart avec lucide react*/}
+                <LineChartIcon size = {20} />   
                 Consommation
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('logs')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" fill="currentColor"/>
-                </svg>
+                {/*logs avec lucide react*/}
+                <LogsIcon size={20} />
                 Logs d'activité
               </button>
             </div>
@@ -207,9 +206,7 @@ const DashboardHistorique = () => {
                 <div className="logs-header">
                   <h3>Journal d'activités</h3>
                   <button className="export-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
-                    </svg>
+                    <FileUpIcon size={20}/>
                     Exporter
                   </button>
                 </div>

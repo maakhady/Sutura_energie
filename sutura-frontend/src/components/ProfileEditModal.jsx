@@ -16,6 +16,7 @@ const ProfileEditModal = ({
   setError,
   userId // Ajoutez l'ID de l'utilisateur ici
 }) => {
+  
   // Fonction pour formater le numéro de téléphone initial
   const formatInitialPhone = (phone) => {
     if (!phone) return '';
@@ -328,49 +329,63 @@ const ProfileEditModal = ({
   // Soumettre le formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     console.log("Soumission du formulaire");
     console.log("Form Data:", profileData);
     console.log("isFormValid:", isFormValid());
     console.log("formValidation:", validateForm());
-
+  
     if (validateForm()) {
       setLoading(true);
       setError('');
       setSuccess('');
-
+  
       try {
-        // Créer un FormData pour envoyer les données et le fichier
-        const formData = new FormData();
-        formData.append('nom', profileData.nom);
-        formData.append('prenom', profileData.prenom);
-        formData.append('email', profileData.email);
-        formData.append('telephone', `+221${profileData.telephone}`);
-
+        let dataToSend;
+        
         if (photoFile) {
+          // Si on a une photo, utiliser FormData
+          const formData = new FormData();
+          formData.append('nom', profileData.nom);
+          formData.append('prenom', profileData.prenom);
+          formData.append('email', profileData.email);
+          formData.append('telephone', `+221${profileData.telephone}`);
           formData.append('photo', photoFile);
+          dataToSend = formData;
+        } else {
+          // Sinon, utiliser un objet JavaScript standard
+          dataToSend = {
+            nom: profileData.nom,
+            prenom: profileData.prenom,
+            email: profileData.email,
+            telephone: `+221${profileData.telephone}`
+          };
         }
-
+  
         console.log("Envoi des données au serveur");
-
+        console.log(userId, "test");
+        console.log(dataToSend, "testdata");
+  
         // Appeler le service pour mettre à jour le profil
-        const response = await utilisateurService.mettreAJourUtilisateur(userId, formData);
+        const response = await utilisateurService.mettreAJourUtilisateur(userId, dataToSend);
         console.log("Réponse du serveur:", response);
-
+  
         if (response && response.success) {
           setSuccess('Profil mis à jour avec succès');
-
+  
           // Mettre à jour les données de l'utilisateur dans le state parent
           const updatedUser = await authService.getMyProfile();
           if (updatedUser && updatedUser.success) {
             setUser(updatedUser.data);
           }
-
+          // mettre à jour les données de l'utilisateur dans la base de données locale
+          localStorage.setItem('user', JSON.stringify(updatedUser.data));
+  
           // Fermer le modal après 2 secondes
           setTimeout(() => {
             setShowModifierProfil(false);
           }, 2000);
-
+  
           // Afficher un message de succès avec SweetAlert2
           Swal.fire({
             icon: 'success',
@@ -385,7 +400,7 @@ const ProfileEditModal = ({
       } catch (err) {
         console.error("Erreur:", err);
         setError(err.response?.data?.message || err.message || "Erreur lors de la mise à jour du profil");
-
+  
         // Afficher un message d'erreur avec SweetAlert2
         Swal.fire({
           icon: 'error',
@@ -399,7 +414,7 @@ const ProfileEditModal = ({
       }
     } else {
       console.log("Le formulaire n'est pas valide");
-
+  
       // Afficher un message d'erreur avec SweetAlert2
       Swal.fire({
         icon: 'warning',

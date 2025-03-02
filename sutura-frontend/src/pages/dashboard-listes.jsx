@@ -2,21 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import {
-  Pencil,
-  Trash2,
-  IdCard,
-  LockKeyholeOpen,
-  Search,
-  SlidersHorizontal,
-  ArrowLeftToLine,
-  ArrowRightToLine,
-  ChevronDown
+  Pencil, Trash2, IdCard,
+  LockKeyholeOpen, Search, SlidersHorizontal,
+  ArrowLeftToLine, ArrowRightToLine, ChevronDown,
+  Fingerprint
 } from 'lucide-react';
 import '../styles/dashboard-liste.css';
 import MiniRightPanel from '../components/MiniRightPanel';
 import CardStat from '../components/CardStat';
-import CardModal from '../components/CardModal';
 import { utilisateurService } from "../services/utilisateurService";
+import { AccessControlModal, CardAssignmentModal, FingerprintModal } from '../components/AccessModals'; // Importez les nouveaux composants de modales
 
 const DashboardListe = () => {
   const navigate = useNavigate();
@@ -39,8 +34,10 @@ const DashboardListe = () => {
   const [activeUsers, setActiveUsers] = useState(0);
   const [assignedCards, setAssignedCards] = useState(0);
 
-  // État pour le modal d'assignation de carte
+  // États pour les modales
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
   const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [fingerprintModalOpen, setFingerprintModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   const filterRef = useRef(null);
@@ -200,53 +197,52 @@ const DashboardListe = () => {
     });
   };
 
-  // Gestion de la suppression multiple d'utilisateurs par rapport au service utilisateur en précisant les utilisateurs sélectionnés et avec sweetalert2
-// Gestion de la suppression multiple d'utilisateurs
-const handleDeleteMultiple = (ids) => {
-  if (!ids || ids.length < 2) {
-    console.error("Au moins deux IDs d'utilisateurs sont requis pour la suppression multiple!");
-    return;
-  }
-  
-  Swal.fire({
-    title: 'Êtes-vous sûr?',
-    text: `Êtes-vous sûr de vouloir supprimer ces ${ids.length} utilisateurs?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Oui, supprimer tout!',
-    cancelButtonText: 'Annuler',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      utilisateurService.supprimerUtilisateurs(ids)
-        .then(() => {
-          // Mettre à jour le state en retirant les utilisateurs supprimés
-          setUsers(users.filter(user => !ids.includes(user.id || user._id)));
-          // Vider la sélection
-          setSelectedUsers([]);
-          
-          Swal.fire({
-            icon: 'success',
-            title: 'Supprimés!',
-            text: `${ids.length} utilisateurs ont été supprimés.`,
-            timer: 2000,
-            showConfirmButton: false
-          });
-        })
-        .catch((error) => {
-          console.error("Erreur suppression multiple:", error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Erreur!',
-            text: 'Une erreur s\'est produite lors de la suppression multiple: ' + (error.response?.data?.message || error.message || 'Erreur inconnue'),
-            timer: 2000,
-            showConfirmButton: false
-          });
-        });
+  // Gestion de la suppression multiple d'utilisateurs
+  const handleDeleteMultiple = (ids) => {
+    if (!ids || ids.length < 2) {
+      console.error("Au moins deux IDs d'utilisateurs sont requis pour la suppression multiple!");
+      return;
     }
-  });
-};
+    
+    Swal.fire({
+      title: 'Êtes-vous sûr?',
+      text: `Êtes-vous sûr de vouloir supprimer ces ${ids.length} utilisateurs?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, supprimer tout!',
+      cancelButtonText: 'Annuler',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        utilisateurService.supprimerUtilisateurs(ids)
+          .then(() => {
+            // Mettre à jour le state en retirant les utilisateurs supprimés
+            setUsers(users.filter(user => !ids.includes(user.id || user._id)));
+            // Vider la sélection
+            setSelectedUsers([]);
+            
+            Swal.fire({
+              icon: 'success',
+              title: 'Supprimés!',
+              text: `${ids.length} utilisateurs ont été supprimés.`,
+              timer: 2000,
+              showConfirmButton: false
+            });
+          })
+          .catch((error) => {
+            console.error("Erreur suppression multiple:", error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Erreur!',
+              text: 'Une erreur s\'est produite lors de la suppression multiple: ' + (error.response?.data?.message || error.message || 'Erreur inconnue'),
+              timer: 2000,
+              showConfirmButton: false
+            });
+          });
+      }
+    });
+  };
 
   // Gestion active/inactive d'un utilisateur
   const handleToggleStatus = (id) => {
@@ -322,58 +318,53 @@ const handleDeleteMultiple = (ids) => {
     });
   };
 
-  // Ouvrir le modal d'assignation de carte
-  const handleOpenCardModal = (user) => {
+  // Gestion des modales
+  const handleOpenAccessModal = (user) => {
     setSelectedUser(user);
+    setAccessModalOpen(true);
+  };
+
+  const handleOpenCardModal = () => {
+    setAccessModalOpen(false);
     setCardModalOpen(true);
   };
 
-  // Fermer le modal d'assignation de carte
-  const handleCloseCardModal = () => {
+  const handleOpenFingerprintModal = () => {
+    setAccessModalOpen(false);
+    setFingerprintModalOpen(true);
+  };
+
+  const handleCloseModals = () => {
+    setAccessModalOpen(false);
     setCardModalOpen(false);
+    setFingerprintModalOpen(false);
     setSelectedUser(null);
   };
 
-  // Gestion de carte RFID (active/inactive)
-  const handleToggleCard = (id) => {
-    // Trouver l'utilisateur pour savoir s'il a une carte assignée
-    const user = users.find(u => (u.id || u._id) === id);
-
-    if (!user) {
-      console.error("Utilisateur non trouvé pour l'ID:", id);
-      return;
-    }
-
-    if (!id) {
-      console.error("ID utilisateur manquant!");
-      return;
-    }
-
-    const hasCarte = user.cardActive !== undefined && user.cardActive !== null;
-
-    // Choisir l'action selon l'état actuel de la carte
-    const action = hasCarte ? 'désactiver' : 'réactiver';
-    const serviceFunction = hasCarte
-      ? utilisateurService.desassignerCarteRFID
-      : utilisateurService.reactiverCarteRFID;
-
+  // Gestion de carte RFID (désassignation)
+  const handleDesassignerCarte = () => {
+    if (!selectedUser) return;
+    
+    const id = selectedUser.id || selectedUser._id;
+    handleCloseModals();
+    
     Swal.fire({
       title: 'Êtes-vous sûr?',
-      text: `Êtes-vous sûr de vouloir ${action} la carte RFID de cet utilisateur?`,
+      text: `Êtes-vous sûr de vouloir désassigner la carte RFID de cet utilisateur?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: `Oui, ${action}`,
+      confirmButtonText: 'Oui, désassignée',
       cancelButtonText: 'Annuler',
     }).then((result) => {
       if (result.isConfirmed) {
-        serviceFunction(id)
+        utilisateurService.desassignerCarteRFID(id)
           .then(() => {
             // Mettre à jour l'utilisateur dans le state
             const updatedUsers = users.map(u => {
               if ((u.id || u._id) === id) {
-                return { ...u, cardActive: !hasCarte };
+                return { ...u, cardActive: false };
               }
               return u;
             });
@@ -385,18 +376,18 @@ const handleDeleteMultiple = (ids) => {
 
             Swal.fire({
               icon: 'success',
-              title: 'Modifié!',
-              text: `La carte RFID a été ${action}e.`,
+              title: 'Désagnisée!',
+              text: `La carte RFID a été Désagnisée.`,
               timer: 2000,
               showConfirmButton: false
             });
           })
           .catch((error) => {
-            console.error(`Erreur lors de l'opération ${action}:`, error);
+            console.error(`Erreur lors de la désassignation:`, error);
             Swal.fire({
               icon: 'error',
               title: 'Erreur!',
-              text: `Une erreur s'est produite lors de l'opération: ${error.response?.data?.message || error.message || 'Erreur inconnue'}`,
+              text: `Une erreur s'est produite: ${error.response?.data?.message || error.message || 'Erreur inconnue'}`,
               timer: 2000,
               showConfirmButton: false
             });
@@ -405,64 +396,48 @@ const handleDeleteMultiple = (ids) => {
     });
   };
 
-  // Gestion assigner une carte RFID à un utilisateur
-  const handleAssignCard = (id) => {
-    handleCloseCardModal(); // Fermer le modal
-
-    if (!id) {
-      console.error("ID utilisateur manquant!");
-      return;
-    }
-
-    // Simulation de lecture de carte RFID
+  const handleSupprimerEmpreinte = () => {
+    if (!selectedUser) return;
+    
+    const id = selectedUser.id || selectedUser._id;
+    handleCloseModals();
+    
     Swal.fire({
-      title: 'Assigner une carte RFID',
-      text: "Veuillez placer la carte RFID sur le lecteur",
-      icon: 'info',
-      input: 'text',
-      inputPlaceholder: 'ID de la carte (simulé)',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Vous devez entrer un ID de carte!';
-        }
-      },
+      title: 'Êtes-vous sûr?',
+      text: `Êtes-vous sûr de vouloir supprimer l'empreinte digitale de cet utilisateur?`,
+      icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Assigner',
+      confirmButtonText: 'Oui, supprimer',
       cancelButtonText: 'Annuler',
     }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        const cardId = result.value;
-        utilisateurService.assignerCarteRFID(id, cardId)
+      if (result.isConfirmed) {
+        utilisateurService.desassignerEmpreinte(id)
           .then(() => {
             // Mettre à jour l'utilisateur dans le state
             const updatedUsers = users.map(u => {
               if ((u.id || u._id) === id) {
-                return { ...u, cardActive: true, cardId };
+                return { ...u, empreinteID: null };
               }
               return u;
             });
             setUsers(updatedUsers);
 
-            // Mettre à jour le compteur de cartes assignées
-            const cartes = updatedUsers.filter(user => user.cardActive).length;
-            setAssignedCards(cartes);
-
             Swal.fire({
               icon: 'success',
-              title: 'Assigné!',
-              text: 'La carte RFID a été assignée.',
+              title: 'Supprimée!',
+              text: `L'empreinte digitale a été supprimée.`,
               timer: 2000,
               showConfirmButton: false
             });
           })
           .catch((error) => {
-            console.error("Erreur lors de l'assignation de carte:", error);
+            console.error(`Erreur lors de la suppression:`, error);
             Swal.fire({
               icon: 'error',
               title: 'Erreur!',
-              text: 'Une erreur s\'est produite lors de l\'assignation: ' + (error.response?.data?.message || error.message || 'Erreur inconnue'),
+              text: `Une erreur s'est produite: ${error.response?.data?.message || error.message || 'Erreur inconnue'}`,
               timer: 2000,
               showConfirmButton: false
             });
@@ -471,63 +446,16 @@ const handleDeleteMultiple = (ids) => {
     });
   };
 
-  // Gestion enregistrer l'empreinte digitale d'un utilisateur
-  const handleSaveFingerprint = (id) => {
-    if (!id) {
-      console.error("ID utilisateur manquant!");
-      return;
-    }
+  // Gestion assignation d'une carte RFID
+  const handleAssignCard = () => {
+    if (!selectedUser) return;
+    
+  };
 
-    Swal.fire({
-      title: 'Enregistrer l\'empreinte digitale',
-      text: "Veuillez placer votre doigt sur le capteur d'empreintes digitales",
-      icon: 'info',
-      input: 'text',
-      inputPlaceholder: 'ID de l\'empreinte (simulé)',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Vous devez entrer un ID d\'empreinte!';
-        }
-      },
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Enregistrer',
-      cancelButtonText: 'Annuler',
-    }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        const empreinteID = result.value;
-        utilisateurService.assignerEmpreinte(id, empreinteID)
-          .then(() => {
-            // Mettre à jour l'utilisateur dans le state
-            const updatedUsers = users.map(u => {
-              if ((u.id || u._id) === id) {
-                return { ...u, empreinteID };
-              }
-              return u;
-            });
-            setUsers(updatedUsers);
-
-            Swal.fire({
-              icon: 'success',
-              title: 'Enregistré!',
-              text: 'L\'empreinte digitale a été enregistrée.',
-              timer: 2000,
-              showConfirmButton: false
-            });
-          })
-          .catch((error) => {
-            console.error("Erreur lors de l'enregistrement d'empreinte:", error);
-            Swal.fire({
-              icon: 'error',
-              title: 'Erreur!',
-              text: 'Une erreur s\'est produite lors de l\'enregistrement: ' + (error.response?.data?.message || error.message || 'Erreur inconnue'),
-              timer: 2000,
-              showConfirmButton: false
-            });
-          });
-      }
-    });
+  // Gestion de l'enregistrement d'empreinte digitale
+  const handleSaveFingerprint = () => {
+    if (!selectedUser) return;
+    
   };
 
   // Gérer le changement de page
@@ -810,15 +738,15 @@ const handleDeleteMultiple = (ids) => {
                           </button>
                           <button
                             className="buton"
-                            title="Carte"
-                            onClick={() => handleOpenCardModal(user)}
+                            title="Contrôle d'accès"
+                            onClick={() => handleOpenAccessModal(user)}
                           >
                             <IdCard size={18} />
                           </button>
                           <button
                             className="buton"
                             title={user.cardActive ? "Désactiver carte" : "Activer carte"}
-                            onClick={() => handleToggleCard(user.id || user._id)}
+                            onClick={() => handleToggleStatus(user.id || user._id)}
                           >
                             <LockKeyholeOpen size={18} />
                           </button>
@@ -875,15 +803,36 @@ const handleDeleteMultiple = (ids) => {
         <MiniRightPanel />
       </div>
 
-      {/* Modal pour l'assignation de carte */}
+      {/* Modales d'accès */}
       {selectedUser && (
-        <CardModal
-          isOpen={cardModalOpen}
-          onClose={handleCloseCardModal}
-          user={selectedUser}
-          onAssignCard={() => handleAssignCard(selectedUser.id || selectedUser._id)}
-          onSaveFingerprint={() => handleSaveFingerprint(selectedUser.id || selectedUser._id)}
-        />
+        <>
+          {/* Modale principale de contrôle d'accès */}
+          <AccessControlModal
+            isOpen={accessModalOpen}
+            onClose={handleCloseModals}
+            user={selectedUser}
+            onOpenCardModal={handleOpenCardModal}
+            onOpenFingerprintModal={handleOpenFingerprintModal}
+            onDesassignerCarte={handleDesassignerCarte}
+            onSupprimerEmpreinte={handleSupprimerEmpreinte}
+          />
+
+          {/* Modale d'assignation de carte */}
+          <CardAssignmentModal
+            isOpen={cardModalOpen}
+            onClose={handleCloseModals}
+            user={selectedUser}
+            onAssignCard={handleAssignCard}
+          />
+
+          {/* Modale d'empreinte digitale */}
+          <FingerprintModal
+            isOpen={fingerprintModalOpen}
+            onClose={handleCloseModals}
+            user={selectedUser}
+            onSaveFingerprint={handleSaveFingerprint}
+          />
+        </>
       )}
     </div>
   );
