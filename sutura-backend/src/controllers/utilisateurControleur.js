@@ -134,20 +134,27 @@ const obtenirTousUtilisateurs = async (req, res) => {
     // Construire les filtres de recherche à partir des query params
     const filtres = {};
 
+    // Récupérer l'ID de l'utilisateur connecté (admin)
+    const adminConnecteId = req.user._id;
+
+    // Construire les filtres de base pour le comptage et la recherche
+    const filtresBase = {};
+
     // Filtre sur le statut actif
     if (req.query.actif !== undefined) {
       filtres.actif = req.query.actif === "true";
+      filtresBase.actif = req.query.actif === "true";
     }
 
     // Filtre sur le rôle
     if (req.query.role) {
-      filtres.role = req.query.role;
+      filtresBase.role = req.query.role;
     }
 
     // Recherche textuelle
     if (req.query.recherche) {
       const recherche = req.query.recherche;
-      filtres.$or = [
+      filtresBase.$or = [
         { nom: { $regex: recherche, $options: "i" } },
         { prenom: { $regex: recherche, $options: "i" } },
         { email: { $regex: recherche, $options: "i" } },
@@ -155,20 +162,28 @@ const obtenirTousUtilisateurs = async (req, res) => {
       ];
     }
 
-    // Récupérer les utilisateurs avec pagination
+    // Compter TOUS les utilisateurs (y compris l'admin connecté)
+    const total = await Utilisateur.countDocuments(filtresBase);
+
+    // Ajouter le filtre pour exclure l'admin connecté pour la requête de recherche
+    const filtresRecherche = {
+      ...filtresBase,
+      _id: { $ne: adminConnecteId },
+    };
+
+    // Récupérer les utilisateurs avec pagination (sans l'admin connecté)
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const startIndex = (page - 1) * limit;
 
-    const total = await Utilisateur.countDocuments(filtres);
-    const utilisateurs = await Utilisateur.find(filtres)
+    const utilisateurs = await Utilisateur.find(filtresRecherche)
       .sort({ date_creation: -1 })
       .skip(startIndex)
       .limit(limit);
 
     res.status(200).json({
       success: true,
-      count: utilisateurs.length,
+      count: total,
       pagination: {
         total,
         page,
@@ -771,6 +786,8 @@ const demanderReinitialisation = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Email de réinitialisation envoyé",
+      token,
+      message: "Email de réinitialisation envoyé",
     });
   } catch (error) {
     console.error("Erreur demanderReinitialisation:", error);
@@ -795,7 +812,6 @@ const demanderReinitialisation = async (req, res) => {
  * Réinitialiser le mot de passe
  * @route POST /api/utilisateurs/reinitialiser-mot-de-passe
  * @param {string} token - Token de réinitialisation
- * @param {string} actuelPassword - Mot de passe actuel
  * @param {string} nouveauPassword - Nouveau mot de passe
  * @param {string} confirmPassword - Confirmation du nouveau mot de passe
  * @returns {object} Message de confirmation
@@ -885,6 +901,94 @@ const reinitialiserMotDePasse = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur lors de la réinitialisation du mot de passe",
+    });
+  }
+};
+
+/**
+ * Changer le mot de passe
+ * @route POST /api/utilisateurs/changerpassword
+ * @param {string} token - Token de réinitialisation
+ * @param {string} actuelPassword - Mot de passe actuel
+ * @param {string} nouveauPassword - Nouveau mot de passe
+ * @param {string} confirmPassword - Confirmation du nouveau mot de passe
+ * @returns {object} Message de confirmation
+ */
+
+const changerpassword = async (req, res) => {
+  try {
+    const { actuelPassword, nouveauPassword, confirmPassword } = req.body;
+    const userId = req.user.id; // Supposant que l'ID de l'utilisateur est disponible via l'authentification
+
+    // Validation des données d'entrée
+    if (!actuelPassword || !nouveauPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Veuillez fournir toutes les informations nécessaires",
+      });
+    }
+
+    // Vérifier que les nouveaux mots de passe correspondent
+    if (nouveauPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Les nouveaux mots de passe ne correspondent pas",
+      });
+    }
+
+    // Récupérer l'utilisateur depuis la base de données
+    const utilisateur = await Utilisateur.findById(userId).select("+password");
+
+    if (!utilisateur) {
+      return res.status(404).json({
+        success: false,
+        message: "Utilisateur non trouvé",
+      });
+    }
+
+    // Vérifier le mot de passe actuel
+    const isMatch = await utilisateur.comparePassword(actuelPassword);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Mot de passe actuel incorrect",
+      });
+    }
+
+    // Mettre à jour le mot de passe
+    utilisateur.password = nouveauPassword;
+    utilisateur.date_modif = Date.now();
+    await utilisateur.save();
+
+    // Créer l'historique pour le changement de mot de passe
+    await creerHistorique({
+      users_id: utilisateur._id,
+      type_entite: "utilisateur",
+      type_operation: "modif",
+      description: `Mot de passe modifié pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
+      statut: "succès",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Mot de passe modifié avec succès",
+    });
+  } catch (error) {
+    console.error("Erreur changerMotDePasse:", error);
+
+    // Créer l'historique pour l'échec du changement de mot de passe
+    await creerHistorique({
+      users_id: req.user?.id,
+      type_entite: "utilisateur",
+      type_operation: "modif",
+      description: `Échec de la modification du mot de passe: ${error.message}`,
+      statut: "erreur",
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la modification du mot de passe",
     });
   }
 };
@@ -1043,4 +1147,5 @@ module.exports = {
   desactiverMaCarteRFID,
   reactiverCarteRFID,
   demanderReinitialisation,
+  changerpassword,
 };

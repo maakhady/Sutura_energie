@@ -1,4 +1,7 @@
 import axios from "axios";
+import { authService } from "./authService";
+import { socketService } from './rfid-fingersocket';
+
 
 const API_URL = "http://localhost:2500/api/utilisateurs";
 
@@ -107,6 +110,8 @@ const mettreAJourUtilisateur = async (id, userData) => {
 };
 
 
+
+
 // Fonction pour supprimer un ou plusieurs utilisateurs definitivement
 const supprimerUtilisateurs = async (ids) => {
   try {
@@ -175,6 +180,48 @@ const assignerCarteRFID = async (id, cardId) => {
     throw error;
   }
 };
+
+
+// Fonction pour démarrer l'assignation d'une carte RFID en temps réel
+const demarrerAssignationRFIDEnTempsReel = async (id) => {
+  try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
+    
+    const socket = socketService.getSocket();
+    socket.emit('demarrer_assignation_rfid', id);
+    
+    return {
+      success: true,
+      message: "Mode d'assignation RFID démarré"
+    };
+  } catch (error) {
+    console.error(
+      "Erreur lors du démarrage de l'assignation RFID:",
+      error.message
+    );
+    throw error;
+  }
+};
+
+// Fonction pour annuler l'assignation RFID en cours
+const annulerAssignationRFID = () => {
+  const socket = socketService.getSocket();
+  socket.emit('annuler_assignation_rfid');
+};
+
+// Fonction pour s'abonner aux mises à jour d'état d'assignation RFID
+const abonnerStatutAssignationRFID = (callback) => {
+  const socket = socketService.getSocket();
+  socket.on('assignation_rfid_status', callback);
+  
+  // Retourner une fonction pour se désabonner
+  return () => {
+    socket.off('assignation_rfid_status', callback);
+  };
+};
+
 
 // Fonction pour désassigner une carte RFID
 const desassignerCarteRFID = async (id) => {
@@ -279,6 +326,15 @@ const desassignerEmpreinte = async (id) => {
   }
 };
 
+//Fonction pour annuler l'assignation d'empreinte en cours
+const annulerAssignationEmpreinte = () => {
+  const socket = socketService.getSocket();
+  socket.emit('annuler_assignation_empreinte');
+};
+
+
+
+
 // Fonction pour demander une réinitialisation de mot de passe
 const demanderReinitialisation = async (email) => {
   try {
@@ -323,11 +379,14 @@ const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, c
 // Fonction pour changer son mot de passe (utilisateur connecté)
 const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPassword) => {
   try {
+    // Vérification des champs requis côté client
     if (!actuelPassword || !nouveauPassword || !confirmPassword) {
       throw new Error("Tous les champs de mot de passe sont requis");
     }
+    
+    // Appel API pour changer le mot de passe
     const response = await axios.post(
-      `${API_URL}/changer-mot-de-passe`,
+      `${API_URL}/changerpassword`,
       {
         actuelPassword,
         nouveauPassword,
@@ -335,6 +394,16 @@ const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPasswor
       },
       getAuthConfig()
     );
+    
+    // Si le changement de mot de passe est réussi
+    if (response.data.success) {
+      // Déconnecter l'utilisateur en utilisant la fonction logout existante
+      await authService.logout();
+      
+      // Rediriger vers la page de connexion
+      window.location.href = '/';
+    }
+    
     return response.data;
   } catch (error) {
     console.error(
@@ -343,6 +412,44 @@ const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPasswor
     );
     throw error;
   }
+};
+
+// Fonction pour démarrer l'assignation d'une empreinte digitale
+const demarrerAssignationEmpreinteEnTempsReel = async (id) => {
+  try {
+    if (!id) {
+      throw new Error("ID utilisateur requis");
+    }
+    
+    const socket = socketService.getSocket();
+    socket.emit('demarrer_assignation_empreinte', id);
+    
+    // Appeler l'API existante pour démarrer l'enregistrement
+    const response = await axios.patch(
+      `${API_URL}/${id}/assigner-empreinte`,
+      {},
+      getAuthConfig()
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Erreur lors du démarrage de l'assignation d'empreinte:",
+      error.response?.data?.message || error.message
+    );
+    throw error;
+  }
+};
+
+// Fonction pour s'abonner aux mises à jour d'état d'assignation d'empreinte
+const abonnerStatutAssignationEmpreinte = (callback) => {
+  const socket = socketService.getSocket();
+  socket.on('assignation_empreinte_status', callback);
+  
+  // Retourner une fonction pour se désabonner
+  return () => {
+    socket.off('assignation_empreinte_status', callback);
+  };
 };
 
 // Exporter les fonctions du service
@@ -362,6 +469,13 @@ export const utilisateurService = {
   demanderReinitialisation,
   reinitialiserMotDePasse,
   changerMotDePasse,
+  abonnerStatutAssignationEmpreinte,
+  annulerAssignationRFID,
+  abonnerStatutAssignationRFID,
+  demarrerAssignationRFIDEnTempsReel,
+  demarrerAssignationEmpreinteEnTempsReel,
+  annulerAssignationEmpreinte,
+
 };
 
 

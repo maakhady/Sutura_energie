@@ -125,7 +125,6 @@ const reinitialiserMotDePasse = async (token, data) => {
   try {
     const response = await axios.post(`${API_URL2}/reinitialiser-password`, {
       token,
-      actuelPassword: data.actuelPassword,
       nouveauPassword: data.nouveauPassword,
       confirmPassword: data.confirmPassword,
     });

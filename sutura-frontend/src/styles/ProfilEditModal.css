@@ -1,0 +1,141 @@
+/* Styles pour le modal de modification de profil */
+
+/* Fond superposé du modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Contenu du modal */
+  .modal-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Titre du modal */
+  .modal-content h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #274C77;
+    margin-top: 0;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  /* Style spécifique pour le modal de modification de profil */
+  .profile-edit-modal {
+    width: 90%;
+    max-width: 700px;
+  }
+  
+  /* Grille du formulaire à deux colonnes */
+  .profile-form .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  /* Messages d'erreur et de succès */
+  .error-message, .success-message {
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  
+  .error-message {
+    background-color: #fee2e2;
+    color: #ef4444;
+  }
+  
+  .success-message {
+    background-color: #d1fae5;
+    color: #10b981;
+  }
+  
+  /* Boutons du formulaire */
+  .form-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  
+  .submit-btn, .cancel-btn {
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+  }
+  
+  .submit-btn {
+    background-color: #274C77;
+    color: white;
+    min-width: 120px;
+  }
+  
+  .submit-btn:hover:not(:disabled) {
+    background-color: #1e3a5f;
+  }
+  
+  .cancel-btn {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    min-width: 120px;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #e5e7eb;
+  }
+  
+  /* Message flottant */
+  .floating {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1100;
+    animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+    animation-fill-mode: forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+  
+  /* Responsive pour les petits écrans */
+  @media screen and (max-width: 768px) {
+    .profile-form .form-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-buttons {
+      flex-direction: column;
+    }
+    
+    .submit-btn, .cancel-btn {
+      width: 100%;
+    }
+  }

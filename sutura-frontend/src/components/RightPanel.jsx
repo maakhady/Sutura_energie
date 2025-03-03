@@ -1,7 +1,209 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, memo } from "react";
+import PropTypes from "prop-types";
 import "../styles/RightPanel.css";
 import { utilisateurService } from "../services/utilisateurService";
 import { authService } from "../services/authService";
+import { Eye, EyeOff } from "lucide-react";
+import MemoizedProfileEditModal from "./ProfileEditModal"; // Importer le composant de modification de profil
+
+// Définir le composant PasswordChangeModal en dehors du composant principal
+// pour qu'il ne soit pas recréé à chaque rendu du composant parent
+const PasswordChangeModal = ({
+  passwordData,
+  showPasswords,
+  error,
+  success,
+  actuelPasswordRef,
+  nouveauPasswordRef,
+  confirmPasswordRef,
+  modalRef,
+  setShowModifierMotDePasse,
+  handleInputChange,
+  handleChangePassword,
+  togglePasswordVisibility,
+  handleModalContentClick,
+}) => {
+  // Vérifie si les mots de passe correspondent
+  const passwordsMatch =
+    passwordData.nouveauPassword &&
+    passwordData.confirmPassword &&
+    passwordData.nouveauPassword === passwordData.confirmPassword;
+
+  // Vérifie si les mots de passe ne correspondent pas
+  const passwordsDontMatch =
+    passwordData.nouveauPassword &&
+    passwordData.confirmPassword &&
+    passwordData.nouveauPassword !== passwordData.confirmPassword;
+
+  return (
+    <div
+      className="modal-overlay"
+      onClick={() => setShowModifierMotDePasse(false)}
+    >
+      <div
+        className="modal-content"
+        onClick={handleModalContentClick}
+        ref={modalRef}
+      >
+        <h3>Modifier mon mot de passe</h3>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+        <form onSubmit={handleChangePassword} className="password-form">
+          <div className="form-group">
+            <label htmlFor="actuelPassword">Mot de passe actuel</label>
+            <div className="password-input-container">
+              <input
+                type={showPasswords.actuelPassword ? "text" : "password"}
+                id="actuelPassword"
+                name="actuelPassword"
+                value={passwordData.actuelPassword}
+                onChange={handleInputChange}
+                autoComplete="current-password"
+                required
+                ref={actuelPasswordRef}
+              />
+              <button
+                type="button"
+                className="toggle-password-btn"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Critique pour maintenir le focus
+                }}
+                onClick={(e) => togglePasswordVisibility("actuelPassword", e)}
+                tabIndex="-1"
+              >
+                {showPasswords.actuelPassword ? (
+                  <Eye size={16} />
+                ) : (
+                  <EyeOff size={16} />
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="form-group">
+            <label htmlFor="nouveauPassword">Nouveau mot de passe</label>
+            <div className="password-input-container">
+              <input
+                type={showPasswords.nouveauPassword ? "text" : "password"}
+                id="nouveauPassword"
+                name="nouveauPassword"
+                value={passwordData.nouveauPassword}
+                onChange={handleInputChange}
+                autoComplete="new-password"
+                required
+                ref={nouveauPasswordRef}
+              />
+              <button
+                type="button"
+                className="toggle-password-btn"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Critique pour maintenir le focus
+                }}
+                onClick={(e) => togglePasswordVisibility("nouveauPassword", e)}
+                tabIndex="-1"
+              >
+                {showPasswords.nouveauPassword ? (
+                  <Eye size={16} />
+                ) : (
+                  <EyeOff size={16} />
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+            <div className="password-input-container">
+              <input
+                type={showPasswords.confirmPassword ? "text" : "password"}
+                id="confirmPassword"
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handleInputChange}
+                autoComplete="new-password"
+                required
+                className={
+                  passwordsDontMatch
+                    ? "password-mismatch"
+                    : passwordsMatch
+                    ? "password-match"
+                    : ""
+                }
+                ref={confirmPasswordRef}
+              />
+              <button
+                type="button"
+                className="toggle-password-btn"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Critique pour maintenir le focus
+                }}
+                onClick={(e) => togglePasswordVisibility("confirmPassword", e)}
+                tabIndex="-1"
+              >
+                {showPasswords.confirmPassword ? (
+                  <Eye size={16} />
+                ) : (
+                  <EyeOff size={16} />
+                )}
+              </button>
+            </div>
+            {passwordsDontMatch && (
+              <p className="password-validation-message error">
+                Les mots de passe ne correspondent pas
+              </p>
+            )}
+            {passwordsMatch && (
+              <p className="password-validation-message success">
+                Les mots de passe correspondent
+              </p>
+            )}
+          </div>
+          <div className="form-buttons">
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={passwordsDontMatch}
+            >
+              Modifier
+            </button>
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => setShowModifierMotDePasse(false)}
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+PasswordChangeModal.propTypes = {
+  passwordData: PropTypes.shape({
+    actuelPassword: PropTypes.string,
+    nouveauPassword: PropTypes.string,
+    confirmPassword: PropTypes.string,
+  }).isRequired,
+  showPasswords: PropTypes.shape({
+    actuelPassword: PropTypes.bool,
+    nouveauPassword: PropTypes.bool,
+    confirmPassword: PropTypes.bool,
+  }).isRequired,
+  error: PropTypes.string,
+  success: PropTypes.string,
+  actuelPasswordRef: PropTypes.object.isRequired,
+  nouveauPasswordRef: PropTypes.object.isRequired,
+  confirmPasswordRef: PropTypes.object.isRequired,
+  modalRef: PropTypes.object.isRequired,
+  setShowModifierMotDePasse: PropTypes.func.isRequired,
+  handleInputChange: PropTypes.func.isRequired,
+  handleChangePassword: PropTypes.func.isRequired,
+  togglePasswordVisibility: PropTypes.func.isRequired,
+  handleModalContentClick: PropTypes.func.isRequired,
+};
+
+// Application de memo au composant
+// Application de memo au composant
+const MemoizedPasswordChangeModal = memo(PasswordChangeModal);
 
 const RightPanel = () => {
   // Fonction pour formatter le rôle
@@ -19,11 +221,12 @@ const RightPanel = () => {
     }
   };
   const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showAlertDetails, setShowAlertDetails] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [showModifierMotDePasse, setShowModifierMotDePasse] = useState(false);
+  const [showModifierProfil, setShowModifierProfil] = useState(false); // Nouvel état pour afficher le modal de profil
   const [passwordData, setPasswordData] = useState({
     actuelPassword: "",
     nouveauPassword: "",
@@ -31,6 +234,19 @@ const RightPanel = () => {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  // État pour l'affichage/masquage des mots de passe
+  const [showPasswords, setShowPasswords] = useState({
+    actuelPassword: false,
+    nouveauPassword: false,
+    confirmPassword: false,
+  });
+
+  // Références pour maintenir le focus
+  const actuelPasswordRef = useRef(null);
+  const nouveauPasswordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+  const modalRef = useRef(null);
+  const profileModalRef = useRef(null); // Référence pour le modal de profil
 
   // Récupérer les informations de l'utilisateur connecté
   useEffect(() => {
@@ -42,14 +258,22 @@ const RightPanel = () => {
           setUser(response.data);
         }
         setLoading(false);
-      } catch (err) {
-        console.error("Erreur lors de la récupération du profil:", err);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchUserProfile();
   }, []);
+
+  // Mettre le focus sur le premier champ quand le modal s'ouvre
+  useEffect(() => {
+    if (showModifierMotDePasse && actuelPasswordRef.current) {
+      setTimeout(() => {
+        actuelPasswordRef.current.focus();
+      }, 100);
+    }
+  }, [showModifierMotDePasse]);
 
   // Gestion de la fermeture du dropdown lors d'un clic à l'extérieur
   useEffect(() => {
@@ -71,6 +295,7 @@ const RightPanel = () => {
       if (event.key === "Escape") {
         setShowAlertDetails(false);
         setShowModifierMotDePasse(false);
+        setShowModifierProfil(false); // Fermer le modal de profil également
       }
     };
 
@@ -85,7 +310,10 @@ const RightPanel = () => {
   };
 
   const handleModifierProfil = () => {
-    console.log("Fonction de modification de profil");
+    // Réinitialiser les messages d'erreur et de succès
+    setError("");
+    setSuccess("");
+    setShowModifierProfil(true); // Afficher le modal de modification de profil
     setShowDropdown(false);
   };
 
@@ -97,7 +325,11 @@ const RightPanel = () => {
       setSuccess("Votre carte RFID a été désactivée avec succès.");
       // Mettre à jour les infos utilisateur
       const userData = await authService.getMyProfile();
-      setUser(userData);
+      if (userData && userData.success) {
+        setUser(userData.data);
+      } else {
+        setUser(userData);
+      }
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -108,6 +340,19 @@ const RightPanel = () => {
   };
 
   const handleModifierMotDePasse = () => {
+    // Réinitialiser tous les états avant d'ouvrir le modal
+    setPasswordData({
+      actuelPassword: "",
+      nouveauPassword: "",
+      confirmPassword: "",
+    });
+    setShowPasswords({
+      actuelPassword: false,
+      nouveauPassword: false,
+      confirmPassword: false,
+    });
+    setError("");
+    setSuccess("");
     setShowModifierMotDePasse(true);
     setShowDropdown(false);
   };
@@ -158,67 +403,35 @@ const RightPanel = () => {
     setShowAlertDetails(true);
   };
 
-  // Modal de changement de mot de passe
-  const PasswordChangeModal = () => {
-    return (
-      <div
-        className="modal-overlay"
-        onClick={() => setShowModifierMotDePasse(false)}
-      >
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          <h3>Modifier mon mot de passe </h3>
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-          <form onSubmit={handleChangePassword} className="password-form">
-            <div className="form-group">
-              <label htmlFor="actuelPassword">Mot de passe actuel</label>
-              <input
-                type="password"
-                id="actuelPassword"
-                name="actuelPassword"
-                value={passwordData.actuelPassword}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="nouveauPassword">Nouveau mot de passe</label>
-              <input
-                type="password"
-                id="nouveauPassword"
-                name="nouveauPassword"
-                value={passwordData.nouveauPassword}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-buttons">
-              <button type="submit" className="submit-btn">
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => setShowModifierMotDePasse(false)}
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+  // Fonction pour basculer l'affichage d'un mot de passe
+  const togglePasswordVisibility = (field, e) => {
+    // Important: empêcher la propagation ET le comportement par défaut
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+
+    // Utiliser requestAnimationFrame pour rétablir le focus après le re-rendu
+    requestAnimationFrame(() => {
+      // Rétablir le focus sur l'élément qui l'avait avant
+      if (field === "actuelPassword" && actuelPasswordRef.current) {
+        actuelPasswordRef.current.focus();
+      } else if (field === "nouveauPassword" && nouveauPasswordRef.current) {
+        nouveauPasswordRef.current.focus();
+      } else if (field === "confirmPassword" && confirmPasswordRef.current) {
+        confirmPasswordRef.current.focus();
+      }
+    });
+  };
+
+  // Empêcher la fermeture du modal sur clic à l'intérieur
+  const handleModalContentClick = (e) => {
+    e.stopPropagation();
   };
 
   // Modal des détails d'alerte
@@ -312,12 +525,30 @@ const RightPanel = () => {
       <div className="consumption-widget">
         <div className="user-avatar-container">
           <div className="user-avatar" onClick={toggleDropdown}>
-            <img src="/avatar.png" alt="User" />
+            {user && user.photo ? (
+              <img src={user.photo} alt={`${user.prenom} ${user.nom}`} />
+            ) : (
+              <div className="user-initials">
+                {user ? `${user.prenom?.[0] || ""}${user.nom?.[0] || ""}` : ""}
+              </div>
+            )}
           </div>
           {showDropdown && (
             <div className="avatar-dropdown">
               <div className="dropdown-header">
-                <img src="/avatar.png" alt="User" className="dropdown-avatar" />
+                {user && user.photo ? (
+                  <img
+                    src={user.photo}
+                    alt={`${user.prenom} ${user.nom}`}
+                    className="dropdown-avatar"
+                  />
+                ) : (
+                  <div className="dropdown-avatar user-initials">
+                    {user
+                      ? `${user.prenom?.[0] || ""}${user.nom?.[0] || ""}`
+                      : ""}
+                  </div>
+                )}
                 <div className="dropdown-user-info">
                   <h4>
                     {user ? `${user.prenom} ${user.nom}` : "Chargement..."}
@@ -348,13 +579,13 @@ const RightPanel = () => {
         <div className="consumption-value">50 kWh</div>
         <div className="consumption-date">Lundi 17/2/2025 13:45</div>
 
-        {/* Messages de succès ou d'erreur */}
-        {error && !showModifierMotDePasse && (
+        {/* Messages de succès ou d'erreur flottants */}
+        {/* {error && !showModifierMotDePasse && !showModifierProfil && (
           <div className="error-message floating">{error}</div>
         )}
-        {success && !showModifierMotDePasse && (
+        {success && !showModifierMotDePasse && !showModifierProfil && (
           <div className="success-message floating">{success}</div>
-        )}
+        )} */}
       </div>
 
       {/* Widget Alertes sécurité */}
@@ -433,7 +664,39 @@ const RightPanel = () => {
 
       {/* Modals */}
       {showAlertDetails && <AlertDetailsModal />}
-      {showModifierMotDePasse && <PasswordChangeModal />}
+
+      {/* Modal de modification de mot de passe */}
+      {showModifierMotDePasse && (
+        <MemoizedPasswordChangeModal
+          passwordData={passwordData}
+          showPasswords={showPasswords}
+          error={error}
+          success={success}
+          actuelPasswordRef={actuelPasswordRef}
+          nouveauPasswordRef={nouveauPasswordRef}
+          confirmPasswordRef={confirmPasswordRef}
+          modalRef={modalRef}
+          setShowModifierMotDePasse={setShowModifierMotDePasse}
+          handleInputChange={handleInputChange}
+          handleChangePassword={handleChangePassword}
+          togglePasswordVisibility={togglePasswordVisibility}
+          handleModalContentClick={handleModalContentClick}
+        />
+      )}
+
+      {/* Modal de modification de profil */}
+      {showModifierProfil && (
+        <MemoizedProfileEditModal
+          user={user}
+          setUser={setUser}
+          modalRef={profileModalRef}
+          setShowModifierProfil={setShowModifierProfil}
+          handleModalContentClick={handleModalContentClick}
+          setError={setError}
+          setSuccess={setSuccess}
+          userId={user._id} // Ajoutez l'ID de l'utilisateur
+        />
+      )}
     </div>
   );
 };
