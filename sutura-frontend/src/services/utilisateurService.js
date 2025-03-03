@@ -282,6 +282,25 @@ const desactiverMaCarteRFID = async () => {
   }
 };
 
+
+//Fonction pour désactiver la carte RFID d'un utilisateur
+const desactiverCarteRFIDParAdmin = async (userId) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/${userId}/desactiver-carte`,
+      {},
+      getAuthConfig()
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la désactivation de la carte RFID:",
+      error.response?.data?.message || error.message
+    );
+    throw error;
+  }
+};
+
 // Fonction pour assigner une empreinte digitale
 const assignerEmpreinte = async (id, empreinteID) => {
   try {
@@ -475,7 +494,7 @@ export const utilisateurService = {
   demarrerAssignationRFIDEnTempsReel,
   demarrerAssignationEmpreinteEnTempsReel,
   annulerAssignationEmpreinte,
-
+  desactiverCarteRFIDParAdmin
 };
 
 

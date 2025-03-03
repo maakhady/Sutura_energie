@@ -1167,6 +1167,76 @@ const desactiverMaCarteRFID = async (req, res) => {
   }
 };
 
+
+const desactiverCarteRFIDParAdmin = async (req, res) => {
+  try {
+    // Vérification implicite des droits d'admin via le middleware verifRole
+    
+    // Récupérer l'utilisateur dont la carte doit être désactivée
+    const utilisateur = await Utilisateur.findById(req.params.id);
+    
+    if (!utilisateur) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+    
+    if (!utilisateur.cardId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cet utilisateur n\'a pas de carte RFID assignée'
+      });
+    }
+    
+    if (utilisateur.cardActive === false) {
+      return res.status(400).json({
+        success: false,
+        message: 'La carte RFID de cet utilisateur est déjà désactivée'
+      });
+    }
+    
+    // Désactiver la carte
+    utilisateur.cardActive = false;
+    utilisateur.date_modif = Date.now();
+    await utilisateur.save();
+    
+    // Récupérer les infos de l'admin pour l'historique
+    const admin = await Utilisateur.findById(req.user.id);
+    
+    // Créer l'historique pour la désactivation de la carte par l'admin
+    await creerHistorique({
+      users_id: req.user.id, // ID de l'admin qui effectue l'action
+      type_entite: 'utilisateur',
+      type_operation: 'modif',
+      description: `Carte RFID désactivée pour l'utilisateur ${utilisateur.nom} ${utilisateur.prenom} par l'administrateur ${admin.nom} ${admin.prenom}`,
+      statut: 'succès'
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: 'Carte RFID désactivée avec succès',
+      data: utilisateur
+    });
+  } catch (error) {
+    console.error('Erreur desactiverCarteRFIDParAdmin:', error);
+    
+    // Créer l'historique pour l'échec de la désactivation de la carte
+    await creerHistorique({
+      users_id: req.user.id,
+      type_entite: 'utilisateur',
+      type_operation: 'modif',
+      description: `Échec de la désactivation de la carte RFID pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
+      statut: 'erreur'
+    });
+    
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la désactivation de la carte RFID'
+    });
+  }
+};
+
   
   /**
    * Réactiver la carte RFID d'un utilisateur (réservé à l'admin)
@@ -1268,4 +1338,5 @@ module.exports = {
   changerpassword,
   verifierStatutEmpreinte,
   demarrerAssignationRFID,
+  desactiverCarteRFIDParAdmin,
 };

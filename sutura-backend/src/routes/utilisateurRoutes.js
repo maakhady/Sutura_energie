@@ -19,7 +19,8 @@ const {
   demanderReinitialisation,
   changerpassword,
   verifierStatutEmpreinte,
-  demarrerAssignationRFID
+  demarrerAssignationRFID,
+  desactiverCarteRFIDParAdmin, 
 } = require("../controllers/utilisateurControleur");
 
 // Routes nécessitant un rôle admin
@@ -60,6 +61,12 @@ router.delete(
   auth,
   verifRole(["admin"]),
   desassignerEmpreinte
+);
+router.patch(
+  "/:id/desactiver-carte",
+  auth,
+  verifRole(["admin"]),
+  desactiverCarteRFIDParAdmin
 );
 router.get(
   "/:id/empreinte/statut",
