@@ -2,6 +2,7 @@ const Utilisateur = require("../models/Utilisateur");
 const emailService = require("../services/emailService");
 const jwt = require("jsonwebtoken"); // Ajoutez cette ligne pour importer jsonwebtoken
 const { creerHistorique } = require("./historiqueControleur");
+const fingerprintService = require("../services/fingerprintService");
 
 /**
  * Créer un nouvel utilisateur
@@ -535,6 +536,47 @@ const assignerCarteRFID = async (req, res) => {
     });
   }
 };
+/**
+ * Démarrer le mode d'assignation RFID en temps réel
+ * @route POST /api/utilisateurs/:id/demarrer-assignation-rfid
+ * @access Private/Admin
+ */
+const demarrerAssignationRFID = async (req, res) => {
+  try {
+    const utilisateurId = req.params.id;
+
+    // Vérifier si l'utilisateur existe
+    const utilisateur = await Utilisateur.findById(utilisateurId);
+    if (!utilisateur) {
+      return res.status(404).json({
+        success: false,
+        message: "Utilisateur non trouvé",
+      });
+    }
+
+    // Vérifier si l'utilisateur a déjà une carte RFID
+    if (utilisateur.cardId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cet utilisateur a déjà une carte RFID assignée. Désassignez-la d'abord.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Mode d'assignation RFID démarré. En attente de présentation d'une carte.",
+    });
+  } catch (error) {
+    console.error("Erreur demarrerAssignationRFID:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors du démarrage du mode d'assignation RFID",
+    });
+  }
+};
 
 /**
  * Désassigner une carte RFID d'un utilisateur
@@ -559,10 +601,17 @@ const desassignerCarteRFID = async (req, res) => {
       });
     }
 
-    utilisateur.cardId = null;
-    utilisateur.cardActive = false; // Réinitialiser également le statut d'activation
-    utilisateur.date_modif = Date.now();
-    await utilisateur.save();
+    // Utiliser $unset au lieu d'assigner null
+    await Utilisateur.updateOne(
+      { _id: req.params.id },
+      {
+        $unset: { cardId: "" },
+        $set: { cardActive: false, date_modif: Date.now() },
+      }
+    );
+
+    // Récupérer l'utilisateur mis à jour
+    const utilisateurMisAJour = await Utilisateur.findById(req.params.id);
 
     // Créer l'historique pour la désassignation de la carte RFID
     await creerHistorique({
@@ -576,7 +625,7 @@ const desassignerCarteRFID = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Carte RFID désassignée avec succès",
-      data: utilisateur,
+      data: utilisateurMisAJour,
     });
   } catch (error) {
     console.error("Erreur desassignerCarteRFID:", error);
@@ -604,57 +653,61 @@ const desassignerCarteRFID = async (req, res) => {
  */
 const assignerEmpreinte = async (req, res) => {
   try {
-    const { empreinteID } = req.body;
+    const utilisateurId = req.params.id;
 
-    if (!empreinteID) {
-      return res.status(400).json({
-        success: false,
-        message: "Veuillez fournir un identifiant d'empreinte digitale",
-      });
-    }
-
-    // Vérifier si l'empreinte est déjà assignée à un autre utilisateur
-    const utilisateurExistant = await Utilisateur.findOne({ empreinteID });
-    if (
-      utilisateurExistant &&
-      utilisateurExistant._id.toString() !== req.params.id
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Cette empreinte digitale est déjà assignée à un autre utilisateur",
-      });
-    }
-
-    const utilisateur = await Utilisateur.findByIdAndUpdate(
-      req.params.id,
-      {
-        empreinteID,
-        date_modif: Date.now(),
-      },
-      { new: true }
-    );
-
+    // Vérifier si l'utilisateur existe
+    const utilisateur = await Utilisateur.findById(utilisateurId);
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
+        message: "Veuillez fournir un identifiant d'empreinte digitale",
         message: "Utilisateur non trouvé",
       });
     }
 
-    // Créer l'historique pour l'assignation de l'empreinte digitale
-    await creerHistorique({
-      users_id: utilisateur._id,
-      type_entite: "utilisateur",
-      type_operation: "modif",
-      description: `Empreinte digitale ${empreinteID} assignée à l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: "succès",
-    });
+    // Vérifier si le périphérique d'empreinte est connecté
+    if (!fingerprintService.isDeviceConnected()) {
+      return res.status(503).json({
+        success: false,
+        message: "Le dispositif d'empreinte digitale n'est pas connecté",
+      });
+    }
+
+    // Vérifier si l'utilisateur a déjà une empreinte
+    if (utilisateur.empreinteID) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cet utilisateur a déjà une empreinte digitale assignée. Désassignez-la d'abord.",
+      });
+    }
+
+    // Déclencher l'enregistrement de l'empreinte
+    const result = await fingerprintService.declencherEnregistrement(
+      utilisateurId
+    );
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: result.message,
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "Empreinte digitale assignée avec succès",
       data: utilisateur,
+      message:
+        "Processus d'enregistrement d'empreinte initié. Veuillez suivre les instructions sur le dispositif.",
+      data: {
+        empreinteID: result.fingerprintID,
+        utilisateur: {
+          id: utilisateur._id,
+          nom: utilisateur.nom,
+          prenom: utilisateur.prenom,
+        },
+      },
     });
   } catch (error) {
     console.error("Erreur assignerEmpreinte:", error);
@@ -668,9 +721,27 @@ const assignerEmpreinte = async (req, res) => {
       statut: "erreur",
     });
 
+    console.error("Erreur assignerEmpreinte:", error);
+
+    // Créer l'historique pour l'échec
+    try {
+      await creerHistorique({
+        users_id: req.params.id,
+        type_entite: "utilisateur",
+        type_operation: "modif",
+        description: `Échec de l'assignation de l'empreinte digitale: ${error.message}`,
+        statut: "erreur",
+      });
+    } catch (histoError) {
+      console.error("Erreur lors de la création de l'historique:", histoError);
+    }
+
     res.status(500).json({
       success: false,
       message: "Erreur lors de l'assignation de l'empreinte digitale",
+      message:
+        "Erreur lors de l'assignation de l'empreinte digitale: " +
+        error.message,
     });
   }
 };
@@ -682,8 +753,10 @@ const assignerEmpreinte = async (req, res) => {
  */
 const desassignerEmpreinte = async (req, res) => {
   try {
-    const utilisateur = await Utilisateur.findById(req.params.id);
+    const utilisateurId = req.params.id;
 
+    // Vérifier si l'utilisateur existe
+    const utilisateur = await Utilisateur.findById(utilisateurId);
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
@@ -691,6 +764,7 @@ const desassignerEmpreinte = async (req, res) => {
       });
     }
 
+    // Vérifier si l'utilisateur a une empreinte
     if (!utilisateur.empreinteID) {
       return res.status(400).json({
         success: false,
@@ -698,39 +772,124 @@ const desassignerEmpreinte = async (req, res) => {
       });
     }
 
-    utilisateur.empreinteID = null;
-    utilisateur.date_modif = Date.now();
-    await utilisateur.save();
+    // Vérifier si le périphérique d'empreinte est connecté
+    if (!fingerprintService.isDeviceConnected()) {
+      // Si le périphérique n'est pas connecté, on supprime quand même l'empreinte de la BDD
+      console.warn(
+        "Le dispositif d'empreinte n'est pas connecté. Suppression de l'empreinte uniquement dans la base de données."
+      );
 
-    // Créer l'historique pour la désassignation de l'empreinte digitale
-    await creerHistorique({
-      users_id: utilisateur._id,
-      type_entite: "utilisateur",
-      type_operation: "modif",
-      description: `Empreinte digitale désassignée de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom}`,
-      statut: "succès",
-    });
+      // Garder l'ancien ID pour l'historique
+      const ancienID = utilisateur.empreinteID;
+
+      // Mettre à jour l'utilisateur
+      utilisateur.empreinteID = null;
+      utilisateur.date_modif = Date.now();
+      await utilisateur.save();
+
+      // Créer l'historique pour la désassignation
+      await creerHistorique({
+        users_id: utilisateur._id,
+        type_entite: "utilisateur",
+        type_operation: "modif",
+        description: `Empreinte digitale ${ancienID} désassignée de l'utilisateur ${utilisateur.nom} ${utilisateur.prenom} (dispositif non connecté)`,
+        statut: "succès",
+      });
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Empreinte digitale désassignée avec succès dans la base de données. Dispositif non connecté.",
+        data: utilisateur,
+      });
+    }
+
+    // Utiliser le service pour supprimer l'empreinte
+    const result = await fingerprintService.supprimerEmpreinte(utilisateurId);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.message,
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "Empreinte digitale désassignée avec succès",
-      data: utilisateur,
+      data: result.utilisateur,
     });
   } catch (error) {
     console.error("Erreur desassignerEmpreinte:", error);
 
-    // Créer l'historique pour l'échec de la désassignation de l'empreinte digitale
-    await creerHistorique({
-      users_id: req.params.id,
-      type_entite: "utilisateur",
-      type_operation: "modif",
-      description: `Échec de la désassignation de l'empreinte digitale pour l'utilisateur (ID: ${req.params.id}): ${error.message}`,
-      statut: "erreur",
-    });
+    // Créer l'historique pour l'échec
+    try {
+      await creerHistorique({
+        users_id: req.params.id,
+        type_entite: "utilisateur",
+        type_operation: "modif",
+        description: `Échec de la désassignation de l'empreinte digitale: ${error.message}`,
+        statut: "erreur",
+      });
+    } catch (histoError) {
+      console.error("Erreur lors de la création de l'historique:", histoError);
+    }
 
     res.status(500).json({
       success: false,
-      message: "Erreur lors de la désassignation de l'empreinte digitale",
+      message:
+        "Erreur lors de la désassignation de l'empreinte digitale: " +
+        error.message,
+    });
+  }
+};
+
+/**
+ * Vérifier le statut de l'enregistrement d'une empreinte
+ * @route GET /api/utilisateurs/:id/empreinte/statut
+ * @access Privé/Admin
+ */
+const verifierStatutEmpreinte = async (req, res) => {
+  try {
+    const utilisateurId = req.params.id;
+
+    // Vérifier si l'utilisateur existe
+    const utilisateur = await Utilisateur.findById(utilisateurId);
+    if (!utilisateur) {
+      return res.status(404).json({
+        success: false,
+        message: "Utilisateur non trouvé",
+      });
+    }
+
+    // Vérifier le statut de l'enregistrement
+    const statut = fingerprintService.getEnrollmentStatus(utilisateurId);
+
+    if (!statut) {
+      return res.status(200).json({
+        success: true,
+        statut: "aucun",
+        message:
+          "Aucun enregistrement d'empreinte en cours pour cet utilisateur",
+        empreinte: utilisateur.empreinteID,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      statut: statut.status,
+      tempsPasse: statut.timeElapsed,
+      message: "Statut de l'enregistrement d'empreinte",
+      empreinte: utilisateur.empreinteID,
+    });
+  } catch (error) {
+    console.error("Erreur verifierStatutEmpreinte:", error);
+
+    res.status(500).json({
+      success: false,
+      message:
+        "Erreur lors de la vérification du statut de l'empreinte: " +
+        error.message,
     });
   }
 };
@@ -1148,4 +1307,6 @@ module.exports = {
   reactiverCarteRFID,
   demanderReinitialisation,
   changerpassword,
+  verifierStatutEmpreinte,
+  demarrerAssignationRFID,
 };

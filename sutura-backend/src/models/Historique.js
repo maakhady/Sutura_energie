@@ -19,12 +19,12 @@ const HistoriqueSchema = new mongoose.Schema({
   },
   type_entite: {
     type: String,
-    enum: ['utilisateur', 'pieces', 'appareil', 'energie'],
+    enum: ['utilisateur', 'pieces', 'appareil', 'energie','acces'],
     required: [true, 'Le type d\'entité est requis']
   },
   type_operation: {
     type: String,
-    enum: ['creation', 'modif', 'suppression', 'mesure', 'connexion', 'deconnexion', 'change_etat', 'erreur'],
+    enum: ['creation', 'modif', 'suppression', 'mesure', 'connexion', 'deconnexion', 'change_etat', 'erreur','porte'],
     required: [true, 'Le type d\'opération est requis']
   },
   description: {
@@ -33,7 +33,7 @@ const HistoriqueSchema = new mongoose.Schema({
   },
   statut: {
     type: String,
-    enum: ['succès', 'erreur'],
+    enum: ['succès', 'erreur', 'en cours'],
     required: [true, 'Le statut est requis']
   },
   date_creation: {
