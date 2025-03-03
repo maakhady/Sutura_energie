@@ -5,6 +5,7 @@ import { utilisateurService } from "../services/utilisateurService";
 import { authService } from "../services/authService";
 import { Eye, EyeOff } from "lucide-react";
 import MemoizedProfileEditModal from "./ProfileEditModal"; // Importer le composant de modification de profil
+import Swal from "sweetalert2";
 
 // Définir le composant PasswordChangeModal en dehors du composant principal
 // pour qu'il ne soit pas recréé à chaque rendu du composant parent
@@ -319,10 +320,37 @@ const RightPanel = () => {
 
   const handleDesactiverCarte = async () => {
     try {
+      // Afficher la confirmation Swal avant de procéder
+      const result = await Swal.fire({
+        title: "Désactiver la carte",
+        text: "Êtes-vous sûr de vouloir désactiver votre carte RFID?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Oui, désactiver",
+        cancelButtonText: "Annuler",
+      });
+
+      // Vérifier si l'utilisateur a confirmé
+      if (!result.isConfirmed) {
+        setShowDropdown(false);
+        return;
+      }
+
       setError("");
       setSuccess("");
       await utilisateurService.desactiverMaCarteRFID();
-      setSuccess("Votre carte RFID a été désactivée avec succès.");
+
+      // Afficher un message de succès avec Swal
+      Swal.fire({
+        icon: "success",
+        title: "Désactivée!",
+        text: "Votre carte RFID a été désactivée avec succès.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
       // Mettre à jour les infos utilisateur
       const userData = await authService.getMyProfile();
       if (userData && userData.success) {
@@ -331,6 +359,16 @@ const RightPanel = () => {
         setUser(userData);
       }
     } catch (err) {
+      // Afficher un message d'erreur avec Swal
+      Swal.fire({
+        icon: "error",
+        title: "Erreur!",
+        text:
+          err.response?.data?.message ||
+          "Erreur lors de la désactivation de la carte RFID",
+        timer: 2000,
+        showConfirmButton: false,
+      });
       setError(
         err.response?.data?.message ||
           "Erreur lors de la désactivation de la carte RFID"
