@@ -1,4 +1,10 @@
 /* dashboard-liste.css - Version corrigée */
+
+/* Stats cards */
+.dashboard1 .stats-cards {
+  width: 1328px;
+}
+
 .users-table tr .action-buttons {
   min-height: 57px;
 }

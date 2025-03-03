@@ -1,7 +1,6 @@
 import axios from "axios";
 import { authService } from "./authService";
-import { socketService } from './rfid-fingersocket';
-
+import { socketService } from "./rfid-fingersocket";
 
 const API_URL = "http://localhost:2500/api/utilisateurs";
 
@@ -10,8 +9,8 @@ const getAuthConfig = () => {
   const token = localStorage.getItem("token");
   return {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   };
 };
 
@@ -40,19 +39,25 @@ const obtenirTousUtilisateurs = async (page = 1, limit = 10, filters = {}) => {
     if (filters.role) queryParams += `&role=${filters.role}`;
     if (filters.recherche) queryParams += `&recherche=${filters.recherche}`;
 
-    const response = await axios.get(`${API_URL}${queryParams}`, getAuthConfig());
+    const response = await axios.get(
+      `${API_URL}${queryParams}`,
+      getAuthConfig()
+    );
 
     // Assurer la compatibilité ID entre MongoDB et le front
     if (response.data) {
       if (Array.isArray(response.data)) {
-        return response.data.map(user => {
+        return response.data.map((user) => {
           if (user._id && !user.id) {
             return { ...user, id: user._id };
           }
           return user;
         });
-      } else if (response.data.utilisateurs && Array.isArray(response.data.utilisateurs)) {
-        response.data.utilisateurs = response.data.utilisateurs.map(user => {
+      } else if (
+        response.data.utilisateurs &&
+        Array.isArray(response.data.utilisateurs)
+      ) {
+        response.data.utilisateurs = response.data.utilisateurs.map((user) => {
           if (user._id && !user.id) {
             return { ...user, id: user._id };
           }
@@ -98,7 +103,11 @@ const mettreAJourUtilisateur = async (id, userData) => {
     if (!id) {
       throw new Error("ID utilisateur requis");
     }
-    const response = await axios.put(`${API_URL}/${id}`, userData, getAuthConfig());
+    const response = await axios.put(
+      `${API_URL}/${id}`,
+      userData,
+      getAuthConfig()
+    );
     return response.data;
   } catch (error) {
     console.error(
@@ -109,9 +118,6 @@ const mettreAJourUtilisateur = async (id, userData) => {
   }
 };
 
-
-
-
 // Fonction pour supprimer un ou plusieurs utilisateurs definitivement
 const supprimerUtilisateurs = async (ids) => {
   try {
@@ -121,7 +127,7 @@ const supprimerUtilisateurs = async (ids) => {
     console.log("Suppression des utilisateurs IDs:", ids);
     const response = await axios.delete(API_URL, {
       ...getAuthConfig(),
-      data: { ids }
+      data: { ids },
     });
     return response.data;
   } catch (error) {
@@ -132,8 +138,6 @@ const supprimerUtilisateurs = async (ids) => {
     throw error;
   }
 };
-  
-
 
 // Fonction pour activer/désactiver un utilisateur
 const toggleStatutUtilisateur = async (id) => {
@@ -181,20 +185,19 @@ const assignerCarteRFID = async (id, cardId) => {
   }
 };
 
-
 // Fonction pour démarrer l'assignation d'une carte RFID en temps réel
 const demarrerAssignationRFIDEnTempsReel = async (id) => {
   try {
     if (!id) {
       throw new Error("ID utilisateur requis");
     }
-    
+
     const socket = socketService.getSocket();
-    socket.emit('demarrer_assignation_rfid', id);
-    
+    socket.emit("demarrer_assignation_rfid", id);
+
     return {
       success: true,
-      message: "Mode d'assignation RFID démarré"
+      message: "Mode d'assignation RFID démarré",
     };
   } catch (error) {
     console.error(
@@ -208,20 +211,19 @@ const demarrerAssignationRFIDEnTempsReel = async (id) => {
 // Fonction pour annuler l'assignation RFID en cours
 const annulerAssignationRFID = () => {
   const socket = socketService.getSocket();
-  socket.emit('annuler_assignation_rfid');
+  socket.emit("annuler_assignation_rfid");
 };
 
 // Fonction pour s'abonner aux mises à jour d'état d'assignation RFID
 const abonnerStatutAssignationRFID = (callback) => {
   const socket = socketService.getSocket();
-  socket.on('assignation_rfid_status', callback);
-  
+  socket.on("assignation_rfid_status", callback);
+
   // Retourner une fonction pour se désabonner
   return () => {
-    socket.off('assignation_rfid_status', callback);
+    socket.off("assignation_rfid_status", callback);
   };
 };
-
 
 // Fonction pour désassigner une carte RFID
 const desassignerCarteRFID = async (id) => {
@@ -265,23 +267,24 @@ const reactiverCarteRFID = async (id) => {
 };
 
 // Fonction pour désactiver sa propre carte RFID (utilisateur connecté)
-const desactiverMaCarteRFID = async () => {
+
+//Fonction pour désactiver la carte RFID d'un utilisateur
+const desactiverCarteRFIDParAdmin = async (userId) => {
   try {
     const response = await axios.patch(
-      `${API_URL}/desactiver-ma-carte`,
+      `${API_URL}/${userId}/desactiver-carte,`,
       {},
       getAuthConfig()
     );
     return response.data;
   } catch (error) {
     console.error(
-      "Erreur lors de la désactivation de votre carte RFID:",
+      "Erreur lors de la désactivation de la carte RFID:",
       error.response?.data?.message || error.message
     );
     throw error;
   }
 };
-
 // Fonction pour assigner une empreinte digitale
 const assignerEmpreinte = async (id, empreinteID) => {
   try {
@@ -329,11 +332,8 @@ const desassignerEmpreinte = async (id) => {
 //Fonction pour annuler l'assignation d'empreinte en cours
 const annulerAssignationEmpreinte = () => {
   const socket = socketService.getSocket();
-  socket.emit('annuler_assignation_empreinte');
+  socket.emit("annuler_assignation_empreinte");
 };
-
-
-
 
 // Fonction pour demander une réinitialisation de mot de passe
 const demanderReinitialisation = async (email) => {
@@ -342,7 +342,7 @@ const demanderReinitialisation = async (email) => {
       throw new Error("Email requis");
     }
     const response = await axios.post(`${API_URL}/demander-reinitialisation`, {
-      email
+      email,
     });
     return response.data;
   } catch (error) {
@@ -355,7 +355,12 @@ const demanderReinitialisation = async (email) => {
 };
 
 // Fonction pour réinitialiser le mot de passe
-const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, confirmPassword) => {
+const reinitialiserMotDePasse = async (
+  token,
+  actuelPassword,
+  nouveauPassword,
+  confirmPassword
+) => {
   try {
     if (!token) {
       throw new Error("Token requis");
@@ -364,7 +369,7 @@ const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, c
       token,
       actuelPassword,
       nouveauPassword,
-      confirmPassword
+      confirmPassword,
     });
     return response.data;
   } catch (error) {
@@ -377,33 +382,37 @@ const reinitialiserMotDePasse = async (token, actuelPassword, nouveauPassword, c
 };
 
 // Fonction pour changer son mot de passe (utilisateur connecté)
-const changerMotDePasse = async (actuelPassword, nouveauPassword, confirmPassword) => {
+const changerMotDePasse = async (
+  actuelPassword,
+  nouveauPassword,
+  confirmPassword
+) => {
   try {
     // Vérification des champs requis côté client
     if (!actuelPassword || !nouveauPassword || !confirmPassword) {
       throw new Error("Tous les champs de mot de passe sont requis");
     }
-    
+
     // Appel API pour changer le mot de passe
     const response = await axios.post(
       `${API_URL}/changerpassword`,
       {
         actuelPassword,
         nouveauPassword,
-        confirmPassword
+        confirmPassword,
       },
       getAuthConfig()
     );
-    
+
     // Si le changement de mot de passe est réussi
     if (response.data.success) {
       // Déconnecter l'utilisateur en utilisant la fonction logout existante
       await authService.logout();
-      
+
       // Rediriger vers la page de connexion
-      window.location.href = '/';
+      window.location.href = "/";
     }
-    
+
     return response.data;
   } catch (error) {
     console.error(
@@ -420,17 +429,17 @@ const demarrerAssignationEmpreinteEnTempsReel = async (id) => {
     if (!id) {
       throw new Error("ID utilisateur requis");
     }
-    
+
     const socket = socketService.getSocket();
-    socket.emit('demarrer_assignation_empreinte', id);
-    
+    socket.emit("demarrer_assignation_empreinte", id);
+
     // Appeler l'API existante pour démarrer l'enregistrement
     const response = await axios.patch(
       `${API_URL}/${id}/assigner-empreinte`,
       {},
       getAuthConfig()
     );
-    
+
     return response.data;
   } catch (error) {
     console.error(
@@ -444,11 +453,11 @@ const demarrerAssignationEmpreinteEnTempsReel = async (id) => {
 // Fonction pour s'abonner aux mises à jour d'état d'assignation d'empreinte
 const abonnerStatutAssignationEmpreinte = (callback) => {
   const socket = socketService.getSocket();
-  socket.on('assignation_empreinte_status', callback);
-  
+  socket.on("assignation_empreinte_status", callback);
+
   // Retourner une fonction pour se désabonner
   return () => {
-    socket.off('assignation_empreinte_status', callback);
+    socket.off("assignation_empreinte_status", callback);
   };
 };
 
@@ -463,7 +472,7 @@ export const utilisateurService = {
   assignerCarteRFID,
   desassignerCarteRFID,
   reactiverCarteRFID,
-  desactiverMaCarteRFID,
+  desactiverCarteRFIDParAdmin,
   assignerEmpreinte,
   desassignerEmpreinte,
   demanderReinitialisation,
@@ -475,7 +484,4 @@ export const utilisateurService = {
   demarrerAssignationRFIDEnTempsReel,
   demarrerAssignationEmpreinteEnTempsReel,
   annulerAssignationEmpreinte,
-
 };
-
-

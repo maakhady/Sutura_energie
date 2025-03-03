@@ -19,7 +19,8 @@ const {
   demanderReinitialisation,
   changerpassword,
   verifierStatutEmpreinte,
-  demarrerAssignationRFID
+  desactiverCarteRFIDParAdmin,
+  demarrerAssignationRFID,
 } = require("../controllers/utilisateurControleur");
 
 // Routes nécessitant un rôle admin
@@ -48,6 +49,12 @@ router.patch(
   auth,
   verifRole(["admin"]),
   reactiverCarteRFID
+);
+router.patch(
+  "/:id/desactiver-carte",
+  auth,
+  verifRole(["admin"]),
+  desactiverCarteRFIDParAdmin
 );
 router.patch(
   "/:id/assigner-empreinte",
@@ -79,5 +86,10 @@ router.post("/changerpassword", auth, changerpassword);
 // Route pour l'utilisateur (désactiver sa propre carte)
 router.patch("/desactiver-ma-carte", auth, desactiverMaCarteRFID);
 
-router.post('/:id/demarrer-assignation-rfid', auth, verifRole(["admin"]),demarrerAssignationRFID);
+router.post(
+  "/:id/demarrer-assignation-rfid",
+  auth,
+  verifRole(["admin"]),
+  demarrerAssignationRFID
+);
 module.exports = router;

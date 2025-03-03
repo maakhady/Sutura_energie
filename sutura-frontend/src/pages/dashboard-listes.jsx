@@ -12,6 +12,8 @@ import {
   ArrowRightToLine,
   ChevronDown,
   Fingerprint,
+  LockIcon,
+  
 } from "lucide-react";
 import "../styles/dashboard-liste.css";
 import MiniRightPanel from "../components/MiniRightPanel";
@@ -368,6 +370,124 @@ const DashboardListe = () => {
               title: "Erreur!",
               text:
                 "Une erreur s'est produite lors de la modification du statut: " +
+                (error.response?.data?.message ||
+                  error.message ||
+                  "Erreur inconnue"),
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          });
+      }
+    });
+  };
+
+  // Ajoutez cette fonction après handleDesassignerCarte dans votre composant
+  const handleDesactiverCarte = (id) => {
+    if (!id) return;
+
+    Swal.fire({
+      title: "Désactiver la carte",
+      text: "Êtes-vous sûr de vouloir désactiver la carte RFID de cet utilisateur?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, désactiver",
+      cancelButtonText: "Annuler",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        utilisateurService
+          .desactiverCarteRFIDParAdmin(id)
+          .then(() => {
+            // Mettre à jour l'état des utilisateurs
+            const updatedUsers = users.map((u) => {
+              if ((u.id || u._id) === id) {
+                return { ...u, cardActive: false };
+              }
+              return u;
+            });
+            setUsers(updatedUsers);
+
+            // Mettre à jour le compteur de cartes assignées
+            const cartes = updatedUsers.filter(
+              (user) => user.cardActive
+            ).length;
+            setAssignedCards(cartes);
+
+            Swal.fire({
+              icon: "success",
+              title: "Désactivée!",
+              text: "La carte RFID a été désactivée avec succès.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la désactivation:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Erreur!",
+              text:
+                "Une erreur s'est produite lors de la désactivation: " +
+                (error.response?.data?.message ||
+                  error.message ||
+                  "Erreur inconnue"),
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          });
+      }
+    });
+  };
+
+  // Fonction pour réactiver une carte RFID
+  const handleReactiverCarte = (id) => {
+    if (!id) return;
+
+    Swal.fire({
+      title: "Réactiver la carte",
+      text: "Êtes-vous sûr de vouloir réactiver la carte RFID de cet utilisateur?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, réactiver",
+      cancelButtonText: "Annuler",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        utilisateurService
+          .reactiverCarteRFID(id)
+          .then(() => {
+            // Mettre à jour l'état des utilisateurs
+            const updatedUsers = users.map((u) => {
+              if ((u.id || u._id) === id) {
+                return { ...u, cardActive: true };
+              }
+              return u;
+            });
+            setUsers(updatedUsers);
+
+            // Mettre à jour le compteur de cartes assignées
+            const cartes = updatedUsers.filter(
+              (user) => user.cardActive
+            ).length;
+            setAssignedCards(cartes);
+
+            Swal.fire({
+              icon: "success",
+              title: "Réactivée!",
+              text: "La carte RFID a été réactivée avec succès.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la réactivation:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Erreur!",
+              text:
+                "Une erreur s'est produite lors de la réactivation: " +
                 (error.response?.data?.message ||
                   error.message ||
                   "Erreur inconnue"),
@@ -880,16 +1000,17 @@ const DashboardListe = () => {
                           </button>
                           <button
                             className="buton"
-                            title={
-                              user.cardActive
-                                ? "Désactiver carte"
-                                : "Activer carte"
-                            }
-                            onClick={() =>
-                              handleToggleStatus(user.id || user._id)
+                            title={user.cardActive ? "Désactiver carte" : "Activer carte"}
+                            onClick={() => user.cardActive 
+                              ? handleDesactiverCarte(user.id  user._id) 
+                              : handleReactiverCarte(user.id  user._id)
                             }
                           >
-                            <LockKeyholeOpen size={18} />
+                            {user.cardActive ? (
+                              <LockKeyholeOpen size={18} />
+                            ) : (
+                              <LockIcon size={18} />
+                            )}
                           </button>
                         </td>
                       </tr>
