@@ -40,10 +40,6 @@ const AppareilSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Par défaut, l'appareil ne suit pas l'intervalle
     },
-    supprime: {
-      type: Boolean,
-      default: false, // Marquer comme supprimé
-    },
     date_creation: {
       type: Date,
       default: Date.now,

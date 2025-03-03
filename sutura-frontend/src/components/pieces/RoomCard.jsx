@@ -10,8 +10,6 @@ import PieceService from "../../services/PieceService"; // Import du service API
 
 const RoomCard = ({
   room,
-  roomIndex,
-  toggleDevice,
   handleEditRoom,
   rooms,
   setRooms,
@@ -109,7 +107,12 @@ const RoomCard = ({
               <div key={deviceIndex} className="device-item">
                 <DeviceCard
                   device={device}
-                  onToggle={() => toggleDevice(roomIndex, deviceIndex)}
+                  rooms={rooms}
+                  setRooms={setRooms} // ✅ Ajoute ceci pour corriger le problème
+                  status={device.actif ? "Actif" : "Inactif"} // Affichage de l'état
+                  handleModeAllumage={(deviceId) =>
+                    console.log("Mode allumage", deviceId)
+                  }
                 />
               </div>
             ))

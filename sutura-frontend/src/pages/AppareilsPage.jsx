@@ -41,10 +41,18 @@ const AppareilsPage = () => {
   const fetchRooms = async () => {
     try {
       const pieces = await PieceService.obtenirToutesPieces();
-      const formattedRooms = pieces.map((item) => ({
-        ...item.piece,
-        devices: item.appareils,
-      }));
+      const formattedRooms = pieces.map((item) => {
+        const devicesWithStatus = item.appareils.map((device) => ({
+          ...device,
+          status: device.actif ? "Actif" : "Inactif", // Ajout du statut de l'appareil
+        }));
+
+        return {
+          ...item.piece,
+          devices: devicesWithStatus,
+        };
+      });
+
       setRooms(formattedRooms);
     } catch (error) {
       console.error("Erreur lors de la récupération des pièces :", error);
@@ -59,8 +67,24 @@ const AppareilsPage = () => {
 
   const stats = [
     { title: "Pièces Totales", value: rooms.length, icon: "device" },
-    { title: "Appareils Actifs", value: 10, icon: "light" },
-    { title: "Appareils Inactifs", value: 7, icon: "device" },
+    {
+      title: "Appareils Actifs",
+      value: rooms.reduce(
+        (count, room) =>
+          count + room.devices.filter((device) => device.actif).length,
+        0
+      ),
+      icon: "light",
+    },
+    {
+      title: "Appareils Inactifs",
+      value: rooms.reduce(
+        (count, room) =>
+          count + room.devices.filter((device) => !device.actif).length,
+        0
+      ),
+      icon: "device",
+    },
   ];
 
   return (

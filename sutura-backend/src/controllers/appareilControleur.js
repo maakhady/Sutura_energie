@@ -4,12 +4,13 @@ const { creerHistorique } = require("./historiqueControleur");
 // Créer un nouvel appareil à partir d'une pièce
 exports.creerAppareil = async (req, res) => {
   try {
-    const { pieces_id, nom_app, intervalle, automatique } = req.body;
+    const { pieces_id, nom_app, actif, intervalle, automatique } = req.body;
 
     const appareil = new Appareil({
       users_id: req.user._id, // Utiliser l'ID de l'utilisateur authentifié
       pieces_id,
       nom_app,
+      actif,
       intervalle,
       automatique: automatique || false, // Par défaut, mode manuel
     });
@@ -160,9 +161,7 @@ exports.supprimerAppareil = async (req, res) => {
     });
 
     // Marquer l'appareil comme supprimé et le désactiver
-    appareil.supprime = true;
-    appareil.actif = false; // Désactiver l'appareil lors de la suppression
-    await appareil.save();
+    await appareil.deleteOne({ _id: req.params.id });
 
     res.status(200).json({ message: "Appareil supprimé avec succès" });
   } catch (error) {
@@ -198,8 +197,19 @@ exports.activerDesactiverAppareil = async (req, res) => {
       return res.status(403).json({ message: "Accès non autorisé" });
     }
 
+    // Vérifier si l'état est déjà celui demandé
+    if (appareil.actif === req.body.actif) {
+      return res.status(200).json({
+        message: `L'appareil est déjà ${
+          req.body.actif ? "activé" : "désactivé"
+        }`,
+        appareil,
+      });
+    }
+
+    // Modifier l'état de l'appareil
     appareil.actif = req.body.actif;
-    console.log;
+    console.log(appareil.actif);
     await appareil.save();
 
     // Créer un historique
@@ -213,6 +223,7 @@ exports.activerDesactiverAppareil = async (req, res) => {
       statut: "succès",
     });
 
+    // Retourner l'appareil mis à jour
     res.status(200).json(appareil);
   } catch (error) {
     res.status(400).json({

@@ -42,17 +42,16 @@ const AppareilService = {
     return response.data;
   },
 
-  async activerDesactiverAppareil(id) {
+  async activerDesactiverAppareil(id, newStatus) {
     const response = await axios.put(
       `${API_URL}/activer-desactiver/${id}`,
-      {},
+      { actif: newStatus }, // Envoi de la valeur correcte
       {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       }
     );
     return response.data;
   },
-
   async definirMode(id, modeData) {
     const response = await axios.put(
       `${API_URL}/definir-mode/${id}`,
