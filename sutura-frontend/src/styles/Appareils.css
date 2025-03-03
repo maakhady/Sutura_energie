@@ -269,6 +269,13 @@
   font-size: 0.85rem;
 }
 
+.pagination-btn:hover {
+  background-color: #274c77;
+  color: white;
+  text-shadow: none; /* Désactivez l'ombre pour le test */
+  background-clip: text; /* Assurez-vous que le texte est visible */
+}
+
 /* Panel latéral */
 .mini-right-panel {
   height: 100%;
@@ -307,6 +314,7 @@
   .pagination-container {
     flex-direction: column;
     gap: 15px;
+    background-color: #274c77;
   }
 
   .pagination-numbers {

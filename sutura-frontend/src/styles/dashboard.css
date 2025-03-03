@@ -1,4 +1,69 @@
 /* dashboard.css */
+/* Welcome section */
+.d-flex .dashboard .welcome-section {
+  min-height: 73px;
+  transform: translatex(-17px) translatey(-20px);
+}
+
+/* Heading */
+.dashboard .titre-appareil h3 {
+  transform: translatex(3px) translatey(-18px);
+}
+
+/* Appareils */
+.dashboard .appareils {
+  transform: translatex(3px) translatey(-15px);
+  margin-bottom: 1px;
+}
+
+.appareils .device-card {
+  width: 200px;
+}
+
+/* Recharts responsive container */
+#root
+  .min-h-screen
+  .d-flex
+  .flex-grow-1
+  .dashboard
+  .content-wrapper
+  .main-content
+  .graphe
+  .graph-container
+  .recharts-responsive-container {
+  width: 95% !important;
+}
+
+/* Recharts wrapper */
+
+/* Main content */
+.dashboard .main-content {
+  transform: translatex(5px) translatey(0px);
+}
+
+@media (min-width: 640px) {
+  /* Welcome section */
+  .d-flex .dashboard .welcome-section {
+    margin-bottom: 0px;
+  }
+}
+
+/* Graphe */
+.dashboard .graphe {
+  height: 374px;
+}
+
+/* Recharts surface */
+.graphe .recharts-wrapper .recharts-surface {
+  display: inline-block;
+  transform: translatex(25px) translatey(-25px);
+}
+
+/* Heading */
+.dashboard .graphe h4 {
+  transform: translatex(8px) translatey(-16px);
+}
+
 .dashboard {
   min-height: 100vh;
   background-color: #f1f6fa;

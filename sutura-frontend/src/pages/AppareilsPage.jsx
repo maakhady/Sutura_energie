@@ -69,7 +69,7 @@ const AppareilsPage = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const stats = [
-    { title: "Pièces Totales", value: rooms.length, icon: "device" },
+    { title: "Pièces Totales", value: rooms.length, icon: "room" },
     {
       title: "Appareils Actifs",
       value: rooms.reduce(
@@ -77,7 +77,7 @@ const AppareilsPage = () => {
           count + room.devices.filter((device) => device.actif).length,
         0
       ),
-      icon: "light",
+      icon: "device",
     },
     {
       title: "Appareils Inactifs",
@@ -86,7 +86,7 @@ const AppareilsPage = () => {
           count + room.devices.filter((device) => !device.actif).length,
         0
       ),
-      icon: "device",
+      icon: "device-off",
     },
   ];
 
@@ -103,7 +103,9 @@ const AppareilsPage = () => {
           </div>
 
           <div className="appareil-header">
-            <h5 className="section-title">Gestion des Appareils par Pièce</h5>
+            <h5 className="section-title" style={{ color: "#274c77" }}>
+              Gestion des Appareils par Pièce
+            </h5>
             <Button
               variant="primary"
               className="add-button rounded px-3 py-2"
@@ -122,7 +124,7 @@ const AppareilsPage = () => {
 
           <div className="rooms-liste">
             {rooms.length === 0 ? (
-              <div className="text-center">
+              <div className="text-center" style={{ color: "#274c77" }}>
                 <p>Aucune pièce actuellement</p>
               </div>
             ) : (
@@ -151,6 +153,7 @@ const AppareilsPage = () => {
                     className="pagination-btn"
                     onClick={() => paginate(currentPage - 1)}
                     disabled={currentPage === 1}
+                    style={{ color: "#274c77" }}
                   >
                     ← Précédent
                   </Button>

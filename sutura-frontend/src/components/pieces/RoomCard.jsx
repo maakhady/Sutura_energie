@@ -67,7 +67,9 @@ const RoomCard = ({
     <>
       <Card.Body className="room-card-body">
         <div className="room-header">
-          <h5 className="fw-bold text-gray-800">{room.nom_piece}</h5>
+          <h5 className="fw-bold text-gray-800" style={{ color: "#274c77" }}>
+            {room.nom_piece}
+          </h5>
           <div className="room-actions">
             <Button
               variant="light"
@@ -117,7 +119,7 @@ const RoomCard = ({
               </div>
             ))
           ) : (
-            <div className="no-devices-message">
+            <div className="no-devices-message" style={{ color: "#274c77" }}>
               {room.devices.length === 0
                 ? "Aucun Appareil ajouté"
                 : "Aucun Appareil"}

@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import "../styles/dashboard.css";
 import RightPanel from "../components/RightPanel";
-import { authService } from "../services/authService";
+
 import PieceService from "../services/PieceService";
 import {
   Lightbulb,
@@ -20,14 +20,16 @@ import {
   WashingMachine,
   Heater,
 } from "lucide-react";
+import Swal from "sweetalert2";
+import AppareilService from "../services/AppareilService";
 
 const DashboardPage = () => {
-  const [utilisateur, setUtilisateur] = useState(null);
-  const [loading, setLoading] = useState(true);
+  /*   const [utilisateur, setUtilisateur] = useState(null);
+  const [loading, setLoading] = useState(true); */
   const [rooms, setRooms] = useState([]);
   const [activeRoomId, setActiveRoomId] = useState(null);
 
-  const formatterRole = (role) => {
+  /*   const formatterRole = (role) => {
     if (!role) return "";
 
     switch (role.toLowerCase()) {
@@ -39,38 +41,76 @@ const DashboardPage = () => {
         return role.charAt(0).toUpperCase() + role.slice(1);
     }
   };
-
+ */
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await authService.getMyProfile();
-        if (response && response.success) {
-          setUtilisateur(response.data);
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération du profil:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
     fetchRooms();
   }, []);
 
   const fetchRooms = async () => {
     try {
       const pieces = await PieceService.obtenirToutesPieces();
-      const formattedRooms = pieces.map((item) => ({
-        ...item.piece,
-        devices: item.appareils,
-      }));
+      const formattedRooms = pieces.map((item) => {
+        const devicesWithStatus = item.appareils.map((device) => ({
+          ...device,
+          status: device.actif ? "Actif" : "Inactif", // Ajout du statut de l'appareil
+          isOn: device.actif, // Ajout du champ `isOn` pour contrôler l'activation
+        }));
+
+        return {
+          ...item.piece,
+          devices: devicesWithStatus,
+        };
+      });
+
       setRooms(formattedRooms);
       if (formattedRooms.length > 0) {
         setActiveRoomId(formattedRooms[0]._id);
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des pièces :", error);
+    }
+  };
+
+  const handleToggleDevice = async (deviceId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus; // Inverser le statut de l'appareil
+
+      if (!deviceId) {
+        throw new Error("L'ID de l'appareil est manquant");
+      }
+
+      // Appel API pour activer/désactiver l'appareil
+      await AppareilService.activerDesactiverAppareil(deviceId, newStatus);
+
+      // Mise à jour du statut de l'appareil localement
+      setRooms((prevRooms) =>
+        prevRooms.map((room) => {
+          if (room._id === activeRoomId) {
+            return {
+              ...room,
+              devices: room.devices.map((device) =>
+                device._id === deviceId // Utiliser _id au lieu de id
+                  ? {
+                      ...device,
+                      isOn: newStatus, // Modifier l'état 'isOn' localement
+                      status: newStatus ? "Actif" : "Inactif", // Mettre à jour le statut
+                    }
+                  : device
+              ),
+            };
+          }
+          return room;
+        })
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'activation/désactivation :", error);
+      Swal.fire({
+        title: "Erreur",
+        text:
+          error.message ||
+          "L'appareil n'a pas pu être activé/désactivé. Essayez à nouveau.",
+        icon: "error",
+      });
     }
   };
 
@@ -114,7 +154,7 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard">
-      <div className="welcome-section">
+      {/* <div className="welcome-section">
         <div className="user-profile">
           <div className="user-info">
             {loading ? (
@@ -137,7 +177,7 @@ const DashboardPage = () => {
             )}
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="content-wrapper">
         <div className="main-content">
@@ -164,7 +204,7 @@ const DashboardPage = () => {
                 .find((room) => room._id === activeRoomId)
                 ?.devices.map((device) => (
                   <div
-                    key={device.id}
+                    key={device._id} // Remplace id par _id ici aussi
                     className={`device-card ${
                       device.isOn ? "device-on" : "device-off"
                     }`}
@@ -182,7 +222,9 @@ const DashboardPage = () => {
                       <input
                         type="checkbox"
                         checked={device.isOn}
-                        onChange={() => {}}
+                        onChange={
+                          () => handleToggleDevice(device._id, device.isOn) // Assure-toi d'utiliser _id ici aussi
+                        }
                       />
                       <span className="slider"></span>
                     </label>
