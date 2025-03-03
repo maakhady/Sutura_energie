@@ -117,7 +117,11 @@ const RoomCard = ({
               </div>
             ))
           ) : (
-            <div className="no-devices-message">Aucun Appareil</div>
+            <div className="no-devices-message">
+              {room.devices.length === 0
+                ? "Aucun Appareil ajouté"
+                : "Aucun Appareil"}
+            </div>
           )}
         </div>
       </Card.Body>

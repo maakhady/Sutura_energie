@@ -15,10 +15,13 @@ const AppareilsPage = () => {
   const roomsPerPage = 2;
 
   const handleNewRoomAdded = (newRoom) => {
-    const updatedRooms = [...rooms, newRoom]; // Ajouter la nouvelle pièce
+    const updatedRooms = [
+      ...rooms,
+      { ...newRoom, devices: [] }, // Assurez-vous que 'devices' est un tableau vide
+    ];
     setRooms(updatedRooms);
 
-    // Calculer la nouvelle page où elle doit être affichée
+    // Calculer la nouvelle page où la pièce doit être affichée
     const totalRooms = updatedRooms.length;
     const newPage = Math.ceil(totalRooms / roomsPerPage);
     setCurrentPage(newPage); // Aller directement à la nouvelle page
