@@ -11,7 +11,7 @@ import '../styles/dashboard-liste.css';
 import MiniRightPanel from '../components/MiniRightPanel';
 import CardStat from '../components/CardStat';
 import { utilisateurService } from "../services/utilisateurService";
-import { AccessControlModal, CardAssignmentModal, FingerprintModal } from '../components/AccessModals'; // Importez les nouveaux composants de modales
+import { AccessControlModal, CardAssignmentModal, FingerprintModal } from '../components/AccessModals';
 
 const DashboardListe = () => {
   const navigate = useNavigate();
@@ -28,6 +28,13 @@ const DashboardListe = () => {
   const [filters, setFilters] = useState({
     role: '',     // '', 'admin', 'utilisateur'
     status: ''    // '', 'actif', 'inactif'
+  });
+  
+  // Nouvel état pour stocker les informations de pagination du serveur
+  const [serverPagination, setServerPagination] = useState({
+    total: 0,
+    page: 1,
+    pages: 0
   });
   
   const [totalUsers, setTotalUsers] = useState(0);
@@ -47,6 +54,13 @@ const DashboardListe = () => {
     console.log("État actuel des utilisateurs:", users);
   }, [users]);
 
+  // Débogage - Afficher l'état de la pagination
+  useEffect(() => {
+    console.log("Pagination serveur:", serverPagination);
+    console.log("Page courante:", currentPage);
+    console.log("Nombre total de pages:", serverPagination.pages);
+  }, [serverPagination, currentPage]);
+
   // Fermer le dropdown de filtre si on clique ailleurs
   useEffect(() => {
     function handleClickOutside(event) {
@@ -61,7 +75,7 @@ const DashboardListe = () => {
     };
   }, [filterRef]);
 
-  // Mappez correctement l'ID de MongoDB (_id) vers l'id attendu par votre frontend
+  // Chargement des utilisateurs avec pagination
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -91,6 +105,13 @@ const DashboardListe = () => {
           // Mettre à jour l'état avec les données extraites
           setUsers(usersArray);
           setTotalUsers(data.count || usersArray.length);
+          
+          // Stocker les informations de pagination du serveur
+          setServerPagination({
+            total: data.count || 0,
+            page: currentPage,
+            pages: data.pagination?.pages || Math.ceil((data.count || 0) / itemsPerPage)
+          });
 
           // Calculer les stats à partir du nouveau tableau obtenu
           const actifs = usersArray.filter(user => user.actif).length;
@@ -460,6 +481,7 @@ const DashboardListe = () => {
 
   // Gérer le changement de page
   const handlePageChange = (page) => {
+    console.log("Changement de page vers:", page);
     setCurrentPage(page);
   };
 
@@ -487,11 +509,12 @@ const DashboardListe = () => {
 
   // Utilisateurs affichés sur la page actuelle
   const currentUsers = Array.isArray(filteredUsers)
-    ? filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    ? filteredUsers
     : [];
 
-  // Calculer le nombre total de pages
-  const totalPages = Math.ceil((Array.isArray(filteredUsers) ? filteredUsers.length : 0) / itemsPerPage);
+  // Utiliser le nombre total de pages du serveur
+  const totalPages = serverPagination.pages;
+  console.log("Nombre total de pages:", totalPages);
 
   // Réinitialiser la page actuelle lorsque les filtres changent
   useEffect(() => {
@@ -501,6 +524,7 @@ const DashboardListe = () => {
   // Générer les boutons de pagination dynamiquement
   const getPaginationButtons = () => {
     const buttons = [];
+    console.log("Génération des boutons de pagination. Total pages:", totalPages);
 
     // Si pas de pages, retourner un tableau vide
     if (totalPages <= 0) return buttons;
@@ -515,7 +539,9 @@ const DashboardListe = () => {
 
     // Pages autour de la page courante
     for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-      buttons.push(i);
+      if (i > 1 && i < totalPages) {
+        buttons.push(i);
+      }
     }
 
     // Autre point de suspension si nécessaire
@@ -528,6 +554,7 @@ const DashboardListe = () => {
       buttons.push(totalPages);
     }
 
+    console.log("Boutons de pagination générés:", buttons);
     return buttons;
   };
 
@@ -557,7 +584,6 @@ const DashboardListe = () => {
     
     return text;
   };
-
   return (
     <div className="dashboard1">
       <div className="content-wrapper1">
@@ -755,6 +781,7 @@ const DashboardListe = () => {
                     ))
                   ) : (
                     <tr>
+                      <td colSpan="9" className="no-results"></td>
                       <td colSpan="9" className="no-results">
                         Aucun utilisateur trouvé
                       </td>
@@ -764,8 +791,8 @@ const DashboardListe = () => {
               </table>
             </div>
 
-            {/* Pagination */}
-            {filteredUsers.length > 0 && (
+            {/* Pagination - Utilise maintenant les informations de pagination du serveur */}
+            {serverPagination.pages > 0 && (
               <div className="pagination">
                 <button
                   className="pagination-btn prev"
@@ -789,7 +816,7 @@ const DashboardListe = () => {
                 <button
                   className="pagination-btn next"
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages || totalPages === 0}
+                  disabled={currentPage === serverPagination.pages || serverPagination.pages === 0}
                 >
                   Suivant
                   <ArrowRightToLine size={18} />
@@ -836,6 +863,6 @@ const DashboardListe = () => {
       )}
     </div>
   );
-};
+}
 
 export default DashboardListe;

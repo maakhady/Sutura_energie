@@ -8,6 +8,30 @@
     overflow-y: auto;
 }
 
+/* Image */
+#root .min-h-screen .d-flex .flex-grow-1 .dashboard .content-wrapper .right-panel .consumption-widget .user-avatar-container .user-avatar img{
+    width:81px !important;
+   }
+   
+   /* Image */
+   .consumption-widget .user-avatar img{
+    transform:translatex(0px) translatey(0px);
+   }
+   
+   /* Right panel */
+   .dashboard .right-panel{
+    transform:translatex(5px) translatey(0px);
+   }
+   
+   /* User avatar */
+   .consumption-widget .user-avatar{
+    width:17%;
+    height:57px;
+    transform:translatex(5px) translatey(0px);
+   }
+   
+   
+
 /* Styles de base pour mobile */
 @media screen and (max-width: 1023px) {
     .right-panel {

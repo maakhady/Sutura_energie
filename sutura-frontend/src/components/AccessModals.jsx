@@ -166,7 +166,7 @@ export const CardAssignmentModal = ({ isOpen, onClose, user, onAssignCard }) => 
             <X size={24} />
           </button>
         </div>
-        <div className="modal-content">
+        <div className="modal-content1">
           <div className="card-assignment-content">
             <div className="card-icon">
               <CreditCard size={48} />
@@ -333,7 +333,7 @@ export const FingerprintModal = ({ isOpen, onClose, user, onSaveFingerprint }) =
             <X size={24} />
           </button>
         </div>
-        <div className="modal-content">
+        <div className="modal-content1">
           <div className="fingerprint-content">
             <div className="fingerprint-icon">
               <Fingerprint size={48} />

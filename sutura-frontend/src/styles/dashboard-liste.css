@@ -22,6 +22,45 @@
     width: 100%; /* Utilisez 100% au lieu de 120% pour éviter les problèmes de dépassement */
   }
   
+  /* Modal content */
+.dashboard1 .modal-content{
+  display:inline-block;
+  transform:translatex(0px) translatey(0px);
+  left:53px;
+  height:504px;
+ }
+ 
+ @media (min-width:641px){
+ 
+  /* Modal content */
+  .dashboard1 .modal-content{
+   padding-top:12px;
+  }
+  
+ }
+
+ /* Card icon */
+.dashboard1 .card-icon{
+  transform:translatex(7px) translatey(0px);
+ }
+ 
+ /* Paragraph */
+ #root .min-h-screen .d-flex .flex-grow-1 .dashboard1 .modal-overlay .modal-container .modal-content1 .card-assignment-content .assignment-instructions p{
+  width:95% !important;
+ }
+ 
+
+ #root .min-h-screen .d-flex .flex-grow-1 .dashboard1 .modal-overlay .modal-container .modal-content1 .fingerprint-content .fingerprint-instructions p{
+  width:95% !important;
+ }
+ 
+ /* Fingerprint icon */
+ .dashboard1 .fingerprint-icon{
+  transform:translatex(8px) translatey(0px);
+ }
+ 
+ 
+ 
  
   
   /* Users List Container */
@@ -599,9 +638,9 @@ input:checked + .slider1::after {
   color: #343a40;
 }
 
-.modal-content {
+/* .modal-content {
   padding: 20px;
-}
+} */
 
 .modal-footer {
   display: flex;
