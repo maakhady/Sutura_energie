@@ -24,24 +24,11 @@ import Swal from "sweetalert2";
 import AppareilService from "../services/AppareilService";
 
 const DashboardPage = () => {
-  /*   const [utilisateur, setUtilisateur] = useState(null);
-  const [loading, setLoading] = useState(true); */
   const [rooms, setRooms] = useState([]);
   const [activeRoomId, setActiveRoomId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const devicesPerPage = 4;
 
-  /*   const formatterRole = (role) => {
-    if (!role) return "";
-
-    switch (role.toLowerCase()) {
-      case "admin":
-        return "Administrateur";
-      case "utilisateur":
-        return "Utilisateur";
-      default:
-        return role.charAt(0).toUpperCase() + role.slice(1);
-    }
-  };
- */
   useEffect(() => {
     fetchRooms();
   }, []);
@@ -52,8 +39,8 @@ const DashboardPage = () => {
       const formattedRooms = pieces.map((item) => {
         const devicesWithStatus = item.appareils.map((device) => ({
           ...device,
-          status: device.actif ? "Actif" : "Inactif", // Ajout du statut de l'appareil
-          isOn: device.actif, // Ajout du champ `isOn` pour contrôler l'activation
+          status: device.actif ? "Actif" : "Inactif",
+          isOn: device.actif,
         }));
 
         return {
@@ -73,27 +60,25 @@ const DashboardPage = () => {
 
   const handleToggleDevice = async (deviceId, currentStatus) => {
     try {
-      const newStatus = !currentStatus; // Inverser le statut de l'appareil
+      const newStatus = !currentStatus;
 
       if (!deviceId) {
         throw new Error("L'ID de l'appareil est manquant");
       }
 
-      // Appel API pour activer/désactiver l'appareil
       await AppareilService.activerDesactiverAppareil(deviceId, newStatus);
 
-      // Mise à jour du statut de l'appareil localement
       setRooms((prevRooms) =>
         prevRooms.map((room) => {
           if (room._id === activeRoomId) {
             return {
               ...room,
               devices: room.devices.map((device) =>
-                device._id === deviceId // Utiliser _id au lieu de id
+                device._id === deviceId
                   ? {
                       ...device,
-                      isOn: newStatus, // Modifier l'état 'isOn' localement
-                      status: newStatus ? "Actif" : "Inactif", // Mettre à jour le statut
+                      isOn: newStatus,
+                      status: newStatus ? "Actif" : "Inactif",
                     }
                   : device
               ),
@@ -152,33 +137,26 @@ const DashboardPage = () => {
     }
   };
 
+  const handlePagination = (direction) => {
+    setCurrentPage((prevPage) =>
+      direction === "next" ? prevPage + 1 : prevPage > 1 ? prevPage - 1 : 1
+    );
+  };
+
+  const currentDevices = rooms
+    .find((room) => room._id === activeRoomId)
+    ?.devices.slice(
+      (currentPage - 1) * devicesPerPage,
+      currentPage * devicesPerPage
+    );
+
+  const totalPages = Math.ceil(
+    rooms.find((room) => room._id === activeRoomId)?.devices.length /
+      devicesPerPage
+  );
+
   return (
     <div className="dashboard">
-      {/* <div className="welcome-section">
-        <div className="user-profile">
-          <div className="user-info">
-            {loading ? (
-              <p>Chargement...</p>
-            ) : (
-              <>
-                <h1>
-                  Bonjour{" "}
-                  {utilisateur
-                    ? `${utilisateur.prenom} ${utilisateur.nom}`
-                    : "Utilisateur"}{" "}
-                  !
-                </h1>
-                <p>
-                  {utilisateur
-                    ? formatterRole(utilisateur.role)
-                    : "Non connecté"}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </div> */}
-
       <div className="content-wrapper">
         <div className="main-content">
           <div className="titre-appareil">
@@ -199,37 +177,61 @@ const DashboardPage = () => {
               ))}
             </div>
 
-            <div className="devices-container">
-              {rooms
-                .find((room) => room._id === activeRoomId)
-                ?.devices.map((device) => (
-                  <div
-                    key={device._id} // Remplace id par _id ici aussi
-                    className={`device-card ${
-                      device.isOn ? "device-on" : "device-off"
-                    }`}
-                  >
-                    <div className="device-info">
-                      <div className="device-icon">
-                        {getDeviceIcon(device.nom_app)}
-                      </div>
-                      <div className="device-text">
-                        <h3>{device.nom_app}</h3>
-                        <span className="power">{device.power}</span>
-                      </div>
+            <div className="devices-container" style={{ overflowX: "auto" }}>
+              {currentDevices?.map((device) => (
+                <div
+                  key={device._id}
+                  className={`device-card ${
+                    device.isOn ? "device-on" : "device-off"
+                  }`}
+                >
+                  <div className="device-info">
+                    <div className="device-icon">
+                      {getDeviceIcon(device.nom_app)}
                     </div>
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        checked={device.isOn}
-                        onChange={
-                          () => handleToggleDevice(device._id, device.isOn) // Assure-toi d'utiliser _id ici aussi
-                        }
-                      />
-                      <span className="slider"></span>
-                    </label>
+                    <div className="device-text">
+                      <h3>{device.nom_app}</h3>
+                      <span className="power">{device.power}</span>
+                    </div>
                   </div>
-                ))}
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={device.isOn}
+                      onChange={() =>
+                        handleToggleDevice(device._id, device.isOn)
+                      }
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination avec des flèches */}
+            <div className="pagination">
+              {/* Flèche précédente */}
+              <button
+                onClick={() => handlePagination("prev")}
+                disabled={currentPage === 1}
+                className="pagination-arrow"
+              >
+                ←
+              </button>
+
+              {/* Affichage de la page courante et du total */}
+              <div className="pagination-info">
+                <span>{currentPage}</span> / <span>{totalPages}</span>
+              </div>
+
+              {/* Flèche suivante */}
+              <button
+                onClick={() => handlePagination("next")}
+                disabled={currentPage === totalPages}
+                className="pagination-arrow"
+              >
+                →
+              </button>
             </div>
           </div>
 

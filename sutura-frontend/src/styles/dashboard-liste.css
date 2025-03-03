@@ -1,490 +1,512 @@
 /* dashboard-liste.css - Version corrigée */
+.users-table tr .action-buttons {
+  min-height: 57px;
+}
+
+/* Users list container */
+.dashboard1 .users-list-container {
+  transform: translatex(0px) translatey(92px);
+}
+
+/* Main content1 */
+.dashboard1 .main-content1 {
+  min-height: 669px;
+}
 
 /* Style du conteneur principal */
 .dashboard1 {
-    min-height: 100vh;
-    background-color: #F1F6FA;
-    padding: 30px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  /* Structure du conteneur de contenu */
-  .content-wrapper1 {
-    display: grid;
-    grid-template-columns: 1fr; /* Utiliser une seule colonne pour maximiser l'espace */
-    width: 97%; /* Utiliser toute la largeur disponible */
-    max-width: 100%;
-  }
-  
-  /* Contenu principal qui contient les cartes et la liste */
-  .main-content1 {
-    width: 100%; /* Utilisez 100% au lieu de 120% pour éviter les problèmes de dépassement */
-  }
-  
-  /* Modal content */
-.dashboard1 .modal-content{
-  display:inline-block;
-  transform:translatex(0px) translatey(0px);
-  left:53px;
-  height:504px;
- }
- 
- @media (min-width:641px){
- 
-  /* Modal content */
-  .dashboard1 .modal-content{
-   padding-top:12px;
-  }
-  
- }
+  min-height: 100vh;
+  background-color: #f1f6fa;
+  padding: 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
 
- /* Card icon */
-.dashboard1 .card-icon{
-  transform:translatex(7px) translatey(0px);
- }
- 
- /* Paragraph */
- #root .min-h-screen .d-flex .flex-grow-1 .dashboard1 .modal-overlay .modal-container .modal-content1 .card-assignment-content .assignment-instructions p{
-  width:95% !important;
- }
- 
+/* Structure du conteneur de contenu */
+y .content-wrapper1 {
+  display: grid;
+  grid-template-columns: 1fr; /* Utiliser une seule colonne pour maximiser l'espace */
+  width: 97%; /* Utiliser toute la largeur disponible */
+  max-width: 100%;
+}
 
- #root .min-h-screen .d-flex .flex-grow-1 .dashboard1 .modal-overlay .modal-container .modal-content1 .fingerprint-content .fingerprint-instructions p{
-  width:95% !important;
- }
- 
- /* Fingerprint icon */
- .dashboard1 .fingerprint-icon{
-  transform:translatex(8px) translatey(0px);
- }
- 
- 
- 
- 
-  
-  /* Users List Container */
-  .users-list-container {
-    background-color: white;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* Contenu principal qui contient les cartes et la liste */
+.main-content1 {
+  width: 100%; /* Utilisez 100% au lieu de 120% pour éviter les problèmes de dépassement */
+}
+
+/* Modal content */
+.dashboard1 .modal-content {
+  display: inline-block;
+  transform: translatex(0px) translatey(0px);
+  left: 53px;
+  height: 504px;
+}
+
+@media (min-width: 641px) {
+  /* Modal content */
+  .dashboard1 .modal-content {
+    padding-top: 12px;
   }
-  
-  .users-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+}
+
+/* Card icon */
+.dashboard1 .card-icon {
+  transform: translatex(7px) translatey(0px);
+}
+
+/* Paragraph */
+#root
+  .min-h-screen
+  .d-flex
+  .flex-grow-1
+  .dashboard1
+  .modal-overlay
+  .modal-container
+  .modal-content1
+  .card-assignment-content
+  .assignment-instructions
+  p {
+  width: 95% !important;
+}
+
+#root
+  .min-h-screen
+  .d-flex
+  .flex-grow-1
+  .dashboard1
+  .modal-overlay
+  .modal-container
+  .modal-content1
+  .fingerprint-content
+  .fingerprint-instructions
+  p {
+  width: 95% !important;
+}
+
+/* Fingerprint icon */
+.dashboard1 .fingerprint-icon {
+  transform: translatex(8px) translatey(0px);
+}
+
+/* Users List Container */
+.users-list-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.users-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.users-list-header h2 {
+  font-size: 18px;
+  margin: 0;
+  color: #274c77;
+}
+
+.create-user-btn {
+  background-color: #274c77;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-user-btn:hover {
+  background-color: #196ac6;
+}
+
+.create-user-btn span {
+  margin-right: 4px;
+  font-size: 18px;
+}
+
+/* Search and Filters */
+.search-filter-container {
+  display: flex;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.search-box {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%; /* Utilisez 100% au lieu de 30% pour utiliser tout l'espace disponible */
+  padding: 10px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: white;
+  color: #274c77;
+}
+
+.search-box input:focus {
+  border-color: #274c77;
+}
+
+.search-btn {
+  position: absolute;
+  right: 8px; /* Modifier de 90px à 8px pour positionner correctement l'icône */
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.filters-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.filters-btn:hover {
+  border-color: #274c77;
+  color: #274c77;
+}
+
+/* Users Table */
+.users-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Aide à contrôler la disposition de la table */
+}
+
+.users-table th,
+.users-table td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap; /* Empêcher le retour à la ligne */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Ajouter des points de suspension pour le texte trop long */
+}
+
+.users-table th {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.users-table td {
+  font-size: 14px;
+  color: #111827;
+}
+
+/* Optimiser la largeur des colonnes du tableau de manière égale */
+.users-table th:nth-child(1),
+.users-table td:nth-child(1) {
+  width: 3%; /* Checkbox */
+}
+
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) {
+  width: 7%; /* Photo */
+}
+
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) {
+  width: 12%; /* Nom */
+}
+
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) {
+  width: 12%; /* Prénom */
+}
+
+.users-table th:nth-child(5),
+.users-table td:nth-child(5) {
+  width: 12%; /* Téléphone */
+}
+
+.users-table th:nth-child(6),
+.users-table td:nth-child(6) {
+  width: 20%; /* Email */
+}
+
+.users-table th:nth-child(7),
+.users-table td:nth-child(7) {
+  width: 10%; /* Role */
+}
+
+.users-table th:nth-child(8),
+.users-table td:nth-child(8) {
+  width: 10%; /* Statut */
+}
+
+.users-table th:nth-child(9),
+.users-table td:nth-child(9) {
+  /* width: 20%; Actions */
+  text-align: center;
+}
+
+.user-photo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-initials {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px; /* Réduire davantage l'espace entre les boutons */
+  justify-content: center; /* Centrer les boutons */
+  /* padding: 0; */
+}
+
+.buton {
+  color: #274c77;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.buton:hover {
+  background-color: #f1f5f9;
+  color: #1a3b61;
+  border-color: #d1d5db;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: #274c77;
+  color: #274c77;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
+}
+
+.page-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background-color: transparent;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.page-number:hover:not(.active) {
+  border-color: #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.page-number.active {
+  background-color: #274c77;
+  color: white;
+}
+
+/* Media Queries */
+@media screen and (max-width: 1024px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
   }
-  
-  .users-list-header h2 {
-    font-size: 18px;
-    margin: 0;
-    color: #274C77;
-  }
-  
-  .create-user-btn {
-    background-color: #274C77;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .create-user-btn:hover {
-    background-color: #196ac6;
-  }
-  
-  .create-user-btn span {
-    margin-right: 4px;
-    font-size: 18px;
-  }
-  
-  /* Search and Filters */
-  .search-filter-container {
-    display: flex;
-    margin-bottom: 20px;
+
+  .stats-cards {
+    grid-template-columns: 1fr;
     gap: 12px;
   }
-  
-  .search-box {
-    display: flex;
-    flex: 1;
-    position: relative;
-  }
-  
-  .search-box input {
-    width: 100%; /* Utilisez 100% au lieu de 30% pour utiliser tout l'espace disponible */
-    padding: 10px 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 14px;
-    outline: none;
-    background-color: white;
-    color: #274C77;
-  }
-  
-  .search-box input:focus {
-    border-color: #274C77;
-  }
-  
-  .search-btn {
-    position: absolute;
-    right: 8px; /* Modifier de 90px à 8px pour positionner correctement l'icône */
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #6b7280;
-    cursor: pointer;
-  }
-  
-  .filters-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #6b7280;
-    cursor: pointer;
-  }
-  
-  .filters-btn:hover {
-    border-color: #274C77;
-    color: #274C77;
-  }
-  
-  /* Users Table */
-  .users-table-container {
-    overflow-x: auto;
-    margin-bottom: 20px;
-    width: 100%;
-  }
-  
-  .users-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed; /* Aide à contrôler la disposition de la table */
-  }
-  
-  .users-table th,
-  .users-table td {
-    padding: 12px 8px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-    white-space: nowrap; /* Empêcher le retour à la ligne */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Ajouter des points de suspension pour le texte trop long */
-  }
-  
-  .users-table th {
-    color: #6b7280;
-    font-weight: 500;
-    font-size: 14px;
-  }
-  
-  .users-table td {
-    font-size: 14px;
-    color: #111827;
-  }
-  
-  /* Optimiser la largeur des colonnes du tableau de manière égale */
-  .users-table th:nth-child(1),
-  .users-table td:nth-child(1) {
-    width: 3%; /* Checkbox */
-  }
-  
-  .users-table th:nth-child(2),
-  .users-table td:nth-child(2) {
-    width: 7%; /* Photo */
-  }
-  
-  .users-table th:nth-child(3),
-  .users-table td:nth-child(3) {
-    width: 12%; /* Nom */
-  }
-  
-  .users-table th:nth-child(4),
-  .users-table td:nth-child(4) {
-    width: 12%; /* Prénom */
-  }
-  
-  .users-table th:nth-child(5),
-  .users-table td:nth-child(5) {
-    width: 12%; /* Téléphone */
-  }
-  
-  .users-table th:nth-child(6),
-  .users-table td:nth-child(6) {
-    width: 20%; /* Email */
-  }
-  
-  .users-table th:nth-child(7),
-  .users-table td:nth-child(7) {
-    width: 10%; /* Role */
-  }
-  
-  .users-table th:nth-child(8),
-  .users-table td:nth-child(8) {
-    width: 10%; /* Statut */
-  }
-  
-  .users-table th:nth-child(9),
-  .users-table td:nth-child(9) {
-    /* width: 20%; Actions */
-    text-align: center;
-  }
-  
-  .user-photo {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-  
-  .user-initials {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: #e5e7eb;
-    color: #6b7280;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  
 
-  
- 
-  
+  .users-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .search-filter-container {
+    flex-direction: column;
+  }
+
   .action-buttons {
-    display: flex;
-    gap: 4px; /* Réduire davantage l'espace entre les boutons */
-    justify-content: center; /* Centrer les boutons */
-    /* padding: 0; */
+    flex-wrap: wrap;
   }
-  
-  .buton {
-    color: #274C77;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    background-color: #f9fafb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .buton:hover {
-    background-color: #f1f5f9;
-    color: #1a3b61;
-    border-color: #d1d5db;
-  }
-  
-  /* Pagination */
-  .pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .pagination-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #6b7280;
-    cursor: pointer;
-  }
-  
-  .pagination-btn:hover:not(:disabled) {
-    border-color: #274C77;
-    color: #274C77;
-  }
-  
-  .pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .page-numbers {
-    display: flex;
-    gap: 4px;
-  }
-  
-  .page-number {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    background-color: transparent;
-    font-size: 14px;
-    color: #6b7280;
-    cursor: pointer;
-  }
-  
-  .page-number:hover:not(.active) {
-    border-color: #e5e7eb;
-    background-color: #f9fafb;
-  }
-  
-  .page-number.active {
-    background-color: #274C77;
-    color: white;
-  }
-  
-  /* Media Queries */
-  @media screen and (max-width: 1024px) {
-    .content-wrapper {
-      grid-template-columns: 1fr;
-    }
-    
-    .stats-cards {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-    
-    .users-list-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-    }
-    
-    .search-filter-container {
-      flex-direction: column;
-    }
-    
-    .action-buttons {
-      flex-wrap: wrap;
-    }
-  }
-  
-  /* Pour les écrans plus larges */
-  @media screen and (min-width: 1280px) {
-    .dashboard {
-      padding: 30px;
-    }
-    
-    .main-content {
-      width: 100%;
-      max-width: none; /* Supprimer la limitation de largeur pour utiliser tout l'espace */
-    }
-    
-    .users-table {
-      table-layout: fixed; /* Maintenir le contrôle fixe des colonnes */
-    }
+}
+
+/* Pour les écrans plus larges */
+@media screen and (min-width: 1280px) {
+  .dashboard {
+    padding: 30px;
   }
 
-  /* Position relative pour le conteneur du dropdown */
+  .main-content {
+    width: 100%;
+    max-width: none; /* Supprimer la limitation de largeur pour utiliser tout l'espace */
+  }
+
+  .users-table {
+    table-layout: fixed; /* Maintenir le contrôle fixe des colonnes */
+  }
+}
+
+/* Position relative pour le conteneur du dropdown */
 .filter-dropdown-container {
-    position: relative;
-  }
-  
-  /* Style du bouton de filtre */
-  .filters-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #6b7280;
-    cursor: pointer;
-    min-width: 150px;
-    justify-content: space-between;
-  }
-  
-  .filters-btn:hover {
-    border-color: #274C77;
-    color: #274C77;
-  }
-  
-  /* Style du dropdown */
-  .filter-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    width: 200px;
-    background-color: white;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-    overflow: hidden;
-    animation: dropdownFadeIn 0.2s ease-out;
-  }
-  
-  /* Options du dropdown */
-  .filter-option {
-    padding: 10px 16px;
-    font-size: 14px;
-    color: #1e293b;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .filter-option:hover {
-    background-color: #f8fafc;
-  }
-  
-  .filter-option.active {
-    background-color: #ebf5ff;
-    color: #274C77;
-    font-weight: 500;
-  }
-  
-  /* Animation du dropdown */
-  @keyframes dropdownFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  /* Message quand aucun résultat n'est trouvé */
-  .no-results {
-    text-align: center;
-    padding: 20px 0;
-    color: #6b7280;
-    font-style: italic;
-  }
-  
-  /* Espacement entre l'icône et le texte */
-  .ml-2 {
-    margin-left: 8px;
-  }
+  position: relative;
+}
 
-  /* À ajouter à votre fichier CSS */
+/* Style du bouton de filtre */
+.filters-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+  min-width: 150px;
+  justify-content: space-between;
+}
+
+.filters-btn:hover {
+  border-color: #274c77;
+  color: #274c77;
+}
+
+/* Style du dropdown */
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 200px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+/* Options du dropdown */
+.filter-option {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.filter-option:hover {
+  background-color: #f8fafc;
+}
+
+.filter-option.active {
+  background-color: #ebf5ff;
+  color: #274c77;
+  font-weight: 500;
+}
+
+/* Animation du dropdown */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Message quand aucun résultat n'est trouvé */
+.no-results {
+  text-align: center;
+  padding: 20px 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Espacement entre l'icône et le texte */
+.ml-2 {
+  margin-left: 8px;
+}
+
+/* À ajouter à votre fichier CSS */
 .header-buttons {
   display: flex;
   gap: 10px;
@@ -509,9 +531,8 @@
   background-color: #c82333;
 }
 
-
 /* Styles pour le switch avec bouton aligné en bas */
-.switch1{
+.switch1 {
   position: relative;
   display: inline-block;
   width: 60px;
@@ -525,7 +546,7 @@
   height: 0;
 }
 
-.slider1{
+.slider1 {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -533,7 +554,7 @@
   right: 0;
   bottom: 0;
   background-color: #c82333;
-  transition: .3s;
+  transition: 0.3s;
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -553,7 +574,7 @@
   /* Positionnement vers le bas, à 3px du bord inférieur */
   bottom: 3px;
   background-color: white;
-  transition: .3s;
+  transition: 0.3s;
   border-radius: 50%;
 }
 
@@ -695,7 +716,10 @@ input:checked + .slider1::after {
 }
 
 /* Boutons des modales */
-.cancel-button, .assign-button, .danger-button, .primary-button {
+.cancel-button,
+.assign-button,
+.danger-button,
+.primary-button {
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
@@ -714,12 +738,14 @@ input:checked + .slider1::after {
   background-color: #e9ecef;
 }
 
-.assign-button, .primary-button {
-  background-color: #274C77;
+.assign-button,
+.primary-button {
+  background-color: #274c77;
   color: white;
 }
 
-.assign-button:hover, .primary-button:hover {
+.assign-button:hover,
+.primary-button:hover {
   background-color: #1a3b61;
 }
 
@@ -788,13 +814,15 @@ input:checked + .slider1::after {
 }
 
 /* Styles pour les modales d'assignation de carte et d'empreinte */
-.card-assignment-content, .fingerprint-content {
+.card-assignment-content,
+.fingerprint-content {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.card-icon, .fingerprint-icon {
+.card-icon,
+.fingerprint-icon {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -805,22 +833,24 @@ input:checked + .slider1::after {
   flex-shrink: 0;
 }
 
-.card-icon svg, .fingerprint-icon svg {
-  color: #274C77;
+.card-icon svg,
+.fingerprint-icon svg {
+  color: #274c77;
 }
 
-.assignment-instructions h3, .fingerprint-instructions h3 {
+.assignment-instructions h3,
+.fingerprint-instructions h3 {
   margin: 0 0 10px 0;
   font-size: 18px;
   color: #343a40;
 }
 
-.assignment-instructions p, .fingerprint-instructions p {
+.assignment-instructions p,
+.fingerprint-instructions p {
   margin: 0;
   color: #6c757d;
   line-height: 1.5;
 }
-
 
 /* Ajouter à vos styles existants */
 
@@ -881,7 +911,7 @@ input:checked + .slider1::after {
 }
 
 .enrollment-steps .step::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;

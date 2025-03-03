@@ -1,4 +1,108 @@
-/* dashboard.css */
+/* Conteneur de pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Flèches de navigation */
+.pagination-arrow {
+  background-color: #f4f4f4;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #555;
+}
+
+.pagination-arrow:hover {
+  background-color: #274c77;
+  color: white;
+  transform: scale(1.1); /* Petite animation de zoom lors du survol */
+}
+
+.pagination-arrow:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  color: #777;
+}
+
+.pagination-arrow:focus {
+  outline: none;
+  box-shadow: 0 0 5px 2px rgba(2, 37, 77, 0.6); /* Ajout d'un focus visible */
+}
+
+/* Points de suspension */
+.pagination-dots {
+  font-size: 16px;
+  color: #555;
+  margin: 0 8px;
+}
+
+/* Page courante */
+.pagination-btn.active {
+  background-color: #274c77;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0 0 5px 2px rgba(2, 37, 77, 0.6); /* Ombre autour de la page active */
+}
+
+.pagination-btn {
+  font-size: 14px;
+  background-color: #f4f4f4;
+  color: #555;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.pagination-btn:hover {
+  background-color: #274c77;
+  color: white;
+  transform: scale(1.1); /* Animation de zoom */
+}
+
+.pagination-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  color: #777;
+}
+
+.pagination-btn:focus {
+  outline: none;
+  box-shadow: 0 0 5px 2px rgba(2, 37, 77, 0.6); /* Focus visible sur le bouton */
+}
+
+/* Affichage du numéro de page actuel */
+.pagination-info {
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.device-card.device-off {
+  background-color: #f2dede; /* Rouge clair pour les appareils éteints */
+}
+
+.dashboard .right-panel .security-alerts {
+  height: 194px;
+}
+
+/* Camera widget */
+.dashboard .right-panel .camera-widget {
+  min-height: 221px;
+}
+
 /* Welcome section */
 .d-flex .dashboard .welcome-section {
   min-height: 73px;
