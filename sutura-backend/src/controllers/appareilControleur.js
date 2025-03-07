@@ -1,18 +1,36 @@
 const Appareil = require("../models/Appareil");
+const relayService = require("../services/relayService");
 const { creerHistorique } = require("./historiqueControleur");
+
+// Fonction pour obtenir le prochain relay_ID disponible
+const getNextRelayID = async () => {
+  const appareils = await Appareil.find().sort({ relay_ID: 1 });
+  const usedRelayIDs = appareils.map((a) => a.relay_ID);
+
+  for (let i = 1; i <= 8; i++) {
+    if (!usedRelayIDs.includes(i)) {
+      return i;
+    }
+  }
+  throw new Error("Tous les relais sont attribués !");
+};
 
 // Créer un nouvel appareil à partir d'une pièce
 exports.creerAppareil = async (req, res) => {
   try {
     const { pieces_id, nom_app, actif, intervalle, automatique } = req.body;
 
+    // Obtenir le prochain relay_ID disponible
+    const relay_ID = await getNextRelayID();
+
     const appareil = new Appareil({
-      users_id: req.user._id, // Utiliser l'ID de l'utilisateur authentifié
+      users_id: req.user._id,
       pieces_id,
       nom_app,
       actif,
       intervalle,
-      automatique: automatique || false, // Par défaut, mode manuel
+      automatique: automatique || false,
+      relay_ID, // Ajout du relay_ID
     });
 
     // Créer un historique
@@ -20,7 +38,7 @@ exports.creerAppareil = async (req, res) => {
       users_id: req.user._id,
       type_entite: "appareil",
       type_operation: "creation",
-      description: `Création de l'appareil ${nom_app}`,
+      description: `Création de l'appareil ${nom_app} avec relay_ID ${relay_ID}`,
       statut: "succès",
     });
 
@@ -32,7 +50,7 @@ exports.creerAppareil = async (req, res) => {
       error: error.message,
     });
 
-    // Créer un historique en cas d
+    // Créer un historique en cas d'erreur
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "appareil",
@@ -209,8 +227,11 @@ exports.activerDesactiverAppareil = async (req, res) => {
 
     // Modifier l'état de l'appareil
     appareil.actif = req.body.actif;
-    console.log(appareil.actif);
     await appareil.save();
+
+    // ✅ Activer/désactiver le relais correspondant
+    await relayService.activerDesactiverRelay(appareil);
+    console.log("📢 Données envoyées au service relay :", appareil);
 
     // Créer un historique
     await creerHistorique({
@@ -226,6 +247,7 @@ exports.activerDesactiverAppareil = async (req, res) => {
     // Retourner l'appareil mis à jour
     res.status(200).json(appareil);
   } catch (error) {
+    console.error("Erreur lors du contrôle du relais :", error);
     res.status(400).json({
       message: "Erreur lors de l'activation/désactivation de l'appareil",
       error: error.message,

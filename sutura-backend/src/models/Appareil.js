@@ -40,6 +40,8 @@ const AppareilSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Par défaut, l'appareil ne suit pas l'intervalle
     },
+    relay_ID: { type: Number, required: true }, // Ajout du relay_ID
+
     date_creation: {
       type: Date,
       default: Date.now,
