@@ -38,7 +38,7 @@ const AddDeviceModal = ({ show, handleClose, roomId, rooms, setRooms }) => {
       console.error("Erreur lors de l'ajout de l'appareil :", error);
       Swal.fire({
         title: "Erreur!",
-        text: "Impossible d'ajouter l'appareil.",
+        text: error,
         icon: "error",
       });
     } finally {

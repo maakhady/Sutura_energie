@@ -6,6 +6,7 @@ const connectDB = require("./src/config/database");
 const serialService = require("./src/services/serialService");
 const fingerprintService = require("./src/services/fingerprintService");
 const rfidService = require("./src/services/rfidService");
+const verifierAppareils = require("./src/services/scheduler");
 const http = require("http");
 const socketIO = require("socket.io");
 
@@ -19,8 +20,8 @@ const io = socketIO(server, {
   cors: {
     origin: process.env.CORS_ORIGIN || "*",
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 // Middleware
@@ -62,64 +63,76 @@ io.on("connection", (socket) => {
   // Envoi des événements aux clients connectés
   socket.on("disconnect", () => {
     console.log("Client déconnecté:", socket.id);
-    
+
     // Si le client avait une assignation RFID en cours, l'annuler
-    if (global.assignationRFIDEnCours && global.assignationRFIDEnCours.socketId === socket.id) {
+    if (
+      global.assignationRFIDEnCours &&
+      global.assignationRFIDEnCours.socketId === socket.id
+    ) {
       global.assignationRFIDEnCours = null;
       console.log("Assignation RFID annulée suite à la déconnexion du client");
     }
   });
-  
+
   // Pour démarrer une session d'assignation de carte RFID
   socket.on("demarrer_assignation_rfid", (userId) => {
     console.log(`Démarrage de l'assignation RFID pour l'utilisateur ${userId}`);
     // Stocker l'ID socket et l'ID utilisateur pour l'assignation
     global.assignationRFIDEnCours = { socketId: socket.id, userId };
-    
+
     // Confirmer au client que l'assignation est en cours
     socket.emit("assignation_rfid_status", {
       status: "en_attente",
-      message: "En attente de présentation d'une carte RFID..."
+      message: "En attente de présentation d'une carte RFID...",
     });
   });
-  
+
   // Pour annuler une session d'assignation RFID
   socket.on("annuler_assignation_rfid", () => {
-    if (global.assignationRFIDEnCours && global.assignationRFIDEnCours.socketId === socket.id) {
+    if (
+      global.assignationRFIDEnCours &&
+      global.assignationRFIDEnCours.socketId === socket.id
+    ) {
       console.log("Annulation de l'assignation RFID");
       global.assignationRFIDEnCours = null;
-      
+
       // Confirmer au client que l'assignation est annulée
       socket.emit("assignation_rfid_status", {
         status: "annulee",
-        message: "Assignation annulée"
+        message: "Assignation annulée",
       });
     }
   });
-  
+
   // Pour démarrer l'enregistrement d'une empreinte
   socket.on("demarrer_assignation_empreinte", (userId) => {
-    console.log(`Démarrage de l'assignation d'empreinte pour l'utilisateur ${userId}`);
-    
+    console.log(
+      `Démarrage de l'assignation d'empreinte pour l'utilisateur ${userId}`
+    );
+
     // Utiliser le service existant pour déclencher l'enregistrement
-    fingerprintService.declencherEnregistrement(userId)
-      .then(result => {
+    fingerprintService
+      .declencherEnregistrement(userId)
+      .then((result) => {
         if (result.success) {
           socket.emit("assignation_empreinte_status", {
             status: "en_cours",
-            message: "Processus d'enregistrement d'empreinte initié. Veuillez suivre les instructions sur le dispositif."
+            message:
+              "Processus d'enregistrement d'empreinte initié. Veuillez suivre les instructions sur le dispositif.",
           });
         } else {
           socket.emit("assignation_empreinte_status", {
             status: "erreur",
-            message: result.message
+            message: result.message,
           });
         }
       })
-      .catch(error => {
+      .catch((error) => {
         socket.emit("assignation_empreinte_status", {
           status: "erreur",
-          message: "Erreur lors de l'initialisation de l'enregistrement d'empreinte: " + error.message
+          message:
+            "Erreur lors de l'initialisation de l'enregistrement d'empreinte: " +
+            error.message,
         });
       });
   });
@@ -159,11 +172,12 @@ connectDB()
       const connected = serialService.initSerialConnection();
       if (connected) {
         console.log("Connexion série avec Arduino initialisée");
-        
+
         // Initialiser les services qui utilisent la connexion série
         fingerprintService.init();
         rfidService.init();
-        
+        verifierAppareils();
+
         console.log("Services d'empreinte et RFID initialisés");
       } else {
         console.warn("Échec de la connexion série avec Arduino");

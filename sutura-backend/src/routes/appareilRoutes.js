@@ -16,7 +16,7 @@ const {
 } = require("../controllers/appareilControleur");
 
 // Routes nécessitant un rôle admin
-router.post("/ajouter", auth, verifRole(["admin"]), creerAppareil);
+router.post("/ajouter", auth, creerAppareil);
 
 // Routes accessibles par l'admin et l'utilisateur concerné
 router.get("/voir", auth, voirTousAppareils);

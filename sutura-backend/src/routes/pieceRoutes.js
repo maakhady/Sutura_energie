@@ -10,11 +10,9 @@ const {
   supprimerPiece,
 } = require("../controllers/pieceControleur");
 
-// Routes nécessitant un rôle admin
-router.post("/creer", auth, verifRole(["admin"]), creerPiece);
-router.get("/allpieces", auth, verifRole(["admin"]), obtenirToutesPieces);
-
 // Routes accessibles par l'admin et l'utilisateur concerné
+router.post("/creer", auth, creerPiece);
+router.get("/allpieces", auth, obtenirToutesPieces);
 
 router.get("/voir/:id", auth, obtenirPieceParId);
 router.put("/modifier/:id", auth, mettreAJourPiece);

@@ -72,14 +72,6 @@ exports.obtenirPieceParId = async (req, res) => {
       return res.status(404).json({ message: "Pièce non trouvée" });
     }
 
-    // Vérifier si l'utilisateur a le droit d'accéder à cette pièce
-    if (
-      req.user.role !== "admin" &&
-      piece.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
-    }
-
     // Récupérer les appareils associés à cette pièce
     const appareils = await Appareil.find({ pieces_id: piece._id });
 
@@ -101,14 +93,6 @@ exports.mettreAJourPiece = async (req, res) => {
     const piece = await Piece.findById(req.params.id);
     if (!piece) {
       return res.status(404).json({ message: "Pièce non trouvée" });
-    }
-
-    // Vérifier si l'utilisateur a le droit de modifier cette pièce
-    if (
-      req.user.role !== "admin" &&
-      piece.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
     }
 
     const pieceModifiee = await Piece.findOneAndUpdate(
@@ -146,20 +130,10 @@ exports.supprimerPiece = async (req, res) => {
     // verifier si la piece est utilisée par un appareil
     const appareils = await Appareil.find({ pieces_id: piece._id });
     if (appareils.length > 0) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Impossible de supprimer cette pièce car elle est utilisée par un ou plusieurs appareils",
-        });
-    }
-
-    // Vérifier si l'utilisateur a le droit de supprimer cette pièce
-    if (
-      req.user.role !== "admin" &&
-      piece.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
+      return res.status(400).json({
+        message:
+          "Impossible de supprimer cette pièce car elle est utilisée par un ou plusieurs appareils",
+      });
     }
 
     await Piece.deleteOne({ _id: req.params.id });

@@ -69,14 +69,6 @@ exports.voirAppareil = async (req, res) => {
       return res.status(404).json({ message: "Appareil non trouvé" });
     }
 
-    // Vérifier si l'utilisateur a le droit de voir cet appareil
-    if (
-      req.user.role !== "admin" &&
-      appareil.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
-    }
-
     res.status(200).json(appareil);
   } catch (error) {
     res.status(400).json({
@@ -207,14 +199,6 @@ exports.activerDesactiverAppareil = async (req, res) => {
       return res.status(404).json({ message: "Appareil non trouvé" });
     }
 
-    // Vérifier si l'utilisateur a le droit de modifier cet appareil
-    if (
-      req.user.role !== "admin" &&
-      appareil.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
-    }
-
     // Vérifier si l'état est déjà celui demandé
     if (appareil.actif === req.body.actif) {
       return res.status(200).json({
@@ -263,14 +247,6 @@ exports.definirMode = async (req, res) => {
       return res.status(404).json({ message: "Appareil non trouvé" });
     }
 
-    // Vérifier si l'utilisateur a le droit de modifier cet appareil
-    if (
-      req.user.role !== "admin" &&
-      appareil.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
-    }
-
     appareil.automatique = req.body.automatique;
     await appareil.save();
 
@@ -317,14 +293,6 @@ exports.creerIntervalle = async (req, res) => {
       description: `Définition de l'intervalle de l'appareil ${appareil.nom_app}`,
       statut: "succès",
     });
-
-    // Vérifier si l'utilisateur a le droit de modifier cet appareil
-    if (
-      req.user.role !== "admin" &&
-      appareil.users_id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Accès non autorisé" });
-    }
 
     // Mettre à jour l'intervalle
     appareil.intervalle = req.body.intervalle;
