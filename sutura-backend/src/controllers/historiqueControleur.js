@@ -77,6 +77,35 @@ const obtenirHistoriques = async (req, res) => {
   }
 };
 
+const obtenirHistoriquesAppareils = async (req, res) => {
+  try {
+    let filtres = { type_entite: "appareil" }; // 🔹 Filtre pour ne prendre que les appareils
+
+    // 🔹 Filtrer uniquement les actions "Allumer", "Éteindre" et "Programmation"
+    filtres.type_operation = { $in: ["Allumer", "Eteindre", "Programmation"] };
+
+    // 🔹 Récupérer les logs avec les relations (user & appareil)
+    const historiques = await Historique.find(filtres)
+      .sort({ date_creation: -1 })
+      .populate("users_id", "nom prenom email") // Récupérer les infos de l'utilisateur
+      .populate("app_id", "nom_app") // Récupérer le nom de l'appareil
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: historiques.length,
+      data: historiques,
+    });
+  } catch (error) {
+    console.error("Erreur obtenirHistoriques:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des historiques",
+      error: error.message,
+    });
+  }
+};
+
 /**
  * Obtenir l'historique des actions de l'utilisateur connecté
  * @route GET /api/historiques/mes-actions
@@ -215,4 +244,5 @@ module.exports = {
   obtenirMesActions,
   supprimerHistoriques,
   obtenirHistoriqueParUser,
+  obtenirHistoriquesAppareils,
 };

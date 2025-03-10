@@ -217,14 +217,15 @@ exports.activerDesactiverAppareil = async (req, res) => {
     await relayService.activerDesactiverRelay(appareil);
     console.log("📢 Données envoyées au service relay :", appareil);
 
-    // Créer un historique
+    // Déterminer le type d'opération
+    const typeOperation = req.body.actif ? "Allumer" : "Eteindre";
+
+    // ✅ Créer un historique avec le bon type d'opération
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "appareil",
-      type_operation: "modif",
-      description: `${
-        req.body.actif ? "Activation" : "Désactivation"
-      } de l'appareil ${appareil.nom_app}`,
+      type_operation: typeOperation,
+      description: `${typeOperation} de l'appareil ${appareil.nom_app}`,
       statut: "succès",
     });
 
@@ -289,7 +290,7 @@ exports.creerIntervalle = async (req, res) => {
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "appareil",
-      type_operation: "creation",
+      type_operation: "Programmation",
       description: `Définition de l'intervalle de l'appareil ${appareil.nom_app}`,
       statut: "succès",
     });
@@ -302,7 +303,7 @@ exports.creerIntervalle = async (req, res) => {
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "appareil",
-      type_operation: "modif",
+      type_operation: "Programmation",
       description: `Définition de l'intervalle de l'appareil ${appareil.nom_app}`,
       statut: "succès",
     });

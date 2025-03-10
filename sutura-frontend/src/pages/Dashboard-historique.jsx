@@ -10,6 +10,7 @@ import {
 import "../styles/historique.css";
 import RightPanel from "../components/RightPanel";
 import { authService } from "../services/authService";
+import { HistoriqueService } from "../services/HistoriqueService";
 import { FileUpIcon, LineChartIcon, LogsIcon } from "lucide-react";
 
 const DashboardHistorique = () => {
@@ -17,7 +18,36 @@ const DashboardHistorique = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("consommation");
   const [selectedPeriod, setSelectedPeriod] = useState("semaine");
+  const [activityLogs, setActivityLogs] = useState([]); // 🔹 Stocke les logs récupérés
+  const [loadingLogs, setLoadingLogs] = useState(true); // 🔹 Indicateur de chargement des logs
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 5;
 
+  const indexOfLastLog = currentPage * logsPerPage;
+  const indexOfFirstLog = indexOfLastLog - logsPerPage;
+  const currentLogs = activityLogs.slice(indexOfFirstLog, indexOfLastLog);
+  const totalPages = Math.ceil(activityLogs.length / logsPerPage);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const fetchLogs = async () => {
+    try {
+      const logsData = await HistoriqueService.voirLogsAppareil();
+      setActivityLogs(logsData);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des logs :", error);
+    }
+  };
   // Fonction pour formatter le rôle
   const formatterRole = (role) => {
     if (!role) return "";
@@ -48,6 +78,9 @@ const DashboardHistorique = () => {
     };
 
     fetchUser();
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 10000); // 🔄 Rafraîchit toutes les 10 sec
+    return () => clearInterval(interval); // ✅ Nettoie l'intervalle quand le composant est démonté
   }, []);
 
   // Données de consommation par période
@@ -98,7 +131,7 @@ const DashboardHistorique = () => {
   };
 
   // Logs d'activité fictifs
-  const activityLogs = [
+  /*   const activityLogs = [
     {
       id: 1,
       device: "Lampe Salon",
@@ -134,7 +167,7 @@ const DashboardHistorique = () => {
       time: "17/02/2025 09:00",
       user: "Utilisateur",
     },
-  ];
+  ]; */
 
   return (
     <div className="dashboard2">
@@ -273,16 +306,40 @@ const DashboardHistorique = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {activityLogs.map((log) => (
-                        <tr key={log.id}>
-                          <td>{log.device}</td>
-                          <td>{log.action}</td>
-                          <td>{log.time}</td>
-                          <td>{log.user}</td>
+                      {currentLogs.length > 0 ? (
+                        currentLogs.map((log) => (
+                          <tr key={log._id}>
+                            <td>{log.nom_appareil}</td>
+                            <td>{log.type_operation}</td>
+                            <td>{new Date(log.createdAt).toLocaleString()}</td>
+                            <td>
+                              {log.user
+                                ? `${log.user.prenom} ${log.user.nom}`
+                                : "Système"}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4">Aucun log trouvé.</td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
+                  <div className="pagination">
+                    <button onClick={prevPage} disabled={currentPage === 1}>
+                      ◀ Précédent
+                    </button>
+                    <span>
+                      Page {currentPage} sur {totalPages}
+                    </span>
+                    <button
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                    >
+                      Suivant ▶
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

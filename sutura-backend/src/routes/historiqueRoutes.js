@@ -1,24 +1,28 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { auth } = require('../middleware/auth');
-const verifRole = require('../middleware/verifRole');
+const { auth } = require("../middleware/auth");
+const verifRole = require("../middleware/verifRole");
 const {
   obtenirHistoriques,
   obtenirMesActions,
   supprimerHistoriques,
-  obtenirHistoriqueParUser
-
-} = require('../controllers/historiqueControleur');
+  obtenirHistoriqueParUser,
+  obtenirHistoriquesAppareils,
+} = require("../controllers/historiqueControleur");
 
 // Route pour les utilisateurs normaux
-router.get('/mes-actions', auth, obtenirMesActions);
-router.get('/user/:userId', auth, obtenirHistoriqueParUser);
-
+router.get("/mes-actions", auth, obtenirMesActions);
+router.get("/user/:userId", auth, obtenirHistoriqueParUser);
 
 // Routes protégées pour les admins
-router.get('/', auth, verifRole(['admin']), obtenirHistoriques);
-router.delete('/', auth, verifRole(['admin']), supprimerHistoriques);
-router.get('/user/:userId', auth, verifRole(['admin']),obtenirHistoriqueParUser);
-
+router.get("/", auth, verifRole(["admin"]), obtenirHistoriques);
+router.get("/HisApp", auth, verifRole(["admin"]), obtenirHistoriquesAppareils);
+router.delete("/", auth, verifRole(["admin"]), supprimerHistoriques);
+router.get(
+  "/user/:userId",
+  auth,
+  verifRole(["admin"]),
+  obtenirHistoriqueParUser
+);
 
 module.exports = router;

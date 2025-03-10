@@ -42,7 +42,7 @@
 }
 
 .historique-header p {
-  color: #274c77      ;
+  color: #274c77;
   margin: 0;
   font-size: 14px;
 }
@@ -103,9 +103,7 @@
   border-color: #274c77;
 }
 
-
-
-  .historique-content {
+.historique-content {
   background: white;
   border-radius: 16px;
   padding: 20px;
@@ -114,9 +112,8 @@
   margin-bottom: 24px;
 }
 
-
 /* Styles pour le graphique de consommation */
-.chart-header  {
+.chart-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -131,7 +128,7 @@
 }
 
 .chart-type {
-  color: #FFB800;
+  color: #ffb800;
   font-size: 14px;
 }
 
@@ -146,8 +143,6 @@
   font-size: 12px;
   color: #666;
 }
-
-
 
 /* .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
@@ -257,21 +252,42 @@
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .period-dropdown {
     width: 100%;
   }
-  
+
   .tabs {
     width: 100%;
   }
-  
+
   .tab-btn {
     flex: 1;
     justify-content: center;
   }
-  
+
   .historique-content {
     padding: 16px;
   }
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+.pagination button {
+  background-color: #274c77;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
