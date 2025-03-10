@@ -60,32 +60,52 @@ const DashboardPage = () => {
 
   const handleToggleDevice = async (deviceId, currentStatus) => {
     try {
-      const newStatus = !currentStatus;
-
       if (!deviceId) {
         throw new Error("L'ID de l'appareil est manquant");
       }
 
+      // 🔍 Trouver l'appareil correspondant
+      const device = rooms
+        .flatMap((room) => room.devices)
+        .find((d) => d._id === deviceId);
+
+      if (!device) {
+        throw new Error("Appareil non trouvé");
+      }
+
+      // ❌ Vérifier si l'appareil est en mode automatique
+      if (device.automatique) {
+        Swal.fire({
+          title: "Action impossible",
+          text: "Impossible d'activer/désactiver l'appareil manuellement, car il est en mode automatique.",
+          icon: "warning",
+          timer: 2000,
+        });
+        return; // Stoppe l'exécution de la fonction
+      }
+
+      const newStatus = !currentStatus;
+
       await AppareilService.activerDesactiverAppareil(deviceId, newStatus);
 
+      // ✅ Mise à jour de l'état des appareils dans les pièces
       setRooms((prevRooms) =>
-        prevRooms.map((room) => {
-          if (room._id === activeRoomId) {
-            return {
-              ...room,
-              devices: room.devices.map((device) =>
-                device._id === deviceId
-                  ? {
-                      ...device,
-                      isOn: newStatus,
-                      status: newStatus ? "Actif" : "Inactif",
-                    }
-                  : device
-              ),
-            };
-          }
-          return room;
-        })
+        prevRooms.map((room) =>
+          room._id === activeRoomId
+            ? {
+                ...room,
+                devices: room.devices.map((d) =>
+                  d._id === deviceId
+                    ? {
+                        ...d,
+                        isOn: newStatus,
+                        status: newStatus ? "Actif" : "Inactif",
+                      }
+                    : d
+                ),
+              }
+            : room
+        )
       );
     } catch (error) {
       console.error("Erreur lors de l'activation/désactivation :", error);
@@ -151,7 +171,7 @@ const DashboardPage = () => {
     );
 
   const totalPages = Math.ceil(
-    rooms.find((room) => room._id === activeRoomId)?.devices.length /
+    (rooms.find((room) => room._id === activeRoomId)?.devices?.length || 0) /
       devicesPerPage
   );
 
