@@ -7,10 +7,34 @@
   padding: 20px;
 }
 
+
+ 
+ /* Appareil header */
+ .appareil .appareil-header{
+  transform:translatex(5px) translatey(-17px);
+ }
+ 
+ /* Appareil header */
+ #root .min-h-screen .d-flex .flex-grow-1 .appareil .content-wrapper2 .main-content2 .appareil-header{
+  width:94% !important;
+ }
+ 
+ /* Pagination container */
+ .appareil .rooms-liste .pagination-container{
+  transform:translatex(0px) translatey(-59px);
+ }
+ 
+ /* Row */
+ .appareil .rooms-liste .row{
+  transform:translatex(-7px) translatey(-55px);
+  margin-top:0px;
+ }
+ 
+
 /* Stat card */
 .appareil .stats-cards .stat-card {
   padding-right: 2px;
-  width: 431px;
+  width:395px;
   margin-right: 1px;
   border: #274c77;
 }

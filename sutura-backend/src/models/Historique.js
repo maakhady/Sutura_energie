@@ -24,7 +24,7 @@ const HistoriqueSchema = new mongoose.Schema({
   },
   type_operation: {
     type: String,
-    enum: ['creation', 'modif', 'suppression', 'mesure', 'connexion', 'deconnexion', 'change_etat', 'erreur','porte'],
+    enum: ['creation', 'modif', 'suppression', 'mesure', 'connexion', 'deconnexion', 'change_etat', 'erreur','porte','Activer','Desactiver','Ouverture','Fermeture'],
     required: [true, 'Le type d\'opération est requis']
   },
   description: {

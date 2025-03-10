@@ -266,7 +266,6 @@ const reactiverCarteRFID = async (id) => {
   }
 };
 
-// Fonction pour désactiver sa propre carte RFID (utilisateur connecté)
 
 //Fonction pour désactiver la carte RFID d'un utilisateur
 
