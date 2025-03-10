@@ -26,6 +26,7 @@ const AddRoomModal = ({ show, handleClose, onRoomAdded }) => {
         text: `La pièce "${roomName}" a été ajoutée avec succès.`,
         icon: "success",
         confirmButtonText: "OK",
+        timer: 700,
       });
 
       setRoomName("");
@@ -37,6 +38,7 @@ const AddRoomModal = ({ show, handleClose, onRoomAdded }) => {
         text: "Une erreur est survenue lors de l'ajout de la pièce.",
         icon: "error",
         confirmButtonText: "OK",
+        timer: 700,
       });
     } finally {
       setLoading(false);

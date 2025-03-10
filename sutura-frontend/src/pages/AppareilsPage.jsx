@@ -7,6 +7,9 @@ import RoomCard from "../components/pieces/RoomCard";
 import AddRoomModal from "../components/pieces/AddRoomModal";
 import PieceService from "../services/PieceService";
 import "../styles/Appareils.css";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:2500"); // ✅ Remplace par l'URL de ton backend
 
 const AppareilsPage = () => {
   const [rooms, setRooms] = useState([]);
@@ -38,7 +41,27 @@ const AppareilsPage = () => {
   };
 
   useEffect(() => {
-    fetchRooms();
+    fetchRooms(); // Chargement initial des pièces et appareils
+
+    // 🟢 Écoute les mises à jour d'état des appareils via WebSocket
+    socket.on("deviceStatusUpdated", (updatedDevice) => {
+      console.log("🔄 Mise à jour reçue via WebSocket :", updatedDevice);
+
+      setRooms((prevRooms) =>
+        prevRooms.map((room) => ({
+          ...room,
+          devices: room.devices.map((device) =>
+            device._id === updatedDevice._id
+              ? { ...device, actif: updatedDevice.actif }
+              : device
+          ),
+        }))
+      );
+    });
+
+    return () => {
+      socket.off("deviceStatusUpdated"); // ❌ Nettoyage de l'écouteur WebSocket
+    };
   }, []);
 
   const fetchRooms = async () => {

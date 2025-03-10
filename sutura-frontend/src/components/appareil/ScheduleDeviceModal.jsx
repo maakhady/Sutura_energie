@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import PropTypes from "prop-types";
+import AppareilService from "../../services/AppareilService";
+import Swal from "sweetalert2";
 
 const ScheduleDeviceModal = ({ show, handleClose, device }) => {
   const [schedule, setSchedule] = useState({
@@ -22,11 +24,53 @@ const ScheduleDeviceModal = ({ show, handleClose, device }) => {
   };
 
   // Fonction pour enregistrer la programmation (ajouter une API si nécessaire)
-  const handleSchedule = () => {
-    const allumage = `${schedule.allumageDate}T${schedule.allumageTime}`;
-    const extinction = `${schedule.extinctionDate}T${schedule.extinctionTime}`;
-    console.log("Programmation enregistrée :", { allumage, extinction });
-    handleClose(); // Fermer le modal après validation
+  const handleSchedule = async () => {
+    if (
+      !schedule.allumageDate ||
+      !schedule.extinctionDate ||
+      !schedule.allumageTime ||
+      !schedule.extinctionTime
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Champs manquants",
+        text: "Veuillez remplir tous les champs avant de programmer l'intervalle.",
+      });
+      return;
+    }
+
+    const intervalleData = {
+      intervalle: {
+        debut_periode: `${schedule.allumageDate}T00:00:00Z`,
+        fin_periode: `${schedule.extinctionDate}T00:00:00Z`,
+        heure_debut: schedule.allumageTime,
+        heure_fin: schedule.extinctionTime,
+      },
+    };
+
+    try {
+      await AppareilService.creerIntervalle(device._id, intervalleData);
+
+      // ✅ Message de succès
+      Swal.fire({
+        icon: "success",
+        title: "Programmation réussie",
+        text: `L'intervalle pour ${device.nom_app} a été enregistré avec succès !`,
+        timer: 3000,
+        showConfirmButton: false,
+      });
+
+      handleClose(); // Fermer la modal après succès
+    } catch (error) {
+      console.error("Erreur lors de la programmation :", error);
+
+      // ❌ Message d'erreur
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: "Une erreur est survenue lors de la programmation. Veuillez réessayer.",
+      });
+    }
   };
 
   return (
@@ -36,44 +80,55 @@ const ScheduleDeviceModal = ({ show, handleClose, device }) => {
       </Modal.Header>
       <Modal.Body>
         <Form>
-          <Form.Group>
-            <Form.Label>Date d{"'"}allumage</Form.Label>
-            <Form.Control
-              type="date"
-              name="allumageDate"
-              value={schedule.allumageDate}
-              onChange={handleChange}
-              min={today}
-            />
-          </Form.Group>
+          {/* Période d'allumage */}
+          <h5>Période où l{"'"}appareil sera actif </h5>
           <Form.Group className="mt-3">
-            <Form.Label>Heure d{"'"}allumage</Form.Label>
-            <Form.Control
-              type="time"
-              name="allumageTime"
-              value={schedule.allumageTime}
-              onChange={handleChange}
-            />
+            <Form.Label>Du ... au ...</Form.Label>
+            <Row>
+              <Col>
+                <Form.Control
+                  type="date"
+                  name="allumageDate"
+                  value={schedule.allumageDate}
+                  onChange={handleChange}
+                  min={today}
+                />
+              </Col>
+              <Col>
+                <Form.Control
+                  type="date"
+                  name="extinctionDate"
+                  value={schedule.extinctionDate}
+                  onChange={handleChange}
+                  min={today}
+                />
+              </Col>
+            </Row>
           </Form.Group>
+
+          {/* Heure d'allumage et extinction */}
           <Form.Group className="mt-3">
-            <Form.Label>Date d{"'"}extinction</Form.Label>
-            <Form.Control
-              type="date"
-              name="extinctionDate"
-              value={schedule.extinctionDate}
-              onChange={handleChange}
-              min={today}
-            />
+            <Form.Label>De ... à ...</Form.Label>
+            <Row>
+              <Col>
+                <Form.Control
+                  type="time"
+                  name="allumageTime"
+                  value={schedule.allumageTime}
+                  onChange={handleChange}
+                />
+              </Col>
+              <Col>
+                <Form.Control
+                  type="time"
+                  name="extinctionTime"
+                  value={schedule.extinctionTime}
+                  onChange={handleChange}
+                />
+              </Col>
+            </Row>
           </Form.Group>
-          <Form.Group className="mt-3">
-            <Form.Label>Heure d{"'"}extinction</Form.Label>
-            <Form.Control
-              type="time"
-              name="extinctionTime"
-              value={schedule.extinctionTime}
-              onChange={handleChange}
-            />
-          </Form.Group>
+
           <Button
             variant="primary"
             className="w-100 mt-4"

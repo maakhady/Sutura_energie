@@ -176,7 +176,7 @@ connectDB()
         // Initialiser les services qui utilisent la connexion série
         fingerprintService.init();
         rfidService.init();
-        verifierAppareils();
+        verifierAppareils(io);
 
         console.log("Services d'empreinte et RFID initialisés");
       } else {

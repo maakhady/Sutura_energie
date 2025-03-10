@@ -52,10 +52,10 @@ const AppareilService = {
     );
     return response.data;
   },
-  async definirMode(id, modeData) {
+  async definirMode(id, automatique) {
     const response = await axios.put(
       `${API_URL}/definir-mode/${id}`,
-      modeData,
+      { automatique }, // Envoie uniquement la nouvelle valeur
       {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       }

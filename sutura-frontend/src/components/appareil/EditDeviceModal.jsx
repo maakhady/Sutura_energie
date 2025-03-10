@@ -46,7 +46,12 @@ const EditDeviceModal = ({
       }
 
       handleClose();
-      Swal.fire("Succès!", "L'appareil a été modifié.", "success");
+      Swal.fire({
+        title: "Succès!",
+        text: "L'appareil a été modifié.",
+        icon: "success",
+        timer: 700,
+      });
     } catch (error) {
       console.error("Erreur de modification :", error);
       Swal.fire("Erreur!", "Impossible de modifier l'appareil.", "error");

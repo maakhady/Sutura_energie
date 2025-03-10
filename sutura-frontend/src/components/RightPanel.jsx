@@ -472,6 +472,37 @@ const RightPanel = () => {
     e.stopPropagation();
   };
 
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Mise à jour chaque seconde
+
+    return () => clearInterval(interval); // Nettoyer l'intervalle lors du démontage du composant
+  }, []);
+
+  // Fonction pour formater la date et l'heure
+  const formatDate = (date) => {
+    const jours = [
+      "Dimanche",
+      "Lundi",
+      "Mardi",
+      "Mercredi",
+      "Jeudi",
+      "Vendredi",
+      "Samedi",
+    ];
+    const jour = jours[date.getDay()];
+    const jourNum = date.getDate();
+    const mois = date.getMonth() + 1;
+    const annee = date.getFullYear();
+    const heures = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
+    return `${jour} ${jourNum}/${mois}/${annee} ${heures}:${minutes}`;
+  };
+
   // Modal des détails d'alerte
   const AlertDetailsModal = () => {
     const renderAlertContent = () => {
@@ -615,7 +646,7 @@ const RightPanel = () => {
         </div>
         <h3>Consommation Actuel</h3>
         <div className="consumption-value">50 kWh</div>
-        <div className="consumption-date">Lundi 17/2/2025 13:45</div>
+        <div className="consumption-date">{formatDate(currentTime)}</div>
 
         {/* Messages de succès ou d'erreur flottants */}
         {/* {error && !showModifierMotDePasse && !showModifierProfil && (

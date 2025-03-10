@@ -37,6 +37,7 @@ const EditRoomModal = ({ show, handleClose, room, onRoomUpdated }) => {
         text: `La pièce a été mise à jour avec succès.`,
         icon: "success",
         confirmButtonText: "OK",
+        timer: 700,
       });
 
       handleClose();
@@ -46,6 +47,7 @@ const EditRoomModal = ({ show, handleClose, room, onRoomUpdated }) => {
         title: "Erreur!",
         text: "Une erreur est survenue lors de la modification de la pièce.",
         icon: "error",
+        timer: 700,
       });
     } finally {
       setLoading(false);

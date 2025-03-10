@@ -23,8 +23,7 @@ import AppareilService from "../../services/AppareilService";
 import EditDeviceModal from "./EditDeviceModal"; // ✅ Import du modal d'édition
 import ScheduleDeviceModal from "./ScheduleDeviceModal";
 
-const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
-  const [status, setStatus] = useState(device.actif); // Utiliser device.actif directement au lieu de device.status
+const DeviceCard = ({ device, rooms, setRooms }) => {
   const [showModal, setShowModal] = useState(false); // État du modal des options
   const [showEditModal, setShowEditModal] = useState(false); // État du modal d'édition
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -32,15 +31,37 @@ const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
   // 🟢 Activer/Désactiver l'appareil
   const handleToggle = async () => {
     try {
-      const newStatus = !status; // Inverser le statut
-      await AppareilService.activerDesactiverAppareil(device._id, newStatus); // Appel API pour mettre à jour le statut
-      setStatus(newStatus); // Met à jour le statut localement
+      if (device.automatique) {
+        Swal.fire({
+          title: "Action impossible",
+          text: "Impossible d'activer/désactiver l'appareil manuellement, car il est en mode automatique.",
+          icon: "warning",
+          timer: 2000,
+        });
+        return; // ❌ Empêche l'exécution du reste du code
+      }
+
+      const newStatus = !device.actif; // ⚡ Inverser l’état de l’appareil
+      await AppareilService.activerDesactiverAppareil(device._id, newStatus); // API call
+
+      // ✅ Met à jour la liste des pièces et appareils
+      setRooms((prevRooms) =>
+        prevRooms.map((room) => ({
+          ...room,
+          devices: room.devices.map((d) =>
+            d._id === device._id
+              ? { ...d, actif: newStatus, isOn: newStatus }
+              : d
+          ),
+        }))
+      );
     } catch (error) {
       console.error("Erreur lors de l'activation/désactivation :", error);
       Swal.fire({
         title: "Erreur",
         text: "L'appareil n'a pas pu être activé/désactivé. Essayez à nouveau.",
         icon: "error",
+        timer: 1000,
       });
     }
   };
@@ -68,7 +89,13 @@ const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
           }));
           setRooms(updatedRooms);
 
-          Swal.fire("Supprimé !", "L'appareil a été supprimé.", "success");
+          Swal.fire({
+            title: "Supprimé !",
+            text: "L'appareil a été supprimé.",
+            icon: "success",
+            timer: 700,
+          });
+
           setShowModal(false);
         } catch (error) {
           console.error("Erreur lors de la suppression :", error);
@@ -76,6 +103,59 @@ const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
         }
       }
     });
+  };
+
+  const handleModeAllumage = async (deviceId, automatique) => {
+    const newMode = !automatique; // On inverse l'état actuel
+
+    const result = await Swal.fire({
+      title: `Voulez-vous ${
+        newMode ? "activer" : "désactiver"
+      } le mode automatique ?`,
+      text: `L'appareil passera en mode ${newMode ? "automatique" : "manuel"}.`,
+      icon: "question",
+
+      showCancelButton: true,
+      confirmButtonText: newMode ? "Oui, activer" : "Oui, désactiver",
+
+      cancelButtonText: "Annuler",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await AppareilService.definirMode(deviceId, newMode);
+
+        if (response) {
+          // 🟢 Mise à jour immédiate du state
+          setRooms((prevRooms) =>
+            prevRooms.map((room) => ({
+              ...room,
+              devices: room.devices.map((device) =>
+                device._id === deviceId
+                  ? { ...device, automatique: newMode }
+                  : device
+              ),
+            }))
+          );
+
+          Swal.fire({
+            title: "Succès",
+            text: `Le mode automatique a été ${
+              newMode ? "activé" : "désactivé"
+            } avec succès.`,
+            timer: 700,
+            icon: "success",
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors de la modification du mode :", error);
+        Swal.fire(
+          "Erreur",
+          "Impossible de changer le mode automatique.",
+          "error"
+        );
+      }
+    }
   };
 
   // 🟡 Récupérer l'icône de l'appareil en fonction de son nom
@@ -108,10 +188,14 @@ const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
   return (
     <>
       {/* 📌 Carte de l'appareil */}
-      <Card className={`device-card ${status ? "device-on" : "device-off"}`}>
+      <Card
+        className={`device-card ${device.actif ? "device-on" : "device-off"}`}
+      >
         <Card.Body className="device-card-body">
           <div className="device-header">
-            <div className={`device-icon ${status ? "icon-on" : "icon-off"}`}>
+            <div
+              className={`device-icon ${device.actif ? "icon-on" : "icon-off"}`}
+            >
               {getDeviceIcon(device.nom_app)}
             </div>
             <div className="device-controls">
@@ -120,8 +204,8 @@ const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
                   className="form-check-input"
                   type="checkbox"
                   role="switch"
-                  checked={status} // Bind le switch à l'état 'actif' ou 'inactif'
-                  onChange={handleToggle} // Lors de l'activation/désactivation, on appelle la fonction handleToggle
+                  checked={device.actif}
+                  onChange={handleToggle}
                 />
               </div>
               <Button
@@ -186,12 +270,11 @@ const DeviceCard = ({ device, rooms, setRooms, handleModeAllumage,  }) => {
             variant="warning"
             className="w-100"
             onClick={() => {
-              handleModeAllumage(device._id);
+              handleModeAllumage(device._id, device.automatique);
               setShowModal(false);
             }}
           >
-            <FontAwesomeIcon icon={faBolt} className="me-2" /> Définir un mode
-            de fonctionnement
+            <FontAwesomeIcon icon={faBolt} className="me-2" /> Mode Automatique
           </Button>
         </Modal.Body>
       </Modal>
@@ -219,6 +302,7 @@ DeviceCard.propTypes = {
     _id: PropTypes.string.isRequired,
     nom_app: PropTypes.string.isRequired,
     conso: PropTypes.string,
+    automatique: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
     icon: PropTypes.string.isRequired,
     keywords: PropTypes.string.isRequired,

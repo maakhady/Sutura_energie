@@ -50,12 +50,14 @@ const RoomCard = ({
             title: "Supprimé!",
             text: "La pièce a été supprimée.",
             icon: "success",
+            timer: 700,
           });
         } catch (error) {
           Swal.fire({
             title: "Erreur!",
             text: "Une erreur est survenue lors de la suppression de la pièce.",
             icon: error,
+            timer: 700,
           });
           console.error("Erreur lors de la suppression de la pièce :", error);
         }

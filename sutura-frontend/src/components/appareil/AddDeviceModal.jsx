@@ -33,6 +33,7 @@ const AddDeviceModal = ({ show, handleClose, roomId, rooms, setRooms }) => {
         title: "Succès!",
         text: "L'appareil a été ajouté avec succès.",
         icon: "success",
+        timer: 700,
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout de l'appareil :", error);
@@ -40,6 +41,7 @@ const AddDeviceModal = ({ show, handleClose, roomId, rooms, setRooms }) => {
         title: "Erreur!",
         text: error,
         icon: "error",
+        timer: 700,
       });
     } finally {
       setLoading(false);

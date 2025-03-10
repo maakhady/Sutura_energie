@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Grid, Clock, Users, LogOut } from "lucide-react";
 import { authService } from "../services/authService";
@@ -7,7 +6,11 @@ import "../styles/sidebar.css";
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // gestion de la déconnexion
+
+  // Récupération des infos de l'utilisateur depuis le localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // Gestion de la déconnexion
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -58,15 +61,18 @@ const Sidebar = () => {
           <span className="nav-text">Historiques</span>
         </Link>
 
-        <Link
-          to="/utilisateurs"
-          className={`nav-item ${
-            location.pathname === "/utilisateurs" ? "active" : ""
-          }`}
-        >
-          <Users size={24} />
-          <span className="nav-text">Utilisateurs</span>
-        </Link>
+        {/* Affichage conditionnel basé sur le rôle */}
+        {user?.role !== "utilisateur" && (
+          <Link
+            to="/utilisateurs"
+            className={`nav-item ${
+              location.pathname === "/utilisateurs" ? "active" : ""
+            }`}
+          >
+            <Users size={24} />
+            <span className="nav-text">Utilisateurs</span>
+          </Link>
+        )}
       </nav>
 
       {/* Déconnexion */}
