@@ -168,7 +168,7 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
       },
       { keywords: ["ventilateur", "ventilo", "fan"], icon: <Fan size={24} /> },
       { keywords: ["lampe", "light"], icon: <Lightbulb size={24} /> },
-      { keywords: ["climatiseur", "clime"], icon: <AirVent size={24} /> },
+      { keywords: ["climatiseur", "clime","clim"], icon: <AirVent size={24} /> },
       {
         keywords: ["lave-linge", "machine à laver", "lavage"],
         icon: <WashingMachine size={24} />,

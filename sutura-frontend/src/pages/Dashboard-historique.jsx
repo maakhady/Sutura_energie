@@ -11,7 +11,7 @@ import "../styles/historique.css";
 import RightPanel from "../components/RightPanel";
 import { authService } from "../services/authService";
 import { HistoriqueService } from "../services/HistoriqueService";
-import { FileUpIcon, LineChartIcon, LogsIcon } from "lucide-react";
+import { FileUpIcon, LineChartIcon, LogsIcon, ArrowLeftToLine, ArrowRightToLine  } from "lucide-react";
 
 const DashboardHistorique = () => {
   const [utilisateur, setUtilisateur] = useState(null);
@@ -21,7 +21,7 @@ const DashboardHistorique = () => {
   const [activityLogs, setActivityLogs] = useState([]); // 🔹 Stocke les logs récupérés
   const [loadingLogs, setLoadingLogs] = useState(true); // 🔹 Indicateur de chargement des logs
   const [currentPage, setCurrentPage] = useState(1);
-  const logsPerPage = 5;
+  const logsPerPage = 5; 
 
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
@@ -129,45 +129,6 @@ const DashboardHistorique = () => {
       };
     }
   };
-
-  // Logs d'activité fictifs
-  /*   const activityLogs = [
-    {
-      id: 1,
-      device: "Lampe Salon",
-      action: "Allumée",
-      time: "17/02/2025 13:20",
-      user: "Utilisateur",
-    },
-    {
-      id: 2,
-      device: "Climatiseur",
-      action: "Éteint",
-      time: "17/02/2025 12:45",
-      user: "Système",
-    },
-    {
-      id: 3,
-      device: "Télévision",
-      action: "Allumée",
-      time: "17/02/2025 11:30",
-      user: "Utilisateur",
-    },
-    {
-      id: 4,
-      device: "Panneau solaire",
-      action: "Mode économie activé",
-      time: "17/02/2025 10:15",
-      user: "Système",
-    },
-    {
-      id: 5,
-      device: "Porte d'entrée",
-      action: "Verrouillée",
-      time: "17/02/2025 09:00",
-      user: "Utilisateur",
-    },
-  ]; */
 
   return (
     <div className="dashboard2">
@@ -289,7 +250,7 @@ const DashboardHistorique = () => {
             ) : (
               <div className="activity-logs">
                 <div className="logs-header">
-                  <h3>Journal d{"'"}activités</h3>
+                  <h3>Journal d{"'"}activités des Appareils</h3>
                   <button className="export-btn">
                     <FileUpIcon size={20} />
                     Exporter
@@ -299,6 +260,7 @@ const DashboardHistorique = () => {
                   <table className="logs-table">
                     <thead>
                       <tr>
+                        <th>Pieces</th>
                         <th>Appareil</th>
                         <th>Action</th>
                         <th>Date/Heure</th>
@@ -309,7 +271,8 @@ const DashboardHistorique = () => {
                       {currentLogs.length > 0 ? (
                         currentLogs.map((log) => (
                           <tr key={log._id}>
-                            <td>{log.nom_appareil}</td>
+                            <td>{log.nom_piece || "Non définie"}</td> {/* Colonne manquante pour la pièce */}
+                            <td>{log.nom_app}</td>
                             <td>{log.type_operation}</td>
                             <td>{new Date(log.createdAt).toLocaleString()}</td>
                             <td>
@@ -328,7 +291,8 @@ const DashboardHistorique = () => {
                   </table>
                   <div className="pagination">
                     <button onClick={prevPage} disabled={currentPage === 1}>
-                      ◀ Précédent
+                    <ArrowLeftToLine size={18} />
+                      Précédent
                     </button>
                     <span>
                       Page {currentPage} sur {totalPages}
@@ -337,7 +301,8 @@ const DashboardHistorique = () => {
                       onClick={nextPage}
                       disabled={currentPage === totalPages}
                     >
-                      Suivant ▶
+                      Suivant 
+                      <ArrowRightToLine size={18} />
                     </button>
                   </div>
                 </div>

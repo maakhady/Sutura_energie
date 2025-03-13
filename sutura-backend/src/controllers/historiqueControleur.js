@@ -1,4 +1,7 @@
 const Historique = require("../models/Historique");
+// Enrichir les résultats avec les informations d'appareil et de pièce
+const Appareil = require('../models/Appareil'); // Ajustez le chemin selon votre structure
+const Piece = require('../models/Piece'); // Ajustez le chemin selon votre structure
 
 /**
  * Créer une nouvelle entrée dans l'historique
@@ -80,21 +83,76 @@ const obtenirHistoriques = async (req, res) => {
 const obtenirHistoriquesAppareils = async (req, res) => {
   try {
     let filtres = { type_entite: "appareil" }; // 🔹 Filtre pour ne prendre que les appareils
-
+    
     // 🔹 Filtrer uniquement les actions "Allumer", "Éteindre" et "Programmation"
     filtres.type_operation = { $in: ["Allumer", "Eteindre", "Programmation"] };
-
-    // 🔹 Récupérer les logs avec les relations (user & appareil)
+    
+    // 🔹 Récupérer les logs avec les relations utilisateur
     const historiques = await Historique.find(filtres)
       .sort({ date_creation: -1 })
       .populate("users_id", "nom prenom email") // Récupérer les infos de l'utilisateur
-      .populate("app_id", "nom_app") // Récupérer le nom de l'appareil
+      .populate("app_id") // Essayer de récupérer l'appareil (peut être null)
       .lean();
-
+    
+    
+    
+    const historiquesEnrichis = await Promise.all(historiques.map(async (historique) => {
+      // Cas 1: Si app_id est déjà présent et peuplé, on l'utilise
+      if (historique.app_id && historique.app_id._id) {
+        // Récupérer les informations de la pièce
+        const piece = await Piece.findById(historique.app_id.pieces_id).lean();
+        
+        // Ajouter les informations d'appareil et de pièce dans un format plus lisible
+        historique.appareil_info = {
+          nom: historique.app_id.nom_app,
+          piece: piece ? piece.nom_piece : 'Pièce inconnue'
+        };
+      } 
+      // Cas 2: Si app_id n'est pas présent, on extrait le nom de l'appareil de la description
+      else {
+        // Extraire le nom de l'appareil de la description (ex: "Allumer de l'appareil Clim")
+        const descriptionMatch = historique.description.match(/appareil\s+(\w+)/i);
+        const nomAppareil = descriptionMatch ? descriptionMatch[1] : null;
+        
+        if (nomAppareil) {
+          // Chercher l'appareil par son nom
+          const appareil = await Appareil.findOne({ nom_app: nomAppareil }).lean();
+          
+          if (appareil) {
+            // Récupérer les informations de la pièce
+            const piece = await Piece.findById(appareil.pieces_id).lean();
+            
+            // Ajouter les informations d'appareil et de pièce
+            historique.appareil_info = {
+              nom: appareil.nom_app,
+              piece: piece ? piece.nom_piece : 'Pièce inconnue'
+            };
+            
+            // Mettre à jour l'ID de l'appareil pour les futures requêtes (optionnel)
+            if (!historique.app_id) {
+              await Historique.findByIdAndUpdate(historique._id, { app_id: appareil._id });
+            }
+          } else {
+            historique.appareil_info = {
+              nom: nomAppareil,
+              piece: 'Appareil non trouvé dans la base de données'
+            };
+          }
+        } else {
+          historique.appareil_info = {
+            nom: 'Inconnu',
+            piece: 'Inconnue'
+          };
+        }
+      }
+      
+      return historique;
+    }));
+    
     res.status(200).json({
       success: true,
-      count: historiques.length,
-      data: historiques,
+      count: historiquesEnrichis.length,
+      data: historiquesEnrichis,
     });
   } catch (error) {
     console.error("Erreur obtenirHistoriques:", error);
