@@ -718,19 +718,18 @@ const RightPanel = () => {
         </div>
       </div>
 
-      {/* Widget Caméra */}
-      <div className="camera-widget">
+       {/* Widget Caméra */}
+       <div className="camera-widget">
         <h3>Caméra</h3>
         <div className="camera-feed">
           <span className="live-badge">LIVE</span>
           <img
-            src="/camera-feed.jpg"
+            src="http://192.168.1.147:7000/video_feed"
             alt="Camera Feed"
             className="camera-image"
           />
         </div>
       </div>
-
       {/* Modals */}
       {showAlertDetails && <AlertDetailsModal />}
 
