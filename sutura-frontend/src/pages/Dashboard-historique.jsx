@@ -19,7 +19,6 @@ const DashboardHistorique = () => {
   const [activeTab, setActiveTab] = useState("consommation");
   const [selectedPeriod, setSelectedPeriod] = useState("semaine");
   const [activityLogs, setActivityLogs] = useState([]); // 🔹 Stocke les logs récupérés
-  const [loadingLogs, setLoadingLogs] = useState(true); // 🔹 Indicateur de chargement des logs
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 5;
 
