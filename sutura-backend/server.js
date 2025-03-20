@@ -9,6 +9,7 @@ const rfidService = require("./src/services/rfidService");
 const verifierAppareils = require("./src/services/scheduler");
 const http = require("http");
 const socketIO = require("socket.io");
+const { setSocketInstance } = require("./src/controllers/energieControleur");
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -24,6 +25,7 @@ const io = socketIO(server, {
   },
 });
 
+setSocketInstance(io);
 // Middleware
 app.use(
   cors({
@@ -43,7 +45,7 @@ global.assignationRFIDEnCours = null;
 app.use("/api/utilisateurs", require("./src/routes/utilisateurRoutes"));
 app.use("/api/pieces", require("./src/routes/pieceRoutes"));
 app.use("/api/appareils", require("./src/routes/appareilRoutes"));
-// app.use('/api/energie', require('./src/routes/energieRoutes'));
+app.use("/api/energie", require("./src/routes/energieRoutes"));
 app.use("/api/auth", require("./src/routes/authRoutes"));
 app.use("/api/historiques", require("./src/routes/historiqueRoutes"));
 

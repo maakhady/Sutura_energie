@@ -1,164 +1,151 @@
-const Energie = require('../models/Energie');
-const { creerHistorique } = require('./historiqueControleur');
+const Energie = require("../models/Energie");
+const HistoriqueEnergie = require("../models/HistoriqueEnergie");
+const Appareil = require("../models/Appareil");
 
-/**
- * Enregistrer une nouvelle mesure d'énergie
- * @route POST /api/energies/enregistrer-mesure
- * @param {string} app_id - ID de l'appareil
- * @param {number} consom_energie - Consommation d'énergie
- * @param {number} tension - Tension mesurée
- * @returns {object} Mesure d'énergie créée
- */
-const enregistrerMesure = async (req, res) => {
+// Tension fixe (V)
+const TENSION = 220;
+
+// Instance WebSocket
+let io;
+const setSocketInstance = (socketInstance) => {
+  io = socketInstance;
+};
+
+// 📌 Traitement des données envoyées par le Raspberry
+const recevoirDonneesCapteurs = async (req, res) => {
   try {
-    const { app_id, consom_energie, tension } = req.body;
+    console.log("📥 Données reçues :", req.body);
 
-    // Validation des données d'entrée
-    if (!app_id || !consom_energie || !tension) {
-      await creerHistorique({
-        users_id: req.user.id,
-        type_entite: 'energie',
-        type_operation: 'creation',
-        description: 'Tentative d\'enregistrement de mesure échouée - Données manquantes',
-        statut: 'erreur'
-      });
+    const sensors = req.body.sensors;
 
-      return res.status(400).json({
-        success: false,
-        message: 'Veuillez fournir toutes les informations requises'
-      });
+    if (!Array.isArray(sensors) || sensors.length !== 6) {
+      console.error("❌ Format des données invalide :", sensors);
+      return res.status(400).json({ message: "Format des données invalide." });
     }
 
-    // Créer la mesure d'énergie
-    const energie = await Energie.create({
-      app_id,
-      consom_energie,
-      tension,
-      date_mesure: new Date()
-    });
+    const appareils = await Appareil.find();
+    console.log("📌 Liste des appareils récupérée :", appareils);
 
-    // Créer l'historique
-    await creerHistorique({
-      users_id: req.user.id,
-      type_entite: 'energie',
-      type_operation: 'creation',
-      description: `Nouvelle mesure d'énergie enregistrée pour l'appareil ${app_id}`,
-      statut: 'succès'
-    });
+    const now = new Date();
 
-    res.status(201).json({
-      success: true,
-      data: energie
-    });
+    for (let i = 0; i < sensors.length; i++) {
+      const courant = sensors[i]; // Courant mesuré (A)
+      const appareil = appareils.find((a) => a.relay_ID === i + 1);
+
+      console.log(
+        `⚡ Appareil ${i + 1} :`,
+        appareil ? appareil.nom_app : "Non trouvé",
+        "| Courant:",
+        courant,
+        "A"
+      );
+
+      if (!appareil) continue;
+
+      const puissance = TENSION * courant; // P = U × I
+      const energie_kWh = puissance * (5 / 3600); // Conso en kWh sur 5 sec
+
+      console.log(
+        `🔋 Calcul : Puissance = ${puissance} W | Énergie = ${energie_kWh} kWh`
+      );
+
+      let energie = await Energie.findOne({ app_id: appareil._id });
+
+      console.log("📊 État avant mise à jour :", energie);
+
+      if (!energie) {
+        energie = new Energie({
+          app_id: appareil._id,
+          consom_energie: 0,
+          total_consom: 0,
+          last_activation: null,
+        });
+      }
+
+      if (courant > 0) {
+        if (!energie.last_activation) {
+          energie.last_activation = now;
+        }
+        energie.consom_energie += energie_kWh;
+        energie.total_consom += energie_kWh;
+      } else {
+        energie.consom_energie = 0;
+        energie.last_activation = null;
+      }
+
+      await energie.save();
+
+      console.log("✅ Énergie mise à jour :", energie);
+
+      // 📌 Enregistrement de l'historique toutes les heures
+      const dateHeureArrondie = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        now.getHours(),
+        0,
+        0
+      );
+
+      const historique = await HistoriqueEnergie.findOneAndUpdate(
+        { app_id: appareil._id, date_heure: dateHeureArrondie },
+        { $inc: { consommation: energie_kWh } },
+        { upsert: true, new: true }
+      );
+
+      console.log("📜 Historique mis à jour :", historique);
+
+      // 📡 Envoi des données en temps réel via WebSocket
+      if (io) {
+        io.emit("updateConso", {
+          app_id: appareil._id,
+          nom_app: appareil.nom_app,
+          consom_energie: energie.consom_energie,
+          total_consom: energie.total_consom,
+        });
+        console.log("📡 Données envoyées via WebSocket :", {
+          app_id: appareil._id,
+          nom_app: appareil.nom_app,
+          consom_energie: energie.consom_energie,
+          total_consom: energie.total_consom,
+        });
+      }
+    }
+
+    res.status(200).json({ message: "Données traitées avec succès" });
   } catch (error) {
-    console.error('Erreur enregistrerMesure:', error);
-    
-    await creerHistorique({
-      users_id: req.user.id,
-      type_entite: 'energie',
-      type_operation: 'creation',
-      description: `Erreur lors de l'enregistrement de la mesure: ${error.message}`,
-      statut: 'erreur'
-    });
-
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de l\'enregistrement de la mesure'
-    });
+    console.error("❌ Erreur traitement capteurs :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
 
-/**
- * Calculer la consommation d'énergie sur une période donnée
- * @route GET /api/energies/calculer-consommation
- * @param {string} app_id - ID de l'appareil
- * @param {date} date_debut - Date de début de la période
- * @param {date} date_fin - Date de fin de la période
- * @returns {object} Statistiques de consommation
- */
-const calculerConsommationPeriode = async (req, res) => {
+// 📌 Récupérer l’historique de consommation
+const getHistorique = async (req, res) => {
   try {
-    const { app_id, date_debut, date_fin } = req.query;
-
-    // Validation des dates
-    const dateDebut = new Date(date_debut);
-    const dateFin = new Date(date_fin);
-
-    if (!dateDebut || !dateFin || dateDebut > dateFin) {
-      return res.status(400).json({
-        success: false,
-        message: 'Veuillez fournir des dates valides'
-      });
-    }
-
-    // Rechercher les mesures pour la période
-    const mesures = await Energie.find({
-      app_id,
-      date_mesure: {
-        $gte: dateDebut,
-        $lte: dateFin
-      }
-    });
-
-    // Calculer les statistiques
-    const consommationTotale = mesures.reduce((total, mesure) => total + mesure.consom_energie, 0);
-    const nombreMesures = mesures.length;
-    const consommationMoyenne = nombreMesures > 0 ? consommationTotale / nombreMesures : 0;
-
-    res.status(200).json({
-      success: true,
-      data: {
-        consommationTotale,
-        consommationMoyenne,
-        nombreMesures,
-        periode: {
-          debut: dateDebut,
-          fin: dateFin
-        }
-      }
-    });
+    const historique = await HistoriqueEnergie.find().populate("app_id");
+    console.log("📜 Récupération de l'historique :", historique);
+    res.json(historique);
   } catch (error) {
-    console.error('Erreur calculerConsommationPeriode:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors du calcul de la consommation'
-    });
+    console.error("❌ Erreur récupération historique :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
 
-/**
- * Obtenir les statistiques d'énergie
- * @route GET /api/energies/statistiques
- * @returns {object} Statistiques générales d'énergie
- */
-const getStatistiques = async (req, res) => {
+// 📌 Récupérer la consommation totale de chaque appareil
+const getConsommationTotale = async (req, res) => {
   try {
-    const stats = await Energie.aggregate([
-      {
-        $group: {
-          _id: '$app_id',
-          consommationTotale: { $sum: '$consom_energie' },
-          tensionMoyenne: { $avg: '$tension' },
-          nombreMesures: { $sum: 1 }
-        }
-      }
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: stats
-    });
+    const consommations = await Energie.find().populate("app_id");
+    console.log("📊 Consommation totale :", consommations);
+    res.json(consommations);
   } catch (error) {
-    console.error('Erreur getStatistiques:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la récupération des statistiques'
-    });
+    console.error("❌ Erreur récupération consommation totale :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
 
 module.exports = {
-  enregistrerMesure,
-  calculerConsommationPeriode,
-  getStatistiques
+  recevoirDonneesCapteurs,
+  getHistorique,
+  getConsommationTotale,
+  setSocketInstance,
 };
