@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import "../styles/RightPanel.css";
 import { utilisateurService } from "../services/utilisateurService";
 import { authService } from "../services/authService";
+import { EnergieService } from "../services/EnergieService";
 import { Eye, EyeOff } from "lucide-react";
 import MemoizedProfileEditModal from "./ProfileEditModal"; // Importer le composant de modification de profil
 import Swal from "sweetalert2";
@@ -222,6 +223,10 @@ const RightPanel = () => {
     }
   };
   const [showDropdown, setShowDropdown] = useState(false);
+  const [totalConso, setTotalConso] = useState({
+    value: 0,
+    timestamp: Date.now(),
+  });
   const [loading, setLoading] = useState(false);
   const [showAlertDetails, setShowAlertDetails] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
@@ -265,6 +270,27 @@ const RightPanel = () => {
     };
 
     fetchUserProfile();
+  }, []);
+
+  useEffect(() => {
+    // Récupération initiale des données
+    EnergieService.getConsommationTotaleAll().then((res) => {
+      console.log("🔵 Initialisation - Total :", res.data.consommation_totale);
+      setTotalConso(res.data.consommation_totale);
+    });
+
+    // 📡 Écoute des mises à jour en temps réel
+    EnergieService.onUpdateConsommationTotaleAll((data) => {
+      setTotalConso((prev) => ({
+        value: data.consommation_totale,
+        timestamp: Date.now(), // Cette valeur change à chaque update
+      }));
+    });
+
+    // Cleanup des écouteurs WebSocket
+    return () => {
+      EnergieService.stopListening();
+    };
   }, []);
 
   // Mettre le focus sur le premier champ quand le modal s'ouvre
@@ -645,7 +671,7 @@ const RightPanel = () => {
           )}
         </div>
         <h3>Consommation Actuel</h3>
-        <div className="consumption-value">50 kWh</div>
+        <div className="consumption-value"> {totalConso.value} kWh</div>
         <div className="consumption-date">{formatDate(currentTime)}</div>
 
         {/* Messages de succès ou d'erreur flottants */}
@@ -718,8 +744,8 @@ const RightPanel = () => {
         </div>
       </div>
 
-       {/* Widget Caméra */}
-       <div className="camera-widget">
+      {/* Widget Caméra */}
+      <div className="camera-widget">
         <h3>Caméra</h3>
         <div className="camera-feed">
           <span className="live-badge">LIVE</span>

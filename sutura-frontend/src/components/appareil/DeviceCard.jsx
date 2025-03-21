@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Card, Button, Modal } from "react-bootstrap";
 import {
@@ -20,6 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import AppareilService from "../../services/AppareilService";
+import { EnergieService } from "../../services/EnergieService";
 import EditDeviceModal from "./EditDeviceModal"; // ✅ Import du modal d'édition
 import ScheduleDeviceModal from "./ScheduleDeviceModal";
 
@@ -27,6 +28,7 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
   const [showModal, setShowModal] = useState(false); // État du modal des options
   const [showEditModal, setShowEditModal] = useState(false); // État du modal d'édition
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [consommation, setConsommation] = useState(device.conso || "0 kWh");
 
   // 🟢 Activer/Désactiver l'appareil
   const handleToggle = async () => {
@@ -126,7 +128,7 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
         const response = await AppareilService.definirMode(deviceId, newMode);
 
         if (response) {
-          // 🟢 Mise à jour immédiate du state
+          //  Mise à jour immédiate du state
           setRooms((prevRooms) =>
             prevRooms.map((room) => ({
               ...room,
@@ -158,7 +160,7 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
     }
   };
 
-  // 🟡 Récupérer l'icône de l'appareil en fonction de son nom
+  //  Récupérer l'icône de l'appareil en fonction de son nom
   const getDeviceIcon = (nom_app) => {
     const devices = [
       { keywords: ["télévision", "télé", "tv"], icon: <Tv size={24} /> },
@@ -168,7 +170,10 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
       },
       { keywords: ["ventilateur", "ventilo", "fan"], icon: <Fan size={24} /> },
       { keywords: ["lampe", "light"], icon: <Lightbulb size={24} /> },
-      { keywords: ["climatiseur", "clime","clim"], icon: <AirVent size={24} /> },
+      {
+        keywords: ["climatiseur", "clime", "clim"],
+        icon: <AirVent size={24} />,
+      },
       {
         keywords: ["lave-linge", "machine à laver", "lavage"],
         icon: <WashingMachine size={24} />,
@@ -185,9 +190,23 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
     return <Lightbulb size={24} />;
   };
 
+  useEffect(() => {
+    const handleUpdateConso = (data) => {
+      if (data.app_id === device._id) {
+        setConsommation(`${data.consom_energie.toFixed(3)} kWh`);
+      }
+    };
+
+    EnergieService.onUpdateConsommationAppareil(handleUpdateConso);
+
+    return () => {
+      EnergieService.stopListening();
+    };
+  }, [device._id]); // ✅ Ajout de 'device._id' dans les dépendances
+
   return (
     <>
-      {/* 📌 Carte de l'appareil */}
+      {/*  Carte de l'appareil */}
       <Card
         className={`device-card ${device.actif ? "device-on" : "device-off"}`}
       >
@@ -235,13 +254,12 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
           </div>
           <p className="device-name">{device.nom_app}</p>
           <p className="device-conso">
-            Conso:{" "}
-            <span className="text-warning">{device.conso || "0 kWh"}</span>
+            Conso: <span className="text-warning">{consommation}</span>
           </p>
         </Card.Body>
       </Card>
 
-      {/* 📌 Modal des options */}
+      {/*  Modal des options */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Options pour {device.nom_app}</Modal.Title>
@@ -285,13 +303,13 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
         device={device}
       />
 
-      {/* 📌 Modal de modification */}
+      {/*  Modal de modification */}
       <EditDeviceModal
         show={showEditModal}
         handleClose={() => setShowEditModal(false)}
         device={device}
         rooms={rooms}
-        setRooms={setRooms} // ✅ Bien passé ici
+        setRooms={setRooms}
       />
     </>
   );

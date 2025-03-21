@@ -11,7 +11,8 @@ const setSocketInstance = (socketInstance) => {
   io = socketInstance;
 };
 
-// 📌 Traitement des données envoyées par le Raspberry
+//  Traitement des données envoyées par le Raspberry
+// Traitement des données envoyées par le Raspberry
 const recevoirDonneesCapteurs = async (req, res) => {
   try {
     console.log("📥 Données reçues :", req.body);
@@ -23,9 +24,7 @@ const recevoirDonneesCapteurs = async (req, res) => {
       return res.status(400).json({ message: "Format des données invalide." });
     }
 
-    const appareils = await Appareil.find();
-    console.log("📌 Liste des appareils récupérée :", appareils);
-
+    const appareils = await Appareil.find(); // Récupération de tous les appareils
     const now = new Date();
 
     for (let i = 0; i < sensors.length; i++) {
@@ -43,15 +42,13 @@ const recevoirDonneesCapteurs = async (req, res) => {
       if (!appareil) continue;
 
       const puissance = TENSION * courant; // P = U × I
-      const energie_kWh = puissance * (5 / 3600); // Conso en kWh sur 5 sec
+      const energie_kWh = puissance * (1 / 3600); // Conso en kWh sur 5 sec
 
       console.log(
         `🔋 Calcul : Puissance = ${puissance} W | Énergie = ${energie_kWh} kWh`
       );
 
       let energie = await Energie.findOne({ app_id: appareil._id });
-
-      console.log("📊 État avant mise à jour :", energie);
 
       if (!energie) {
         energie = new Energie({
@@ -62,19 +59,19 @@ const recevoirDonneesCapteurs = async (req, res) => {
         });
       }
 
-      if (courant > 0) {
+      // 🚀 Nouvelle logique d'arrêt :
+      if (courant === 0 || appareil.actif === false) {
+        energie.consom_energie = 0;
+        energie.last_activation = null;
+      } else {
         if (!energie.last_activation) {
           energie.last_activation = now;
         }
         energie.consom_energie += energie_kWh;
         energie.total_consom += energie_kWh;
-      } else {
-        energie.consom_energie = 0;
-        energie.last_activation = null;
       }
 
       await energie.save();
-
       console.log("✅ Énergie mise à jour :", energie);
 
       // 📌 Enregistrement de l'historique toutes les heures
@@ -87,13 +84,11 @@ const recevoirDonneesCapteurs = async (req, res) => {
         0
       );
 
-      const historique = await HistoriqueEnergie.findOneAndUpdate(
+      await HistoriqueEnergie.findOneAndUpdate(
         { app_id: appareil._id, date_heure: dateHeureArrondie },
         { $inc: { consommation: energie_kWh } },
         { upsert: true, new: true }
       );
-
-      console.log("📜 Historique mis à jour :", historique);
 
       // 📡 Envoi des données en temps réel via WebSocket
       if (io) {
@@ -123,10 +118,10 @@ const recevoirDonneesCapteurs = async (req, res) => {
 const getHistorique = async (req, res) => {
   try {
     const historique = await HistoriqueEnergie.find().populate("app_id");
-    console.log("📜 Récupération de l'historique :", historique);
+    console.log(" Récupération de l'historique :", historique);
     res.json(historique);
   } catch (error) {
-    console.error("❌ Erreur récupération historique :", error);
+    console.error(" Erreur récupération historique :", error);
     res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
@@ -135,17 +130,89 @@ const getHistorique = async (req, res) => {
 const getConsommationTotale = async (req, res) => {
   try {
     const consommations = await Energie.find().populate("app_id");
-    console.log("📊 Consommation totale :", consommations);
+    console.log(" Consommation totale :", consommations);
     res.json(consommations);
+  } catch (error) {
+    console.error(" Erreur récupération consommation totale :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
+// 🔹 Récupérer la consommation totale de tous les appareils
+const getConsommationTotaleAll = async (req, res) => {
+  try {
+    const total = await Energie.aggregate([
+      {
+        $group: {
+          _id: null,
+          total_conso: { $sum: "$total_consom" },
+        },
+      },
+    ]);
+
+    const consommationTotale = total.length > 0 ? total[0].total_conso : 0;
+
+    console.log(
+      "📊 Consommation totale de tous les appareils :",
+      consommationTotale
+    );
+
+    res.json({ consommation_totale: consommationTotale });
+
+    // 📡 Envoi en temps réel via WebSocket
+    if (io) {
+      io.emit("updateConsommationTotaleAll", {
+        consommation_totale: consommationTotale,
+      });
+      console.log("📡 Consommation totale envoyée en temps réel !");
+    }
   } catch (error) {
     console.error("❌ Erreur récupération consommation totale :", error);
     res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
 
+// 🔹 Récupérer la consommation totale par pièce
+const getConsommationParPiece = async (req, res) => {
+  try {
+    const consommations = await Energie.aggregate([
+      {
+        $lookup: {
+          from: "appareils",
+          localField: "app_id",
+          foreignField: "_id",
+          as: "appareil",
+        },
+      },
+      { $unwind: "$appareil" },
+      {
+        $group: {
+          _id: "$appareil.pieces_id",
+          consommation_piece: { $sum: "$total_consom" },
+        },
+      },
+    ]);
+
+    console.log("🏠 Consommation par pièce :", consommations);
+    res.json(consommations);
+
+    // 📡 Envoi en temps réel via WebSocket
+    if (io) {
+      io.emit("updateConsommationParPiece", consommations);
+      console.log("📡 Consommation par pièce envoyée en temps réel !");
+    }
+  } catch (error) {
+    console.error("❌ Erreur récupération consommation par pièce :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
+// 🔹 Export des fonctions
 module.exports = {
   recevoirDonneesCapteurs,
   getHistorique,
   getConsommationTotale,
   setSocketInstance,
+  getConsommationTotaleAll,
+  getConsommationParPiece,
 };

@@ -4,9 +4,10 @@ import { Plus, Pencil, Trash } from "lucide-react";
 import DeviceCard from "../appareil/DeviceCard";
 import EditRoomModal from "./EditRoomModal";
 import AddDeviceModal from "../appareil/AddDeviceModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2"; // Import de Swal
 import PieceService from "../../services/PieceService"; // Import du service API
+import { EnergieService } from "../../services/EnergieService";
 
 const RoomCard = ({
   room,
@@ -19,6 +20,7 @@ const RoomCard = ({
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
+  const [consommationPieces, setConsommationPieces] = useState({});
 
   // 🗑️ Fonction pour supprimer une pièce
   const handleDeleteRoom = async (roomId) => {
@@ -65,6 +67,44 @@ const RoomCard = ({
     });
   };
 
+  useEffect(() => {
+    // 🔄 Met à jour la consommation en temps réel
+    const handleUpdate = (data) => {
+      const consommationMap = {};
+      data.forEach((item) => {
+        consommationMap[item._id] = item.consommation_piece; // Associer la consommation à la pièce
+      });
+      setConsommationPieces(consommationMap);
+    };
+
+    // Écoute les mises à jour WebSocket
+    EnergieService.onUpdateConsommationParPiece(handleUpdate);
+
+    // Nettoyage
+    return () => {
+      EnergieService.stopListening();
+    };
+  }, []);
+  useEffect(() => {
+    const fetchConsommation = async () => {
+      try {
+        const response = await EnergieService.getConsommationParPiece();
+        const consommationMap = {};
+        response.data.forEach((item) => {
+          consommationMap[item._id] = item.consommation_piece.toFixed(3);
+        });
+        setConsommationPieces(consommationMap);
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération de la consommation :",
+          error
+        );
+      }
+    };
+
+    fetchConsommation();
+  }, []);
+
   return (
     <>
       <Card.Body className="room-card-body">
@@ -102,7 +142,11 @@ const RoomCard = ({
 
         <div className="room-energy">
           <span className="energy-icon">⚡</span>
-          <h5 className="energy-value">{room.energy || "0 kWh"}</h5>
+          <h5 className="energy-value">
+            {consommationPieces[room._id] !== undefined
+              ? `${consommationPieces[room._id]} kWh`
+              : "0 kWh"}
+          </h5>
         </div>
 
         <div className="device-container">
