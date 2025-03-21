@@ -1,702 +1,738 @@
 /* RightPanel.css */
 .right-panel {
-    background: #E3EEF0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px;
-    overflow-y: auto;
+  background: #e3eef0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+}
+.consumption-date-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.toggle-relay-btn {
+  padding: 8px 12px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.toggle-relay-btn:hover {
+  background-color: #45a049;
+}
+
+.toggle-relay-btn:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
 }
 
 /* Image */
-#root .min-h-screen .d-flex .flex-grow-1 .dashboard .content-wrapper .right-panel .consumption-widget .user-avatar-container .user-avatar img{
-    width:81px !important;
-   }
-   
-   /* Image */
-   .consumption-widget .user-avatar img{
-    transform:translatex(0px) translatey(0px);
-   }
-   
-   /* Right panel */
-   .dashboard .right-panel{
-    transform:translatex(5px) translatey(0px);
-   }
-   
-   /* User avatar */
-   .consumption-widget .user-avatar{
-    width:17%;
-    height:57px;
-    transform:translatex(5px) translatey(0px);
-   }
-   
-   
+#root
+  .min-h-screen
+  .d-flex
+  .flex-grow-1
+  .dashboard
+  .content-wrapper
+  .right-panel
+  .consumption-widget
+  .user-avatar-container
+  .user-avatar
+  img {
+  width: 81px !important;
+}
+
+/* Image */
+.consumption-widget .user-avatar img {
+  transform: translatex(0px) translatey(0px);
+}
+
+/* Right panel */
+.dashboard .right-panel {
+  transform: translatex(5px) translatey(0px);
+}
+
+/* User avatar */
+.consumption-widget .user-avatar {
+  width: 17%;
+  height: 57px;
+  transform: translatex(5px) translatey(0px);
+}
 
 /* Styles de base pour mobile */
 @media screen and (max-width: 1023px) {
-    .right-panel {
-        width: 100%;
-        height: auto;
-        position: static;
-        margin-top: 20px;
-    }
+  .right-panel {
+    width: 100%;
+    height: auto;
+    position: static;
+    margin-top: 20px;
+  }
 
-    .consumption-widget {
-        margin-top: 30px;
-    }
+  .consumption-widget {
+    margin-top: 30px;
+  }
 
-    .camera-feed {
-        height: 250px;
-    }
+  .camera-feed {
+    height: 250px;
+  }
 
-    .camera-image {
-        height: 250px;
-    }
+  .camera-image {
+    height: 250px;
+  }
 }
 
 /* Styles pour tablettes */
 @media screen and (min-width: 768px) and (max-width: 1023px) {
-    .right-panel {
-        padding: 24px;
-    }
+  .right-panel {
+    padding: 24px;
+  }
 
-    .alert-list {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-    }
+  .alert-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
 }
 
 /* Styles pour desktop */
 @media screen and (min-width: 1024px) {
-    .right-panel {
-        width: 400px;
-        height: 100vh;
-        position: fixed;
-        right: 0;
-        top: 0;
-    }
+  .right-panel {
+    width: 400px;
+    height: 100vh;
+    position: fixed;
+    right: 0;
+    top: 0;
+  }
 
-    .consumption-widget {
-        margin-top: 50px;
-        
-    }
+  .consumption-widget {
+    margin-top: 50px;
+  }
 
-    .security-alerts {
-        overflow: auto;
-    }
+  .security-alerts {
+    overflow: auto;
+  }
 
-    .camera-image {
-        height: 200px;
-    }
+  .camera-image {
+    height: 200px;
+  }
 }
 
 /* Widget Consommation */
 .consumption-widget {
-    background: #4c92fb;
-    border-radius: 16px;
-    padding: 20px;
-    color: white;
-    position: relative;
+  background: #4c92fb;
+  border-radius: 16px;
+  padding: 20px;
+  color: white;
+  position: relative;
 }
 
 /* Avatar et Dropdown */
 .user-avatar-container {
-    position: relative;
+  position: relative;
 }
 
 .user-avatar {
-    position: absolute;
-    top: -80px;
-    right: 1px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid white;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+  position: absolute;
+  top: -80px;
+  right: 1px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid white;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
 .user-avatar:hover {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 .user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Style pour les initiales de l'utilisateur */
 .user-initials {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background-color: #274C77;
-    color: white;
-    font-weight: bold;
-    font-size: 14px;
-    border-radius: 50%;
-    text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #274c77;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 50%;
+  text-transform: uppercase;
 }
 
 /* Style pour les initiales dans le dropdown */
 .dropdown-avatar.user-initials {
-    width: 48px;
-    height: 48px;
-    font-size: 16px;
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
 }
 
 .avatar-dropdown {
-    position: absolute;
-    top: -35px;
-    right:10px;
-    width: 280px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    overflow: hidden;
-    animation: slideDown 0.2s ease-out;
+  position: absolute;
+  top: -35px;
+  right: 10px;
+  width: 280px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
 }
 
 .dropdown-header {
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background-color: #f8fafc;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #f8fafc;
 }
 
 .dropdown-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .dropdown-user-info {
-    flex: 1;
+  flex: 1;
 }
 
 .dropdown-user-info h4 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 500;
-    color: #1e293b;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1e293b;
 }
 
 .dropdown-user-info p {
-    margin: 4px 0 0;
-    font-size: 14px;
-    color: #64748b;
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #64748b;
 }
 
 .dropdown-divider {
-    height: 1px;
-    background-color: #274C77;
-    margin: 0;
+  height: 1px;
+  background-color: #274c77;
+  margin: 0;
 }
 
 .dropdown-item {
-    width: 100%;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    color: #1e293b;
-    font-size: 14px;
+  width: 100%;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #1e293b;
+  font-size: 14px;
 }
 
 .dropdown-item:hover {
-    background-color: #274C77;
+  background-color: #274c77;
 }
 
 .item-icon {
-    font-size: 18px;
+  font-size: 18px;
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .consumption-value {
-    font-size: clamp(36px, 5vw, 48px);
-    font-weight: bold;
-    margin: 10px 0;
+  font-size: clamp(36px, 5vw, 48px);
+  font-weight: bold;
+  margin: 10px 0;
 }
 
 .consumption-date {
-    font-size: 14px;
-    opacity: 0.9;
+  font-size: 14px;
+  opacity: 0.9;
 }
 
 /* Messages d'erreur et de succès */
-.error-message, .success-message {
-    padding: 8px 12px;
-    margin: 10px 0;
-    border-radius: 4px;
-    font-size: 14px;
+.error-message,
+.success-message {
+  padding: 8px 12px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .error-message {
-    background-color: #fee2e2;
-    color: #dc2626;
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .success-message {
-    background-color: #dcfce7;
-    color: #16a34a;
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
-.error-message.floating, .success-message.floating {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    right: 10px;
-    z-index: 10;
+.error-message.floating,
+.success-message.floating {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 10;
 }
 
 /* Widget Alertes */
 .security-alerts {
-    background:rgb(251, 214, 214);
-    border-radius: 16px;
-    padding: 20px;
+  background: rgb(251, 214, 214);
+  border-radius: 16px;
+  padding: 20px;
 }
 
 .alerts-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
 .alerts-icons {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .alert-count {
-    background: #ffdada;
-    color: #dc2626;
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 12px;
+  background: #ffdada;
+  color: #dc2626;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
 }
-.title-alert{
-    color: #274C77
+.title-alert {
+  color: #274c77;
 }
 
 .alert-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .alert-item {
-    background: white;
-    border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    gap: 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
 }
 
 .alert-content {
-    flex: 1;
+  flex: 1;
 }
 
 .alert-title {
-    font-weight: 500;
-    margin-bottom: 4px;
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .alert-subtitle {
-    color: #6b7280;
-    font-size: 14px;
-    margin-bottom: 4px;
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 4px;
 }
 
 .status-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #10b981;
-    margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #10b981;
+  margin-bottom: 4px;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
-    background: #10b981;
-    border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
 }
 
 .view-details {
-    color: #274C77;
-    font-size: 12px;
-    text-decoration: none;
-    background:rgb(141, 186, 253);
-    padding: 3px;
-    border-radius: 12%
+  color: #274c77;
+  font-size: 12px;
+  text-decoration: none;
+  background: rgb(141, 186, 253);
+  padding: 3px;
+  border-radius: 12%;
 }
 
 /* Styles pour le widget caméra */
 .camera-widget {
-    background-color: white;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-  }
-  
-  .camera-widget h3 {
-    font-size: 20px;
-    margin-top: 0;
-    margin-bottom: 12px;
-    color: #333;
-  }
-  
-  .camera-feed {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #000;
-    width: 100%;
-    height: 0;
-    padding-bottom: 75%; /* Ratio 4:3 pour correspondre au flux vidéo */
-  }
-  
-  .camera-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: fill; /* Changement de 'contain' à 'fill' pour remplir le conteneur */
-  }
-  
-  .live-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background-color: rgba(255, 0, 0, 0.7);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 2;
-  }
-  
-  /* État pour caméra déconnectée */
-  .camera-offline {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 100%;
-    background-color: #333;
-    color: white;
-  }
-  
-  .camera-offline p {
-    text-align: center;
-    font-size: 14px;
-  }
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.camera-widget h3 {
+  font-size: 20px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.camera-feed {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #000;
+  width: 100%;
+  height: 0;
+  padding-bottom: 75%; /* Ratio 4:3 pour correspondre au flux vidéo */
+}
+
+.camera-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill; /* Changement de 'contain' à 'fill' pour remplir le conteneur */
+}
+
+.live-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+/* État pour caméra déconnectée */
+.camera-offline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: #333;
+  color: white;
+}
+
+.camera-offline p {
+  text-align: center;
+  font-size: 14px;
+}
 
 /* Optimisations pour les très petits écrans */
 @media screen and (max-width: 375px) {
-    .right-panel {
-        padding: 16px;
-    }
+  .right-panel {
+    padding: 16px;
+  }
 
-    .consumption-value {
-        font-size: 32px;
-    }
+  .consumption-value {
+    font-size: 32px;
+  }
 
-    .alert-item {
-        flex-direction: column;
-    }
+  .alert-item {
+    flex-direction: column;
+  }
 
-    .camera-image {
-        height: 180px;
-    }
+  .camera-image {
+    height: 180px;
+  }
 
-    .avatar-dropdown {
-        width: calc(100vw - 32px);
-        right: -16px;
-    }
+  .avatar-dropdown {
+    width: calc(100vw - 32px);
+    right: -16px;
+  }
 }
 
 /* Modal Styles */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    animation: fadeIn 0.2s ease-out;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .modal-content {
-    background: white;
-    padding: 24px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .alert-details-content {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .alert-details-content h3 {
-    color: #274C77;
-    margin-bottom: 20px;
-    font-size: 18px;
-    font-weight: 500;
+  color: #274c77;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .alert-security-title {
-    color: #DC2626 !important;
+  color: #dc2626 !important;
 }
 
 .security-alert-message {
-    color: #DC2626;
-    font-weight: 500;
-    margin-bottom: 16px;
-    font-size: 16px;
-    padding: 8px;
-    background: #ffdada;
-    border-radius: 8px;
+  color: #dc2626;
+  font-weight: 500;
+  margin-bottom: 16px;
+  font-size: 16px;
+  padding: 8px;
+  background: #ffdada;
+  border-radius: 8px;
 }
 
 .detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .detail-row:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .detail-label {
-    color: #6b7280;
-    font-size: 14px;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 .detail-value {
-    font-weight: 500;
-    color: #1f2937;
+  font-weight: 500;
+  color: #1f2937;
 }
 
 .detail-value.critical {
-    color: #DC2626;
-    font-weight: 600;
+  color: #dc2626;
+  font-weight: 600;
 }
 
 .retour-btn {
-    width: 100%;
-    padding: 12px;
-    background-color: #274C77;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+  width: 100%;
+  padding: 12px;
+  background-color: #274c77;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .retour-btn:hover {
-    background-color: #1a365d;
+  background-color: #1a365d;
 }
 
 /* Styles pour le modal de changement de mot de passe */
 .password-form {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 .form-group {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: #1f2937;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #1f2937;
 }
 
 .form-group input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
 .form-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
 }
 
-.submit-btn, .cancel-btn {
-    padding: 10px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+.submit-btn,
+.cancel-btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .submit-btn {
-    background-color: #274C77;
-    color: white;
-    border: none;
+  background-color: #274c77;
+  color: white;
+  border: none;
 }
 
 .submit-btn:hover {
-    background-color: #1a365d;
+  background-color: #1a365d;
 }
 
 .submit-btn:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .cancel-btn {
-    background-color: #f3f4f6;
-    color: #1f2937;
-    border: 1px solid #d1d5db;
+  background-color: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
 }
 
 .cancel-btn:hover {
-    background-color: #e5e7eb;
+  background-color: #e5e7eb;
 }
 
 /* Animation pour le modal */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Media queries pour le modal */
 @media screen and (max-width: 640px) {
-    .modal-content {
-        width: 95%;
-        padding: 16px;
-        margin: 16px;
-    }
+  .modal-content {
+    width: 95%;
+    padding: 16px;
+    margin: 16px;
+  }
 
-    .alert-details-content h3 {
-        font-size: 16px;
-    }
+  .alert-details-content h3 {
+    font-size: 16px;
+  }
 
-    .security-alert-message {
-        font-size: 14px;
-    }
+  .security-alert-message {
+    font-size: 14px;
+  }
 }
 
 /* Pour assurer que le modal est au-dessus de tout */
 .modal-overlay {
-    z-index: 9999;
+  z-index: 9999;
 }
 
 /* Conteneur pour l'input et le bouton d'affichage du mot de passe */
 .password-input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .password-input-container input {
-    width: 100%;
-    padding: 10px;
-    padding-right: 40px; /* Espace pour le bouton œil */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.3s;
+  width: 100%;
+  padding: 10px;
+  padding-right: 40px; /* Espace pour le bouton œil */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
 }
 
 /* Styles pour indiquer si les mots de passe correspondent ou non */
 .password-match {
-    border-color: #4CAF50 !important;
-    background-color: rgba(76, 175, 80, 0.05);
+  border-color: #4caf50 !important;
+  background-color: rgba(76, 175, 80, 0.05);
 }
 
 .password-mismatch {
-    border-color: #f44336 !important;
-    background-color: rgba(244, 67, 54, 0.05);
+  border-color: #f44336 !important;
+  background-color: rgba(244, 67, 54, 0.05);
 }
 
 /* Bouton pour afficher/masquer le mot de passe */
 .toggle-password-btn {
-    position: absolute;
-    right: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #555;
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #555;
 }
 
 .toggle-password-btn:hover {
-    color: #000;
+  color: #000;
 }
 
 .toggle-password-btn:focus {
-    outline: none;
+  outline: none;
 }
 
 /* Messages de validation du mot de passe */
 .password-validation-message {
-    margin-top: 5px;
-    font-size: 12px;
+  margin-top: 5px;
+  font-size: 12px;
 }
 
 .password-validation-message.error {
-    color: #f44336;
+  color: #f44336;
 }
 
 .password-validation-message.success {
-    color: #4CAF50;
+  color: #4caf50;
 }

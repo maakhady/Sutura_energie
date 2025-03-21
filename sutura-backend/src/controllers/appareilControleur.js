@@ -239,6 +239,71 @@ exports.activerDesactiverAppareil = async (req, res) => {
     });
   }
 };
+//
+// Activer/Désactiver plusieurs appareils ou en en fonction des pieces partagées
+exports.activerDesactiverPlusieursAppareils = async (req, res) => {
+  try {
+    const { pieceId, actif } = req.body;
+
+    if (typeof actif !== "boolean") {
+      return res
+        .status(400)
+        .json({
+          message: "Le paramètre 'actif' est requis et doit être un booléen.",
+        });
+    }
+
+    let filtres = {};
+    if (pieceId) {
+      filtres.pieces_id = pieceId; // Filtrer les appareils par pièce
+    }
+
+    const appareils = await Appareil.find(filtres);
+    if (appareils.length === 0) {
+      return res.status(404).json({ message: "Aucun appareil trouvé." });
+    }
+
+    // Mise à jour de l'état de chaque appareil en base de données
+    const updates = appareils.map((appareil) => {
+      appareil.actif = actif;
+      return appareil.save();
+    });
+    await Promise.all(updates);
+
+    // Envoi de la commande au Raspberry Pi pour tous les relais concernés
+    const requetes = appareils.map((appareil) =>
+      axios.post(`${RASPBERRY_PI_URL}/control-relay/${appareil.relay_ID}`, {
+        actif,
+      })
+    );
+    await Promise.all(requetes);
+
+    // Création d’un historique
+    const typeOperation = actif ? "Allumer" : "Éteindre";
+    await creerHistorique({
+      users_id: req.user._id,
+      type_entite: "appareil",
+      type_operation: typeOperation,
+      description: `${typeOperation} ${appareils.length} appareil(s)`,
+      statut: "succès",
+    });
+
+    res.status(200).json({
+      message: `Tous les appareils ${pieceId ? "de la pièce" : ""} ont été ${
+        actif ? "activés" : "désactivés"
+      }`,
+      appareils,
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors du contrôle des relais :", error.message);
+    res
+      .status(500)
+      .json({
+        message: "Erreur lors de l’activation/désactivation des appareils",
+        error: error.message,
+      });
+  }
+};
 
 // Définir le mode manuel ou automatique
 exports.definirMode = async (req, res) => {

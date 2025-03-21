@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Card, Button } from "react-bootstrap";
+import { Card, Button, Form } from "react-bootstrap";
 import { Plus, Pencil, Trash } from "lucide-react";
 import DeviceCard from "../appareil/DeviceCard";
 import EditRoomModal from "./EditRoomModal";
@@ -7,6 +7,7 @@ import AddDeviceModal from "../appareil/AddDeviceModal";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2"; // Import de Swal
 import PieceService from "../../services/PieceService"; // Import du service API
+import AppareilService from "../../services/AppareilService";
 import { EnergieService } from "../../services/EnergieService";
 
 const RoomCard = ({
@@ -21,7 +22,40 @@ const RoomCard = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
   const [consommationPieces, setConsommationPieces] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [relaisActifs, setRelaisActifs] = useState(
+    room.devices.some((device) => device.actif) // Vérifie si au moins un appareil est actif
+  );
 
+  const toggleRelaisPiece = async () => {
+    setLoading(true);
+    try {
+      await AppareilService.activerDesactiverParPiece(room._id, !relaisActifs);
+      setRelaisActifs(!relaisActifs);
+
+      // Mise à jour locale des appareils de la pièce
+      setRooms((prevRooms) =>
+        prevRooms.map((r) =>
+          r._id === room._id
+            ? {
+                ...r,
+                devices: r.devices.map((device) => ({
+                  ...device,
+                  actif: !relaisActifs,
+                })),
+              }
+            : r
+        )
+      );
+    } catch (error) {
+      console.error(
+        `❌ Erreur lors de l'activation/désactivation des appareils :`,
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
   // 🗑️ Fonction pour supprimer une pièce
   const handleDeleteRoom = async (roomId) => {
     Swal.fire({
@@ -113,6 +147,16 @@ const RoomCard = ({
             {room.nom_piece}
           </h5>
           <div className="room-actions">
+            {/* ✅ Toggle Switch pour activer/désactiver tous les relais de la pièce */}
+            <Form.Check
+              type="switch"
+              id={`toggle-relais-${room._id}`}
+              label=""
+              checked={relaisActifs}
+              onChange={toggleRelaisPiece}
+              disabled={loading}
+              className="toggle-switch"
+            />
             <Button
               variant="light"
               size="sm"

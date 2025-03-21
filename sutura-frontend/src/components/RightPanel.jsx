@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import "../styles/RightPanel.css";
 import { utilisateurService } from "../services/utilisateurService";
 import { authService } from "../services/authService";
+import AppareilService from "../services/AppareilService";
 import { EnergieService } from "../services/EnergieService";
 import { Eye, EyeOff } from "lucide-react";
 import MemoizedProfileEditModal from "./ProfileEditModal"; // Importer le composant de modification de profil
@@ -614,6 +615,20 @@ const RightPanel = () => {
     );
   };
 
+  const [relaisActifs, setRelaisActifs] = useState(false);
+
+  const toggleRelais = async () => {
+    setLoading(true);
+    try {
+      await AppareilService.activerDesactiverTousLesRelais(!relaisActifs);
+      setRelaisActifs(!relaisActifs);
+    } catch (error) {
+      console.error("Erreur lors du changement d'état des relais :", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="right-panel">
       {/* Widget Consommation */}
@@ -672,7 +687,21 @@ const RightPanel = () => {
         </div>
         <h3>Consommation Actuel</h3>
         <div className="consumption-value"> {totalConso.value} kWh</div>
-        <div className="consumption-date">{formatDate(currentTime)}</div>
+        {/* Date + Bouton Activation */}
+        <div className="consumption-date-button">
+          <span className="consumption-date">{formatDate(currentTime)}</span>
+          <button
+            className="toggle-relay-btn"
+            onClick={toggleRelais}
+            disabled={loading}
+          >
+            {loading
+              ? "..."
+              : relaisActifs
+              ? "Désactiver Tous"
+              : "Activer Tous"}
+          </button>
+        </div>
 
         {/* Messages de succès ou d'erreur flottants */}
         {/* {error && !showModifierMotDePasse && !showModifierProfil && (

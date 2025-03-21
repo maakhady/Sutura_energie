@@ -9,6 +9,7 @@ const {
   modifierAppareil,
   supprimerAppareil,
   activerDesactiverAppareil,
+  activerDesactiverPlusieursAppareils,
   definirMode,
   creerIntervalle,
   voirIntervalle,
@@ -24,6 +25,12 @@ router.get("/:id", auth, voirAppareil);
 router.put("/modifier/:id", auth, modifierAppareil);
 router.delete("/supprimer/:id", auth, supprimerAppareil);
 router.put("/activer-desactiver/:id", auth, activerDesactiverAppareil);
+router.post(
+  "/control-multiple-relays",
+  auth,
+  activerDesactiverPlusieursAppareils
+);
+
 router.put("/definir-mode/:id", auth, definirMode);
 
 // Routes pour la gestion des intervalles

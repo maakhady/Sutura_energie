@@ -74,6 +74,23 @@ const AppareilService = {
     return response.data;
   },
 
+  // Activer/Désactiver plusieurs relais (tous ou par pièce)
+  async activerDesactiverPlusieursAppareils(pieceId, newStatus) {
+    const response = await apiClient.post(
+      `/control-multiple-relays`,
+      { pieceId, actif: newStatus }, // `pieceId` est optionnel
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    return response.data;
+  },
+
+  // Activer/Désactiver tous les relais
+  async activerDesactiverTousLesRelais(newStatus) {
+    return this.activerDesactiverPlusieursAppareils(null, newStatus);
+  },
+
   // Définir le mode de fonctionnement d'un appareil
   async definirMode(id, automatique) {
     const response = await apiClient.put(
@@ -88,13 +105,9 @@ const AppareilService = {
 
   // Ajouter un intervalle de fonctionnement à un appareil
   async creerIntervalle(id, intervalleData) {
-    const response = await apiClient.post(
-      `/intervalle/${id}`,
-      intervalleData,
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      }
-    );
+    const response = await apiClient.post(`/intervalle/${id}`, intervalleData, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
     return response.data;
   },
 

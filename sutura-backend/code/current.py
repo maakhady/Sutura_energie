@@ -139,6 +139,29 @@ def control_relay_api(relay_id):
         print(f"⚠️ Erreur API : {e}")
         return jsonify({"message": "Erreur lors du contrôle du relais.", "error": str(e)}), 500
 
+@app.route('/control-multiple-relays', methods=['POST'])
+def control_multiple_relays():
+    try:
+        data = request.get_json()
+        relais_ids = data.get("relais_ids", [])
+        actif = data.get("actif")
+
+        if not isinstance(relais_ids, list) or not all(isinstance(i, int) for i in relais_ids):
+            return jsonify({"message": "Liste 'relais_ids' invalide."}), 400
+
+        if actif is None:
+            return jsonify({"message": "Le paramètre 'actif' est requis."}), 400
+
+        for relay_id in relais_ids:
+            control_relay(relay_id, actif)
+
+        return jsonify({"message": f"Relais {relais_ids} {'activés' if actif else 'désactivés'} avec succès."}), 200
+
+    except Exception as e:
+        print(f"⚠️ Erreur API : {e}")
+        return jsonify({"message": "Erreur lors du contrôle des relais.", "error": str(e)}), 500
+
+
 # === Lancement des threads ===
 if __name__ == "__main__":
     threading.Thread(target=read_serial, daemon=True).start()  # Thread pour la lecture série

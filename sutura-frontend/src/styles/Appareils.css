@@ -7,34 +7,64 @@
   padding: 20px;
 }
 
+.room-toggle {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
 
- 
- /* Appareil header */
- .appareil .appareil-header{
-  transform:translatex(5px) translatey(-17px);
- }
- 
- /* Appareil header */
- #root .min-h-screen .d-flex .flex-grow-1 .appareil .content-wrapper2 .main-content2 .appareil-header{
-  width:94% !important;
- }
- 
- /* Pagination container */
- .appareil .rooms-liste .pagination-container{
-  transform:translatex(0px) translatey(-59px);
- }
- 
- /* Row */
- .appareil .rooms-liste .row{
-  transform:translatex(-7px) translatey(-55px);
-  margin-top:0px;
- }
- 
+.toggle-room-btn {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.toggle-room-btn:hover {
+  background-color: #0056b3;
+}
+
+.toggle-room-btn:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Appareil header */
+.appareil .appareil-header {
+  transform: translatex(5px) translatey(-17px);
+}
+
+/* Appareil header */
+#root
+  .min-h-screen
+  .d-flex
+  .flex-grow-1
+  .appareil
+  .content-wrapper2
+  .main-content2
+  .appareil-header {
+  width: 94% !important;
+}
+
+/* Pagination container */
+.appareil .rooms-liste .pagination-container {
+  transform: translatex(0px) translatey(-59px);
+}
+
+/* Row */
+.appareil .rooms-liste .row {
+  transform: translatex(-7px) translatey(-55px);
+  margin-top: 0px;
+}
 
 /* Stat card */
 .appareil .stats-cards .stat-card {
   padding-right: 2px;
-  width:395px;
+  width: 395px;
   margin-right: 1px;
   border: #274c77;
 }
