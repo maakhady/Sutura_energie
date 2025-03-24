@@ -31,6 +31,14 @@ const DashboardPage = () => {
 
   useEffect(() => {
     fetchRooms();
+
+    // 🔥 Écouter l'événement de mise à jour
+    const handleUpdate = () => fetchRooms();
+    window.addEventListener("updateDevices", handleUpdate);
+
+    return () => {
+      window.removeEventListener("updateDevices", handleUpdate);
+    };
   }, []);
 
   const fetchRooms = async () => {

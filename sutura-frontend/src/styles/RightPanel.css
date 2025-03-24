@@ -30,8 +30,11 @@
 }
 
 .toggle-relay-btn:disabled {
-  background-color: #aaa;
+  background-color: red;
   cursor: not-allowed;
+}
+.red-btn {
+  background-color: red !important;
 }
 
 /* Image */

@@ -277,15 +277,19 @@ const RightPanel = () => {
     // Récupération initiale des données
     EnergieService.getConsommationTotaleAll().then((res) => {
       console.log("🔵 Initialisation - Total :", res.data.consommation_totale);
-      setTotalConso(res.data.consommation_totale);
+      setTotalConso({
+        value: parseFloat(res.data.consommation_totale).toFixed(2), // ✅ 2 décimales
+        timestamp: Date.now(),
+      });
     });
 
     // 📡 Écoute des mises à jour en temps réel
     EnergieService.onUpdateConsommationTotaleAll((data) => {
-      setTotalConso((prev) => ({
-        value: data.consommation_totale,
-        timestamp: Date.now(), // Cette valeur change à chaque update
-      }));
+      console.log("🟢 Mise à jour - Total :", data.consommation_totale);
+      setTotalConso({
+        value: parseFloat(data.consommation_totale).toFixed(2), // ✅ 2 décimales
+        timestamp: Date.now(), // Permet de forcer le rendu
+      });
     });
 
     // Cleanup des écouteurs WebSocket
@@ -622,6 +626,9 @@ const RightPanel = () => {
     try {
       await AppareilService.activerDesactiverTousLesRelais(!relaisActifs);
       setRelaisActifs(!relaisActifs);
+
+      // 🔥 Notifier les autres composants qu'un changement a eu lieu
+      window.dispatchEvent(new Event("updateDevices"));
     } catch (error) {
       console.error("Erreur lors du changement d'état des relais :", error);
     } finally {
@@ -685,13 +692,20 @@ const RightPanel = () => {
             </div>
           )}
         </div>
-        <h3>Consommation Actuel</h3>
-        <div className="consumption-value"> {totalConso.value} kWh</div>
+        <h3>Consommation Actuelle</h3>
+        <div className="consumption-value">
+          {totalConso?.value ? `${totalConso.value} kWh` : "0.00 kWh"}
+        </div>
         {/* Date + Bouton Activation */}
         <div className="consumption-date-button">
-          <span className="consumption-date">{formatDate(currentTime)}</span>
+          <span className="consumption-date">
+            {formatDate(new Date(currentTime))}
+          </span>
+
           <button
-            className="toggle-relay-btn"
+            className={`toggle-relay-btn ${
+              !relaisActifs ? "disabled-btn" : ""
+            }`}
             onClick={toggleRelais}
             disabled={loading}
           >

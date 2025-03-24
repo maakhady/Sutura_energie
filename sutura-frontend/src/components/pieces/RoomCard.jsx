@@ -23,17 +23,20 @@ const RoomCard = ({
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
   const [consommationPieces, setConsommationPieces] = useState({});
   const [loading, setLoading] = useState(false);
-  const [relaisActifs, setRelaisActifs] = useState(
-    room.devices.some((device) => device.actif) // Vérifie si au moins un appareil est actif
-  );
+  const [relaisActifs, setRelaisActifs] = useState();
 
   const toggleRelaisPiece = async () => {
     setLoading(true);
     try {
-      await AppareilService.activerDesactiverParPiece(room._id, !relaisActifs);
+      await AppareilService.activerDesactiverPlusieursAppareils(
+        room._id,
+        !relaisActifs
+      );
+
+      // Met à jour l'état des relais locaux
       setRelaisActifs(!relaisActifs);
 
-      // Mise à jour locale des appareils de la pièce
+      // 🔥 Met à jour l'état global des pièces dans `AppareilsPage`
       setRooms((prevRooms) =>
         prevRooms.map((r) =>
           r._id === room._id
@@ -56,6 +59,7 @@ const RoomCard = ({
       setLoading(false);
     }
   };
+
   // 🗑️ Fonction pour supprimer une pièce
   const handleDeleteRoom = async (roomId) => {
     Swal.fire({
@@ -106,7 +110,9 @@ const RoomCard = ({
     const handleUpdate = (data) => {
       const consommationMap = {};
       data.forEach((item) => {
-        consommationMap[item._id] = item.consommation_piece; // Associer la consommation à la pièce
+        consommationMap[item._id] = parseFloat(item.consommation_piece).toFixed(
+          2
+        );
       });
       setConsommationPieces(consommationMap);
     };
@@ -125,7 +131,9 @@ const RoomCard = ({
         const response = await EnergieService.getConsommationParPiece();
         const consommationMap = {};
         response.data.forEach((item) => {
-          consommationMap[item._id] = item.consommation_piece.toFixed(3);
+          consommationMap[item._id] = parseFloat(
+            item.consommation_piece
+          ).toFixed(2);
         });
         setConsommationPieces(consommationMap);
       } catch (error) {
@@ -152,7 +160,7 @@ const RoomCard = ({
               type="switch"
               id={`toggle-relais-${room._id}`}
               label=""
-              checked={relaisActifs}
+              checked={room.devices.some((device) => device.actif)} // ✅ Vérifie si au moins un appareil est actif
               onChange={toggleRelaisPiece}
               disabled={loading}
               className="toggle-switch"
@@ -182,6 +190,7 @@ const RoomCard = ({
               <Trash size={18} />
             </Button>
           </div>
+          ;
         </div>
 
         <div className="room-energy">

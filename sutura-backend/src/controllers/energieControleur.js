@@ -4,7 +4,7 @@ const Appareil = require("../models/Appareil");
 
 // Tension fixe (V)
 const TENSION = 220;
-
+const SEUIL_ALERTE_PUISSANCE = 40;
 // Instance WebSocket
 let io;
 const setSocketInstance = (socketInstance) => {
@@ -42,7 +42,23 @@ const recevoirDonneesCapteurs = async (req, res) => {
       if (!appareil) continue;
 
       const puissance = TENSION * courant; // P = U × I
-      const energie_kWh = puissance * (1 / 3600); // Conso en kWh sur 5 sec
+      const energie_kWh = puissance * (1 / 3600); // Conso en kWh sur 1 sec
+
+      //  Alerte si puissance supérieure au seuil et appareil actif
+      if (puissance > SEUIL_ALERTE_PUISSANCE && appareil.actif) {
+        if (io) {
+          io.emit("alerteSurconsommation", {
+            app_id: appareil._id,
+            nom_app: appareil.nom_app,
+            puissance: puissance,
+            seuil: SEUIL_ALERTE_PUISSANCE,
+            timestamp: now,
+          });
+          console.log(
+            `⚠️ Alerte surconsommation pour ${appareil.nom_app}: ${puissance}W`
+          );
+        }
+      }
 
       console.log(
         `🔋 Calcul : Puissance = ${puissance} W | Énergie = ${energie_kWh} kWh`

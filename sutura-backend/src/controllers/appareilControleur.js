@@ -1,6 +1,7 @@
 const Appareil = require("../models/Appareil");
 const relayService = require("../services/relayService");
 const { creerHistorique } = require("./historiqueControleur");
+const axios = require("axios");
 
 // Fonction pour obtenir le prochain relay_ID disponible
 const getNextRelayID = async () => {
@@ -246,11 +247,9 @@ exports.activerDesactiverPlusieursAppareils = async (req, res) => {
     const { pieceId, actif } = req.body;
 
     if (typeof actif !== "boolean") {
-      return res
-        .status(400)
-        .json({
-          message: "Le paramètre 'actif' est requis et doit être un booléen.",
-        });
+      return res.status(400).json({
+        message: "Le paramètre 'actif' est requis et doit être un booléen.",
+      });
     }
 
     let filtres = {};
@@ -263,23 +262,28 @@ exports.activerDesactiverPlusieursAppareils = async (req, res) => {
       return res.status(404).json({ message: "Aucun appareil trouvé." });
     }
 
-    // Mise à jour de l'état de chaque appareil en base de données
-    const updates = appareils.map((appareil) => {
-      appareil.actif = actif;
-      return appareil.save();
-    });
-    await Promise.all(updates);
+    // **Créer une liste des IDs de relais**
+    const relais_ids = appareils
+      .filter((appareil) => typeof appareil.relay_ID === "number")
+      .map((appareil) => appareil.relay_ID);
 
-    // Envoi de la commande au Raspberry Pi pour tous les relais concernés
-    const requetes = appareils.map((appareil) =>
-      axios.post(`${RASPBERRY_PI_URL}/control-relay/${appareil.relay_ID}`, {
-        actif,
+    if (relais_ids.length === 0) {
+      return res.status(400).json({ message: "Aucun relais valide trouvé." });
+    }
+
+    // ✅ Utiliser relayService pour envoyer UNE SEULE requête au Raspberry Pi
+    await relayService.activerDesactiverPlusieursRelais(relais_ids, actif);
+
+    // ✅ Mettre à jour l’état des appareils en base de données
+    await Promise.all(
+      appareils.map((appareil) => {
+        appareil.actif = actif;
+        return appareil.save();
       })
     );
-    await Promise.all(requetes);
 
-    // Création d’un historique
-    const typeOperation = actif ? "Allumer" : "Éteindre";
+    // ✅ Création de l'historique
+    const typeOperation = actif ? "Allumer" : "Eteindre";
     await creerHistorique({
       users_id: req.user._id,
       type_entite: "appareil",
@@ -291,17 +295,14 @@ exports.activerDesactiverPlusieursAppareils = async (req, res) => {
     res.status(200).json({
       message: `Tous les appareils ${pieceId ? "de la pièce" : ""} ont été ${
         actif ? "activés" : "désactivés"
-      }`,
-      appareils,
+      }.`,
     });
   } catch (error) {
-    console.error("❌ Erreur lors du contrôle des relais :", error.message);
-    res
-      .status(500)
-      .json({
-        message: "Erreur lors de l’activation/désactivation des appareils",
-        error: error.message,
-      });
+    console.error("❌ Erreur lors du contrôle des relais :", error);
+    res.status(500).json({
+      message: "Erreur lors de l’activation/désactivation des appareils",
+      error: error.message,
+    });
   }
 };
 
