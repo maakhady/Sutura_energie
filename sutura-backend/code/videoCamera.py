@@ -20,7 +20,7 @@
 # def cleanup_camera():
 #     """ Arrete proprement le processus de la camera """
 #     global camera_process
-#     if camera_process:
+#     if camera_process:Candidature Développeur Full Stack
 #         try:
 #             camera_process.terminate()
 #             time.sleep(0.5)
