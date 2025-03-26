@@ -901,3 +901,212 @@ color: #007bff;
 .enrollment-steps .step.active::after {
 background-color: #007bff;
 }
+
+
+/* Ajoutez ces styles à votre fichier dashboard-liste.css */
+
+/* Styles de base du tableau déjà présents - conserver tout le CSS existant */
+
+/* Ajout des styles responsive pour le tableau */
+@media screen and (max-width: 1200px) {
+  /* Ajustement des largeurs des colonnes pour les écrans moyens */
+  .users-table th:nth-child(6),
+  .users-table td:nth-child(6) {
+    width: 15%; /* Email - réduire légèrement */
+  }
+  
+  .users-table th:nth-child(5),
+  .users-table td:nth-child(5) {
+    width: 10%; /* Téléphone - réduire légèrement */
+  }
+}
+
+@media screen and (max-width: 992px) {
+  /* Masquer la colonne téléphone sur les tablettes */
+  .users-table th:nth-child(5),
+  .users-table td:nth-child(5) {
+    display: none;
+  }
+  
+  /* Ajuster la largeur de la colonne email */
+  .users-table th:nth-child(6),
+  .users-table td:nth-child(6) {
+    width: 25%;
+  }
+  
+  /* Réduire la taille des boutons d'action */
+  .buton {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+  }
+  
+  /* Ajustements pour l'en-tête */
+  .users-list-header {
+    flex-wrap: wrap;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    margin-top: 10px;
+    justify-content: flex-end;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  /* Styles pour mobile */
+  .users-table-container {
+    overflow-x: auto; /* Permettre le défilement horizontal */
+  }
+  
+  /* Masquer les colonnes moins importantes sur mobile */
+  .users-table th:nth-child(6),
+  .users-table td:nth-child(6) {
+    display: none; /* Masquer l'email */
+  }
+  
+  /* Réduire la taille des polices */
+  .users-table th,
+  .users-table td {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+  
+  /* Optimiser l'espace pour les actions */
+  .action-buttons {
+    gap: 2px;
+  }
+  
+  .buton {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    padding: 3px;
+  }
+  
+  /* Ajuster la pagination */
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .pagination-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .page-numbers {
+    order: -1;
+  }
+  
+  /* Ajuster la recherche et les filtres */
+  .search-filter-container {
+    flex-direction: column;
+  }
+  
+  .filter-dropdown-container {
+    width: 100%;
+  }
+  
+  .filters-btn {
+    width: 100%;
+  }
+  
+  .search-box {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  /* Pour les très petits écrans */
+  
+  /* Masquer d'autres colonnes pour gagner de l'espace */
+  .users-table th:nth-child(7),
+  .users-table td:nth-child(7) {
+    display: none; /* Masquer la colonne rôle */
+  }
+  
+  /* Réduire davantage la taille des polices */
+  .users-table th,
+  .users-table td {
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+  
+  /* Ajuster la largeur des colonnes restantes */
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3),
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 25%; /* Nom et prénom */
+  }
+  
+  /* Rendre les boutons encore plus compacts */
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  
+  /* Adapter le header et les boutons */
+  .create-user-btn, 
+  .delete-selected-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  
+  .users-list-header h2 {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .header-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* Adaptation générale des styles responsive */
+@media screen and (max-width: 480px) {
+  .dashboard1 {
+    padding: 15px;
+  }
+  
+  .content-wrapper1 {
+    width: 100%;
+  }
+  
+  .users-list-container {
+    padding: 10px;
+  }
+}
+
+/* Optimisation de la table pour les très petits écrans (portrait) */
+@media screen and (max-width: 380px) {
+  /* Configuration ultra-compacte pour les téléphones en mode portrait */
+  .users-table th:nth-child(2),
+  .users-table td:nth-child(2) {
+    display: none; /* Masquer les photos/initiales */
+  }
+  
+  .users-table th:nth-child(1),
+  .users-table td:nth-child(1) {
+    width: 10%; /* Checkbox */
+  }
+  
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3),
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4) {
+    width: 30%; /* Nom et prénom */
+  }
+  
+  .users-table th:nth-child(9),
+  .users-table td:nth-child(9) {
+    width: 30%; /* Actions */
+  }
+}
