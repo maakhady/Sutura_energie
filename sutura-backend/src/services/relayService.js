@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const RASPBERRY_PI_URL = "http://192.168.1.35:2500"; // Mets l'IP réelle
+const RASPBERRY_PI_URL = "http://192.168.1.28:2500"; // Mets l'IP réelle
 
 // Fonction pour activer/désactiver un relais unique
 exports.activerDesactiverRelay = async (appareil) => {

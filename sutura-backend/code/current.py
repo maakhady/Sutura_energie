@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 # === Configuration ===
 SERIAL_PORT = "/dev/ttyUSB0"  # Adapter selon ton port USB
 BAUD_RATE = 115200
-NODE_SERVER_URL = "http://192.168.1.5:2500/data"  # Adapter selon ton serveur
+NODE_SERVER_URL = "http://192.168.1.59:2500/api/energie/data"  # Adapter selon ton serveur
 
 # === Initialisation du port série ===
 ser = None

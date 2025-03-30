@@ -1,0 +1,10 @@
+#dependence raspberry , pour relay et lecture courrant
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y \
+    libusb-1.0-0 \
+    libusb-1.0-0-dev \
+    python3-usb \
+    python3-serial \
+    python3-requests \
+    python3-flask

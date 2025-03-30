@@ -190,7 +190,6 @@ const RoomCard = ({
               <Trash size={18} />
             </Button>
           </div>
-          ;
         </div>
 
         <div className="room-energy">
