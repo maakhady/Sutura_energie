@@ -163,22 +163,31 @@ const DeviceCard = ({ device, rooms, setRooms }) => {
   //  Récupérer l'icône de l'appareil en fonction de son nom
   const getDeviceIcon = (nom_app) => {
     const devices = [
-      { keywords: ["télévision", "télé", "tv"], icon: <Tv size={24} /> },
+      {
+        keywords: ["télévision", "télé", "tv", "tele"],
+        icon: <Tv size={24} />,
+      },
       {
         keywords: ["ordinateur", "ordi", "computer"],
         icon: <Computer size={24} />,
       },
       { keywords: ["ventilateur", "ventilo", "fan"], icon: <Fan size={24} /> },
-      { keywords: ["lampe", "light"], icon: <Lightbulb size={24} /> },
+      {
+        keywords: ["lampe", "light", "lumière"],
+        icon: <Lightbulb size={24} />,
+      },
       {
         keywords: ["climatiseur", "clime", "clim"],
         icon: <AirVent size={24} />,
       },
       {
-        keywords: ["lave-linge", "machine à laver", "lavage"],
+        keywords: ["lave-linge", "machine à laver", "lavage", "wash"],
         icon: <WashingMachine size={24} />,
       },
-      { keywords: ["micro-ondes", "four"], icon: <Heater size={24} /> },
+      {
+        keywords: ["micro-ondes", "four", "cusinière"],
+        icon: <Heater size={24} />,
+      },
     ];
 
     const nom_normalise = nom_app.toLowerCase();

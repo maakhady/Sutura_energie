@@ -306,6 +306,59 @@ exports.activerDesactiverPlusieursAppareils = async (req, res) => {
   }
 };
 
+exports.arreterTousLesAppareils = async (req, res) => {
+  try {
+    console.log("🚨 Alerte reçue du Raspberry Pi : extinction d'urgence !");
+
+    // Récupérer tous les appareils actifs
+    const appareilsActifs = await Appareil.find({ actif: true });
+    if (appareilsActifs.length === 0) {
+      return res.status(200).json({ message: "Aucun appareil n'était actif." });
+    }
+
+    // **Mettre à jour leur état à 'false' (éteint)**
+    await Promise.all(
+      appareilsActifs.map((appareil) => {
+        appareil.actif = false;
+        return appareil.save();
+      })
+    );
+
+    // Émettre l'événement d'arrêt d'urgence via Socket.IO
+    global.io.emit("emergency_shutdown", {
+      appareils: appareilsActifs.map((app) => ({
+        _id: app._id,
+        nom_app: app.nom_app,
+        actif: false,
+        relay_ID: app.relay_ID,
+      })),
+      message: "Arrêt d'urgence - Alerte incendie",
+    });
+
+    // ✅ Créer un historique d'arrêt d'urgence
+    await creerHistorique({
+      users_id: null, // Pas d'utilisateur, car c'est un arrêt automatique
+      type_entite: "système",
+      type_operation: "Eteindre",
+      description:
+        "Arrêt d'urgence de tous les appareils suite à une alerte incendie",
+      statut: "succès",
+    });
+
+    console.log("🔥 Tous les appareils ont été arrêtés suite à l'alerte !");
+    res.status(200).json({
+      message:
+        "Tous les appareils ont été arrêtés en raison d'une alerte incendie.",
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors de l'arrêt d'urgence :", error);
+    res.status(500).json({
+      message: "Erreur lors de l'arrêt d'urgence des appareils",
+      error: error.message,
+    });
+  }
+};
+
 // Définir le mode manuel ou automatique
 exports.definirMode = async (req, res) => {
   try {

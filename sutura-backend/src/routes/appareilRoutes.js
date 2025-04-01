@@ -10,6 +10,7 @@ const {
   supprimerAppareil,
   activerDesactiverAppareil,
   activerDesactiverPlusieursAppareils,
+  arreterTousLesAppareils,
   definirMode,
   creerIntervalle,
   voirIntervalle,
@@ -30,7 +31,10 @@ router.post(
   auth,
   activerDesactiverPlusieursAppareils
 );
+// Route pour pour arrêter tous les appareils en cas de flamme
+router.post("/arreter-tout", arreterTousLesAppareils);
 
+// Route pour définir le mode
 router.put("/definir-mode/:id", auth, definirMode);
 
 // Routes pour la gestion des intervalles

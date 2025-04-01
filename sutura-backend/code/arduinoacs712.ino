@@ -1,7 +1,7 @@
-#include "ACS712.h" 
+#include "ACS712.h"
 #include <ArduinoJson.h>
 
-// Déclaration des capteurs sur les broches A0 à A5
+// Déclaration des capteurs de courant sur les broches A0 à A5
 ACS712 sensors[] = {
   ACS712(ACS712_05B, A0),
   ACS712(ACS712_05B, A1),
@@ -12,9 +12,12 @@ ACS712 sensors[] = {
 };
 
 const int numSensors = 6;
+const int flameSensorPin = 2;  // Broche du capteur de flamme
 
 void setup() {
-  Serial.begin(115200);  // Augmenter la vitesse pour une meilleure réactivité
+  Serial.begin(115200);
+  
+  pinMode(flameSensorPin, INPUT_PULLUP);  // Activer la résistance de pull-up
   for (int i = 0; i < numSensors; i++) {
     sensors[i].calibrate();
   }
@@ -32,8 +35,12 @@ void loop() {
     data.add(I);
   }
 
+  int flameDetected = digitalRead(flameSensorPin) == LOW ? 1 : 0; // Détection de flamme
+
+  jsonDoc["flame"] = flameDetected; // Ajouter l'état du capteur au JSON
+
   serializeJson(jsonDoc, Serial);
   Serial.println();
+
   delay(1000);
 }
-

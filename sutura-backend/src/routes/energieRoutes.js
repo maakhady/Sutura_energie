@@ -8,6 +8,9 @@ const {
   getConsommationTotale,
   getConsommationTotaleAll,
   getConsommationParPiece,
+  getConsommationParJour,
+  getConsommationSemaine,
+  getConsommationParMois,
 } = require("../controllers/energieControleur");
 
 // 📌 Route pour recevoir les données des capteurs
@@ -24,5 +27,14 @@ router.get("/total/all", auth, getConsommationTotaleAll);
 
 // 📌 Route pour récupérer la consommation totale par pièce
 router.get("/total/piece", auth, getConsommationParPiece);
+
+// 📌 Route pour récupérer la consommation totale par jour
+router.get("/consommation/jour", auth, getConsommationParJour);
+
+// 📌 Route pour récupérer la consommation totale par semaine
+router.get("/consommation/semaine", auth, getConsommationSemaine);
+
+// 📌 Route pour récupérer la consommation totale par mois
+router.get("/consommation/mois", auth, getConsommationParMois);
 
 module.exports = router;

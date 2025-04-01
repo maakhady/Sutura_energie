@@ -223,6 +223,83 @@ const getConsommationParPiece = async (req, res) => {
   }
 };
 
+const getConsommationParJour = async (req, res) => {
+  try {
+    const consommationJour = await HistoriqueEnergie.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date_heure" },
+            month: { $month: "$date_heure" },
+            day: { $dayOfMonth: "$date_heure" },
+          },
+          total_consommation: { $sum: "$consommation" },
+        },
+      },
+      { $sort: { "_id.year": -1, "_id.month": -1, "_id.day": -1 } }, // Trier du plus récent au plus ancien
+    ]);
+
+    res.json(consommationJour);
+  } catch (error) {
+    console.error("❌ Erreur récupération consommation par jour :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
+const getConsommationSemaine = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Dimanche début de semaine
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const consommationSemaine = await HistoriqueEnergie.aggregate([
+      {
+        $match: {
+          date_heure: { $gte: startOfWeek }, // Filtre depuis le début de la semaine
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date_heure" },
+            month: { $month: "$date_heure" },
+            day: { $dayOfMonth: "$date_heure" },
+          },
+          total_consommation: { $sum: "$consommation" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]);
+
+    res.json(consommationSemaine);
+  } catch (error) {
+    console.error("❌ Erreur récupération consommation de la semaine :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
+const getConsommationParMois = async (req, res) => {
+  try {
+    const consommationMois = await HistoriqueEnergie.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date_heure" },
+            month: { $month: "$date_heure" },
+          },
+          total_consommation: { $sum: "$consommation" },
+        },
+      },
+      { $sort: { "_id.year": -1, "_id.month": -1 } }, // Trier du plus récent au plus ancien
+    ]);
+
+    res.json(consommationMois);
+  } catch (error) {
+    console.error("❌ Erreur récupération consommation par mois :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
 // 🔹 Export des fonctions
 module.exports = {
   recevoirDonneesCapteurs,
@@ -231,4 +308,7 @@ module.exports = {
   setSocketInstance,
   getConsommationTotaleAll,
   getConsommationParPiece,
+  getConsommationParJour,
+  getConsommationSemaine,
+  getConsommationParMois,
 };

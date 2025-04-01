@@ -48,6 +48,17 @@ export const EnergieService = {
     return apiClient.get("/total/piece");
   },
 
+  getConsommationSemaine: async () => {
+    setAuthHeader();
+    return apiClient.get("/historique/semaine"); // Nouvelle route backend pour récupérer la consommation de la semaine
+  },
+
+  getConsommationMois: async () => {
+    setAuthHeader();
+    return apiClient.get("/historique/mois"); // Nouvelle route backend pour récupérer la consommation du mois
+  },
+
+
   onUpdateConsommationAppareil: (callback) => {
     socket.on("updateConso", callback);
   },
@@ -60,9 +71,20 @@ export const EnergieService = {
     socket.on("updateConsommationParPiece", callback);
   },
 
+  onUpdateConsommationSemaine: (callback) => {
+    socket.on("updateConsommationSemaine", callback);  
+  } ,
+
+  onUpdateConsommationMois: (callback) => {
+    socket.on("updateConsommationMois", callback);
+  },
+  
+
   stopListening: () => {
     socket.off("updateConso");
     socket.off("updateConsommationTotaleAll");
     socket.off("updateConsommationParPiece");
+    socket.off("updateConsommationSemaine");
+    socket.off("updateConsommationMois");
   },
 };

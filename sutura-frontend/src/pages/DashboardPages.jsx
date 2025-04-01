@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import "../styles/dashboard.css";
 import RightPanel from "../components/RightPanel";
-
+import { EnergieService } from "../services/EnergieService";
 import PieceService from "../services/PieceService";
 import {
   Lightbulb,
@@ -26,6 +26,9 @@ import AppareilService from "../services/AppareilService";
 const DashboardPage = () => {
   const [rooms, setRooms] = useState([]);
   const [activeRoomId, setActiveRoomId] = useState(null);
+  const [consumptionData, setConsumptionData] = useState([]);
+  const [loading, setLoading] = useState(true); // Indique si la récupération est en cours
+  const [error, setError] = useState(null); // Gère les erreurs
   const [currentPage, setCurrentPage] = useState(1);
   const devicesPerPage = 4;
 
@@ -38,6 +41,39 @@ const DashboardPage = () => {
 
     return () => {
       window.removeEventListener("updateDevices", handleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchWeeklyConsumption = async () => {
+      setLoading(true); // 🕓 Commence le chargement
+      setError(null);
+
+      try {
+        const response = await EnergieService.getConsommationSemaine();
+        const formattedData = formatData(response.data);
+
+        if (formattedData.length === 0) {
+          setError("Aucune donnée disponible pour cette semaine.");
+        }
+
+        setConsumptionData(formattedData);
+      } catch (err) {
+        setError("Erreur lors de la récupération des consommations.");
+        console.error(err);
+      } finally {
+        setLoading(false); // ✅ Arrête le chargement
+      }
+    };
+
+    fetchWeeklyConsumption();
+
+    EnergieService.onUpdateConsommationSemaine((updatedData) => {
+      setConsumptionData(formatData(updatedData));
+    });
+
+    return () => {
+      EnergieService.stopListening();
     };
   }, []);
 
@@ -127,15 +163,29 @@ const DashboardPage = () => {
     }
   };
 
-  const [consumptionData] = useState([
-    { time: "Lundi", value: 30 },
-    { time: "Mardi", value: 42 },
-    { time: "Mercredi", value: 28 },
-    { time: "Jeudi", value: 45 },
-    { time: "Vendredi", value: 32 },
-    { time: "Samedi", value: 35 },
-    { time: "Dimanche", value: 30 },
-  ]);
+  /*   const fetchWeeklyConsumption = async () => {
+    try {
+      const response = await EnergieService.getConsommationSemaine();
+      setConsumptionData(formatData(response.data));
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des consommations :",
+        error
+      );
+    }
+  }; */
+
+  // Formater les données pour affichage dans le graphe
+  const formatData = (rawData) => {
+    return rawData.map((item) => ({
+      time: new Date(
+        item._id.year,
+        item._id.month - 1,
+        item._id.day
+      ).toLocaleDateString("fr-FR", { weekday: "long" }),
+      value: item.total_consommation,
+    }));
+  };
 
   const getDeviceIcon = (nom_app) => {
     switch (nom_app.toLowerCase()) {
@@ -153,6 +203,7 @@ const DashboardPage = () => {
         return <Lightbulb size={24} />;
       case "climatiseur":
       case "clime":
+      case "clim":
         return <AirVent size={24} />;
       case "lave-linge":
       case "machine à laver":
@@ -263,42 +314,43 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="titre-graphe">
-            <h3>Graphe </h3>
-          </div>
           <div className="graphe">
-            <h4>Consommation journalière </h4>
-            <div className="graph-container">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={consumptionData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#eee"
-                    opacity={0.1}
-                  />
-                  <XAxis
-                    dataKey="time"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#666", fontSize: 12 }}
-                  />
-                  <YAxis
-                    domain={[0, 60]}
-                    ticks={[0, 15, 30, 45, 60]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#666", fontSize: 12 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#FFB800"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <h4>Consommation journalière</h4>
+
+            {loading ? (
+              <p>Chargement des données...</p>
+            ) : error ? (
+              <p>{error}</p>
+            ) : consumptionData.length > 0 ? (
+              <div className="graph-container">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={consumptionData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#eee"
+                      opacity={0.1}
+                    />
+                    <XAxis
+                      dataKey="time"
+                      tick={{ fill: "#666", fontSize: 12 }}
+                    />
+                    <YAxis
+                      domain={[0, "dataMax"]}
+                      tick={{ fill: "#666", fontSize: 12 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#FFB800"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p>Aucune donnée disponible pour cette semaine.</p>
+            )}
           </div>
         </div>
 

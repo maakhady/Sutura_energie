@@ -10,8 +10,8 @@ from flask import Flask, request, jsonify
 # === Configuration ===
 SERIAL_PORT = "/dev/ttyUSB0"  # Adapter selon ton port USB
 BAUD_RATE = 115200
-NODE_SERVER_URL = "http://192.168.1.59:2500/api/energie/data"  # Adapter selon ton serveur
-
+NODE_SERVER_URL = "http://192.168.1.53:2500/api/energie/data"  # Adapter selon ton serveur
+BACKEND_URL = "http://192.168.1.53:2500/api/appareils/arreter-tout" 
 # === Initialisation du port série ===
 ser = None
 
@@ -72,8 +72,27 @@ def control_relay(channel, state):
 
         time.sleep(0.5)  # Délai pour éviter un envoi trop rapide
 
+def notify_backend_emergency():
+    """Envoie une requête au backend pour signaler l'arrêt d'urgence."""
+    try:
+        print("🚨 Envoi d'une alerte au backend...")
+        response = requests.post(BACKEND_URL)
+        print(f"✅ Alerte envoyée au backend ! Réponse: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"❌ Erreur lors de l'envoi de l'alerte : {e}")
+
+def emergency_shutdown():
+    """Désactive tous les relais et informe le backend."""
+    global relay_states
+    print("🚨 ALERTE ! Flamme détectée ! Arrêt de tous les appareils...")
+
+    for i in range(1, 7):  # Désactiver tous les relais
+        control_relay(i, False)
+    
+    notify_backend_emergency()  # Envoyer une requête au backend
+
 def read_serial():
-    """Lecture en continu des valeurs de courant et envoi au serveur Node.js."""
+    """Lecture en continu des valeurs de courant et détection de flamme."""
     global ser
 
     while True:
@@ -85,30 +104,32 @@ def read_serial():
             if ser.in_waiting > 0:
                 line = ser.readline().decode('utf-8').strip()
 
-                # Vérifier si la ligne commence et finit bien par { et }
                 if not (line.startswith("{") and line.endswith("}")):
                     print(f"⚠️ Donnée incomplète ignorée : {line}")
-                    continue  # Passer à la prochaine ligne
+                    continue
 
-                # Charger les données JSON
                 try:
                     data = json.loads(line)
                     sensors = data.get("sensors", [])
+                    flame_detected = data.get("flame", 0)
+
+                    if flame_detected:
+                        emergency_shutdown()  # Arrêter tous les appareils immédiatement
+                        continue
 
                     if len(sensors) != 6:
                         print("⚠️ Erreur : Données capteurs invalides")
                         continue
 
-                    # Filtrer les valeurs selon l'état des relais
                     payload = {"sensors": [0] * 6}
                     for i in range(6):
                         if relay_states[i + 1]:  # Si le relais est actif
                             payload["sensors"][i] = sensors[i]
 
-                    # Envoyer seulement si au moins un relais est actif
                     if any(relay_states.values()):
                         response = requests.post(NODE_SERVER_URL, json=payload)
                         print(f"📡 Données envoyées : {payload}, Réponse: {response.status_code}")
+                
                 except json.JSONDecodeError:
                     print(f"⚠️ Erreur de décodage JSON. Ligne reçue : {line}")
 

@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
 
 // Gestion des connexions socket
 io.on("connection", (socket) => {
-  console.log("Client connecté:", socket.id);
+  console.log("Client1 connecté:", socket.id);
 
   // Envoi des événements aux clients connectés
   socket.on("disconnect", () => {
