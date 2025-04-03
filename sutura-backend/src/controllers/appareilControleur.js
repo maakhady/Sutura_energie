@@ -310,13 +310,22 @@ exports.arreterTousLesAppareils = async (req, res) => {
   try {
     console.log("🚨 Alerte reçue du Raspberry Pi : extinction d'urgence !");
 
-    // Récupérer tous les appareils actifs
     const appareilsActifs = await Appareil.find({ actif: true });
     if (appareilsActifs.length === 0) {
       return res.status(200).json({ message: "Aucun appareil n'était actif." });
     }
 
-    // **Mettre à jour leur état à 'false' (éteint)**
+    // Get all relay IDs that need to be turned off
+    const relais_ids = appareilsActifs
+      .filter((appareil) => typeof appareil.relay_ID === "number")
+      .map((appareil) => appareil.relay_ID);
+
+    // Turn off all relays physically
+    if (relais_ids.length > 0) {
+      await relayService.activerDesactiverPlusieursRelais(relais_ids, false);
+    }
+
+    // Update database status
     await Promise.all(
       appareilsActifs.map((appareil) => {
         appareil.actif = false;
@@ -324,25 +333,15 @@ exports.arreterTousLesAppareils = async (req, res) => {
       })
     );
 
-    // Émettre l'événement d'arrêt d'urgence via Socket.IO
+    // Emit Socket.IO event with more detailed information
     global.io.emit("emergency_shutdown", {
-      appareils: appareilsActifs.map((app) => ({
+      message:
+        "Arrêt d'urgence : Tous les appareils ont été désactivés en raison d'une alerte incendie",
+      devices: appareilsActifs.map((app) => ({
         _id: app._id,
         nom_app: app.nom_app,
-        actif: false,
-        relay_ID: app.relay_ID,
+        pieces_id: app.pieces_id,
       })),
-      message: "Arrêt d'urgence - Alerte incendie",
-    });
-
-    // ✅ Créer un historique d'arrêt d'urgence
-    await creerHistorique({
-      users_id: null, // Pas d'utilisateur, car c'est un arrêt automatique
-      type_entite: "système",
-      type_operation: "Eteindre",
-      description:
-        "Arrêt d'urgence de tous les appareils suite à une alerte incendie",
-      statut: "succès",
     });
 
     console.log("🔥 Tous les appareils ont été arrêtés suite à l'alerte !");

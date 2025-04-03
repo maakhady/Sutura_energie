@@ -6,6 +6,7 @@ import MiniRightPanel from "../components/MiniRightPanel";
 import RoomCard from "../components/pieces/RoomCard";
 import AddRoomModal from "../components/pieces/AddRoomModal";
 import PieceService from "../services/PieceService";
+import Swal from "sweetalert2";
 import "../styles/Appareils.css";
 import { io } from "socket.io-client";
 
@@ -41,12 +42,10 @@ const AppareilsPage = () => {
   };
 
   useEffect(() => {
-    fetchRooms(); // Chargement initial des pièces et appareils
+    fetchRooms();
 
-    // 🟢 Écoute les mises à jour d'état des appareils via WebSocket
     socket.on("deviceStatusUpdated", (updatedDevice) => {
       console.log("🔄 Mise à jour reçue via WebSocket :", updatedDevice);
-
       setRooms((prevRooms) =>
         prevRooms.map((room) => ({
           ...room,
@@ -59,8 +58,39 @@ const AppareilsPage = () => {
       );
     });
 
+    // Ajouter l'écouteur pour l'arrêt d'urgence
+    socket.on("emergency_shutdown", (data) => {
+      console.log("🚨 Arrêt d'urgence reçu:", data);
+
+      // Mettre à jour l'état de tous les appareils
+      setRooms((prevRooms) =>
+        prevRooms.map((room) => ({
+          ...room,
+          devices: room.devices.map((device) => ({
+            ...device,
+            actif: false,
+            status: "Inactif",
+          })),
+        }))
+      );
+
+      // Afficher l'alerte Sweetalert2
+      Swal.fire({
+        title: "🚨 Alerte de Sécurité !",
+        text: data.message,
+        icon: "warning",
+        confirmButtonText: "Compris",
+        confirmButtonColor: "#274c77",
+        background: "#fff",
+        customClass: {
+          popup: "emergency-alert",
+        },
+      });
+    });
+
     return () => {
-      socket.off("deviceStatusUpdated"); // ❌ Nettoyage de l'écouteur WebSocket
+      socket.off("deviceStatusUpdated");
+      socket.off("emergency_shutdown");
     };
   }, []);
 
