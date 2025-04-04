@@ -778,8 +778,8 @@ const RightPanel = () => {
         <h3>Caméra</h3>
         <div className="camera-feed">
           <span className="live-badge">LIVE</span>
-          <img
-            src="http://192.168.1.147:7000/video_feed"
+          <img 
+            src="http://192.168.40.29:7000/video_feed"
             alt="Camera Feed"
             className="camera-image"
           />
