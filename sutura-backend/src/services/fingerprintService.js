@@ -23,6 +23,13 @@ const startStatusUpdates = () => {
     // Envoyer des mises à jour pour chaque enregistrement en cours
     for (const [userId, data] of pendingEnrollments.entries()) {
       if (data.status === 'pending') {
+        // Si une étape spécifique est en cours, ne pas envoyer de mise à jour périodique
+        if (data.currentStep) {
+          // Ne rien faire - laisser le message d'étape tel quel
+          continue;
+        }
+        
+        // Sinon, envoi normal des mises à jour périodiques
         global.io.emit("assignation_empreinte_status", {
           userId,
           status: "en_cours",
@@ -36,13 +43,125 @@ const startStatusUpdates = () => {
 
 // Traiter les messages reçus de l'Arduino
 const handleArduinoMessage = async (data) => {
-  // Ne traiter que les messages pertinents pour ce service
-  // Empreinte reconnue
-  if (data.startsWith('MATCH:')) {
+  console.log("Message Arduino à traiter:", data);
+  
+  // Traiter les messages STATUS explicites
+  if (data.includes('STATUS:PLACE_FINGER')) {
+    const userId = Array.from(pendingEnrollments.keys()).find(
+      key => pendingEnrollments.get(key).status === 'pending'
+    );
+    
+    if (userId) {
+      // Mettre à jour l'objet avec l'étape en cours
+      const enrollmentData = pendingEnrollments.get(userId);
+      pendingEnrollments.set(userId, {
+        ...enrollmentData,
+        currentStep: 'premiere_capture'
+      });
+      
+      if (global.io) {
+        console.log("Envoi de l'étape première_capture pour", userId);
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "etape",
+          etape: "premiere_capture",
+          message: "Placez votre doigt sur le capteur"
+        });
+      }
+    }
+  }
+  else if (data.includes('STATUS:REMOVE_FINGER')) {
+    const userId = Array.from(pendingEnrollments.keys()).find(
+      key => pendingEnrollments.get(key).status === 'pending'
+    );
+    
+    if (userId) {
+      // Mettre à jour l'objet avec l'étape en cours
+      const enrollmentData = pendingEnrollments.get(userId);
+      pendingEnrollments.set(userId, {
+        ...enrollmentData,
+        currentStep: 'retirer_doigt'
+      });
+      
+      if (global.io) {
+        console.log("Envoi de l'étape retirer_doigt pour", userId);
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "etape",
+          etape: "retirer_doigt",
+          message: "Retirez votre doigt du capteur"
+        });
+      }
+    }
+  }
+  else if (data.includes('STATUS:PLACE_FINGER_AGAIN')) {
+    const userId = Array.from(pendingEnrollments.keys()).find(
+      key => pendingEnrollments.get(key).status === 'pending'
+    );
+    
+    if (userId) {
+      // Mettre à jour l'objet avec l'étape en cours
+      const enrollmentData = pendingEnrollments.get(userId);
+      pendingEnrollments.set(userId, {
+        ...enrollmentData,
+        currentStep: 'seconde_capture'
+      });
+      
+      if (global.io) {
+        console.log("Envoi de l'étape seconde_capture pour", userId);
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "etape",
+          etape: "seconde_capture",
+          message: "Replacez le même doigt sur le capteur"
+        });
+      }
+    }
+  }
+  else if (data.includes('STATUS:ERROR')) {
+    const userId = Array.from(pendingEnrollments.keys()).find(
+      key => pendingEnrollments.get(key).status === 'pending'
+    );
+    
+    if (userId && global.io) {
+      console.log("Envoi du statut d'erreur pour", userId);
+      global.io.emit("assignation_empreinte_status", {
+        userId,
+        status: "erreur",
+        message: "Erreur d'enregistrement: " + data.substring(data.indexOf('STATUS:ERROR') + 13)
+      });
+      
+      pendingEnrollments.delete(userId);
+    }
+  }
+  else if (data.includes('STATUS:SUCCESS') || data.includes('STATUS:SUCCESS')) {
+    const userId = Array.from(pendingEnrollments.keys()).find(
+      key => pendingEnrollments.get(key).status === 'pending'
+    );
+    
+    if (userId) {
+      const { fingerprintID } = pendingEnrollments.get(userId);
+      const result = await confirmerEnregistrement(userId, fingerprintID);
+      
+      console.log("Envoi du statut de succès pour", userId);
+      if (global.io) {
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "succes",
+          message: "Empreinte digitale enregistrée avec succès",
+          utilisateur: result.utilisateur
+        });
+      }
+      
+      pendingEnrollments.delete(userId);
+    }
+  }
+  
+  // Traiter les autres types de messages comme avant
+  else if (data.startsWith('MATCH:')) {
     const fingerprintID = data.split(':')[1].trim();
     await verifierEmpreinte(fingerprintID);
   }
-  // Message d'enregistrement réussi
   else if (data.includes('Empreinte enregistrée avec succès')) {
     const userId = Array.from(pendingEnrollments.keys()).find(
       key => pendingEnrollments.get(key).status === 'pending'
@@ -65,7 +184,6 @@ const handleArduinoMessage = async (data) => {
       pendingEnrollments.delete(userId);
     }
   }
-  // Messages d'erreur
   else if (data.includes('Les empreintes ne correspondent pas') || 
            data.includes('Erreur lors de l\'enregistrement de l\'empreinte')) {
     const userId = Array.from(pendingEnrollments.keys()).find(
@@ -96,33 +214,73 @@ const handleArduinoMessage = async (data) => {
       pendingEnrollments.delete(userId);
     }
   }
-  // Messages d'étapes de l'enregistrement
   else if (data.includes('Placez votre doigt sur le capteur')) {
     const userId = Array.from(pendingEnrollments.keys()).find(
       key => pendingEnrollments.get(key).status === 'pending'
     );
     
-    if (userId && global.io) {
-      global.io.emit("assignation_empreinte_status", {
-        userId,
-        status: "etape",
-        etape: "premiere_capture",
-        message: "Placez votre doigt sur le capteur"
+    if (userId) {
+      // Mettre à jour l'objet avec l'étape en cours
+      const enrollmentData = pendingEnrollments.get(userId);
+      pendingEnrollments.set(userId, {
+        ...enrollmentData,
+        currentStep: 'premiere_capture'
       });
+      
+      if (global.io) {
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "etape",
+          etape: "premiere_capture",
+          message: "Placez votre doigt sur le capteur"
+        });
+      }
     }
   }
-  else if (data.includes('Placez le même doigt à nouveau')) {
+  else if (data.includes('Retirez votre doigt')) {
     const userId = Array.from(pendingEnrollments.keys()).find(
       key => pendingEnrollments.get(key).status === 'pending'
     );
     
-    if (userId && global.io) {
-      global.io.emit("assignation_empreinte_status", {
-        userId,
-        status: "etape",
-        etape: "seconde_capture",
-        message: "Placez le même doigt à nouveau sur le capteur"
+    if (userId) {
+      // Mettre à jour l'objet avec l'étape en cours
+      const enrollmentData = pendingEnrollments.get(userId);
+      pendingEnrollments.set(userId, {
+        ...enrollmentData,
+        currentStep: 'retirer_doigt'
       });
+      
+      if (global.io) {
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "etape",
+          etape: "retirer_doigt",
+          message: "Retirez votre doigt du capteur"
+        });
+      }
+    }
+  }
+  else if (data.includes('Replacez le même doigt') || data.includes('Placez le même doigt à nouveau')) {
+    const userId = Array.from(pendingEnrollments.keys()).find(
+      key => pendingEnrollments.get(key).status === 'pending'
+    );
+    
+    if (userId) {
+      // Mettre à jour l'objet avec l'étape en cours
+      const enrollmentData = pendingEnrollments.get(userId);
+      pendingEnrollments.set(userId, {
+        ...enrollmentData,
+        currentStep: 'seconde_capture'
+      });
+      
+      if (global.io) {
+        global.io.emit("assignation_empreinte_status", {
+          userId,
+          status: "etape",
+          etape: "seconde_capture",
+          message: "Replacez le même doigt sur le capteur"
+        });
+      }
     }
   }
 };
@@ -316,7 +474,6 @@ const confirmerEnregistrement = async (userId, fingerprintID) => {
 };
 
 // Supprimer une empreinte
-// Supprimer une empreinte
 const supprimerEmpreinte = async (userId) => {
   try {
     const utilisateur = await Utilisateur.findById(userId);
@@ -415,6 +572,21 @@ const isDeviceConnected = () => {
   return serialService.isDeviceConnected();
 };
 
+// Annuler l'assignation d'empreinte en cours
+const annulerAssignationEmpreinte = (userId) => {
+  if (userId && pendingEnrollments.has(userId)) {
+    pendingEnrollments.delete(userId);
+    console.log(`Assignation d'empreinte annulée pour l'utilisateur ${userId}`);
+    return true;
+  } else if (!userId) {
+    // Annuler toutes les assignations en cours si userId n'est pas spécifié
+    pendingEnrollments.clear();
+    console.log("Toutes les assignations d'empreinte ont été annulées");
+    return true;
+  }
+  return false;
+};
+
 // Nettoyer les enregistrements expirés
 setInterval(() => {
   const now = Date.now();
@@ -443,5 +615,6 @@ module.exports = {
   declencherEnregistrement,
   supprimerEmpreinte,
   getEnrollmentStatus,
-  isDeviceConnected
+  isDeviceConnected,
+  annulerAssignationEmpreinte
 };

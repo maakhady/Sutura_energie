@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { auth } = require("../middleware/auth");
-const verifRole = require("../middleware/verifRole");
+// const verifRole = require("../middleware/verifRole");
 const {
   recevoirDonneesCapteurs,
   getHistorique,

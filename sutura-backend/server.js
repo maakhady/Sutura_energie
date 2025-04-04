@@ -163,15 +163,31 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Gestionnaire d'arrêt propre pour les connexions séries
+const handleGracefulShutdown = () => {
+  console.log('Arrêt du serveur, nettoyage des connexions...');
+  serialService.cleanupConnections();
+  
+  // Attendre un peu pour permettre aux connexions de se terminer proprement
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+};
+
+// Configurer les gestionnaires d'événements pour l'arrêt propre
+process.on('SIGINT', handleGracefulShutdown);
+process.on('SIGTERM', handleGracefulShutdown);
+
 // Connexion à la base de données puis démarrage du serveur
 const PORT = process.env.PORT || 2500;
 
 connectDB()
-  .then(() => {
+  .then(async () => {
     // Initialiser la connexion série
     try {
-      // Initialiser le service de communication série
-      const connected = serialService.initSerialConnection();
+      // Initialiser le service de communication série - Notez l'utilisation de await
+      const connected = await serialService.initSerialConnection();
+      
       if (connected) {
         console.log("Connexion série avec Arduino initialisée");
 
@@ -183,10 +199,11 @@ connectDB()
         console.log("Services d'empreinte et RFID initialisés");
       } else {
         console.warn("Échec de la connexion série avec Arduino");
+        console.log("L'application continue sans connexion à l'Arduino, tentatives automatiques programmées");
       }
     } catch (error) {
       console.warn("Impossible de se connecter à l'Arduino:", error.message);
-      console.log("L'application démarre sans connexion à l'Arduino");
+      console.log("L'application démarre sans connexion à l'Arduino, tentatives de reconnexion programmées");
     }
 
     // Utiliser server.listen au lieu de app.listen pour supporter Socket.IO
