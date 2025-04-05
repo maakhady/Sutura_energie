@@ -7,10 +7,15 @@ const SOCKET_URL = "http://localhost:2500"; // Même URL que votre API
 
 const initSocket = () => {
   if (!socket) {
-    socket = io(SOCKET_URL);
+    socket = io(SOCKET_URL, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      transports: ['websocket', 'polling'] // Essayer websocket d'abord, puis polling en fallback
+    });
     
     socket.on('connect', () => {
-      console.log('Connecté au serveur socket');
+      console.log('Connecté au serveur socket:', socket.id);
     });
     
     socket.on('disconnect', () => {
@@ -19,6 +24,24 @@ const initSocket = () => {
     
     socket.on('error', (error) => {
       console.error('Erreur socket:', error);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Erreur de connexion socket:', error);
+    });
+    
+    // Logger tous les événements reçus pour le débogage
+    socket.onAny((event, ...args) => {
+      console.log(`[SOCKET] Événement reçu: ${event}`, args);
+    });
+
+    // Ajouter des handlers spécifiques pour les événements d'empreinte et RFID
+    socket.on('assignation_empreinte_status', (data) => {
+      console.log('[SOCKET] Statut empreinte:', data);
+    });
+
+    socket.on('assignation_rfid_status', (data) => {
+      console.log('[SOCKET] Statut RFID:', data);
     });
   }
   
@@ -39,8 +62,16 @@ const getSocket = () => {
   return socket;
 };
 
+// Fonction spécifique pour le debug des messages d'empreinte
+const debugEmpreinte = (userId) => {
+  const socket = getSocket();
+  console.log(`[DEBUG] Demande de debug empreinte pour l'utilisateur ${userId}`);
+  socket.emit('debug_empreinte', { userId });
+};
+
 export const socketService = {
   initSocket,
   closeSocket,
-  getSocket
+  getSocket,
+  debugEmpreinte
 };

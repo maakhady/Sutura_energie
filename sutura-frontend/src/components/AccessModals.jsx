@@ -236,35 +236,10 @@ export const FingerprintModal = ({ isOpen, onClose, user, onSaveFingerprint }) =
         
         console.log('Statut empreinte:', data);
         
-        // Gérer les messages directement depuis l'Arduino
-        if (data.message) {
-          if (data.message.includes('PLACE_FINGER')) {
-            setStatus('pending');
-            setStep(1);
-            setMessage('Placez votre doigt sur le capteur');
-            return;
-          } else if (data.message.includes('REMOVE_FINGER')) {
-            setStatus('pending');
-            setStep(2);
-            setMessage('Retirez votre doigt du capteur');
-            return;
-          } else if (data.message.includes('SUCCESS')) {
-            setStatus('success');
-            setStep(3);
-            setMessage('Empreinte enregistrée avec succès!');
-            
-            // Fermer la modale après un délai
-            setTimeout(() => {
-              onClose();
-              window.location.reload(); // Recharger pour voir les changements
-            }, 1500);
-            return;
-          }
-        }
-        
-        // Gestion des statuts génériques
+        // Gestion par type de statut
         if (data.status === 'demarrage' || data.status === 'en_cours') {
           setStatus('pending');
+          setStep(0);
           setMessage(data.message || 'Initialisation du capteur d\'empreinte...');
         }
         else if (data.status === 'etape') {
@@ -273,9 +248,12 @@ export const FingerprintModal = ({ isOpen, onClose, user, onSaveFingerprint }) =
           if (data.etape === 'premiere_capture') {
             setStep(1);
             setMessage(data.message || 'Placez votre doigt sur le capteur');
+          } else if (data.etape === 'retirer_doigt') {
+            // Étape intermédiaire
+            setMessage(data.message || 'Retirez votre doigt du capteur');
           } else if (data.etape === 'seconde_capture') {
             setStep(2);
-            setMessage(data.message || 'Placez le même doigt à nouveau sur le capteur');
+            setMessage(data.message || 'Replacez le même doigt sur le capteur');
           }
         }
         else if (data.status === 'succes') {
@@ -293,7 +271,38 @@ export const FingerprintModal = ({ isOpen, onClose, user, onSaveFingerprint }) =
           setStatus('error');
           setMessage(data.message || 'Erreur lors de l\'enregistrement');
         }
+        
+        // Traitement des messages bruts (au cas où le statut ne serait pas correctement formaté)
+        else if (data.message) {
+          if (data.message.includes('STATUS:PLACE_FINGER') || data.message.includes('Placez votre doigt')) {
+            setStatus('pending');
+            setStep(1);
+            setMessage('Placez votre doigt sur le capteur');
+          } else if (data.message.includes('STATUS:REMOVE_FINGER') || data.message.includes('Retirez votre doigt')) {
+            setStatus('pending');
+            setMessage('Retirez votre doigt du capteur');
+          } else if (data.message.includes('STATUS:PLACE_FINGER_AGAIN') || data.message.includes('Replacez le même doigt')) {
+            setStatus('pending');
+            setStep(2);
+            setMessage('Replacez le même doigt sur le capteur');
+          } else if (data.message.includes('STATUS:SUCCESS') || data.message.includes('Empreinte enregistrée avec succès')) {
+            setStatus('success');
+            setStep(3);
+            setMessage('Empreinte enregistrée avec succès!');
+            
+            // Fermer la modale après un délai
+            setTimeout(() => {
+              onClose();
+              window.location.reload(); // Recharger pour voir les changements
+            }, 1500);
+          }
+        }
       });
+      
+      // Si la modale est ouverte et en état initial, commencer le processus automatiquement
+      if (status === 'idle') {
+        startEnrollment();
+      }
     }
     
     // Nettoyer l'abonnement à la fermeture
@@ -320,10 +329,8 @@ export const FingerprintModal = ({ isOpen, onClose, user, onSaveFingerprint }) =
     }
   };
   
-  
   if (!isOpen) return null;
   
-
   return (
     <div className="modal-overlay">
       <div className="modal-container">

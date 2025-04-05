@@ -11,22 +11,44 @@ import "../styles/historique.css";
 import RightPanel from "../components/RightPanel";
 import { authService } from "../services/authService";
 import { HistoriqueService } from "../services/HistoriqueService";
-import { FileUpIcon, LineChartIcon, LogsIcon, ArrowLeftToLine, ArrowRightToLine  } from "lucide-react";
+import { EnergieService } from "../services/EnergieService";
+import { FileUpIcon, LineChartIcon, LogsIcon, ArrowLeftToLine, ArrowRightToLine } from "lucide-react";
 
 const DashboardHistorique = () => {
   const [utilisateur, setUtilisateur] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("consommation");
   const [selectedPeriod, setSelectedPeriod] = useState("semaine");
-  const [activityLogs, setActivityLogs] = useState([]); // 🔹 Stocke les logs récupérés
-  const [loadingLogs, setLoadingLogs] = useState(true); // 🔹 Indicateur de chargement des logs
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const logsPerPage = 5; 
+  const logsPerPage = 5;
+
+  // Variables d'état pour la consommation
+  const [consommationData, setConsommationData] = useState([]);
+  const [loadingConsommation, setLoadingConsommation] = useState(true);
+  const [errorConsommation, setErrorConsommation] = useState(null);
 
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
   const currentLogs = activityLogs.slice(indexOfFirstLog, indexOfLastLog);
   const totalPages = Math.ceil(activityLogs.length / logsPerPage);
+
+  // Ordre chronologique des mois pour l'affichage
+  const monthsOrder = [
+    { id: 1, label: "jan" },
+    { id: 2, label: "fév" },
+    { id: 3, label: "mar" },
+    { id: 4, label: "avr" },
+    { id: 5, label: "mai" },
+    { id: 6, label: "jui" },
+    { id: 7, label: "jul" },
+    { id: 8, label: "aoû" },
+    { id: 9, label: "sep" },
+    { id: 10, label: "oct" },
+    { id: 11, label: "nov" },
+    { id: 12, label: "déc" }
+  ];
 
   const nextPage = () => {
     if (currentPage < totalPages) {
@@ -44,10 +66,102 @@ const DashboardHistorique = () => {
     try {
       const logsData = await HistoriqueService.voirLogsAppareil();
       setActivityLogs(logsData);
+      setLoadingLogs(false);
     } catch (error) {
       console.error("Erreur lors de la récupération des logs :", error);
+      setLoadingLogs(false);
     }
   };
+
+  // Fonction pour formater les données mensuelles avec des numéros comme clés
+  const formatMonthlyData = (data) => {
+    if (!data || (!data.mois && !Array.isArray(data))) return [];
+
+    // Récupérer les données dans le bon format
+    const monthsData = data.mois || data;
+    
+    // Créer un objet pour stocker les données par mois
+    const monthDataMap = {};
+    
+    // Initialiser tous les mois avec des valeurs à 0
+    monthsOrder.forEach(month => {
+      monthDataMap[month.id] = {
+        monthId: month.id,
+        monthLabel: month.label,
+        value: 0
+      };
+    });
+    
+    // Remplir avec les données réelles
+    monthsData.forEach(item => {
+      const date = new Date(item.date);
+      const month = item.mois_numero || (date.getMonth() + 1);
+      
+      if (monthDataMap[month]) {
+        monthDataMap[month].value = item.total_consommation;
+      }
+    });
+    
+    // Convertir l'objet en tableau trié par id de mois
+    return Object.values(monthDataMap).sort((a, b) => a.monthId - b.monthId);
+  };
+
+  // Fonction pour récupérer les données de consommation
+  const fetchConsommationData = async () => {
+    try {
+      setLoadingConsommation(true);
+      setErrorConsommation(null);
+      
+      let response;
+      if (selectedPeriod === "semaine") {
+        response = await EnergieService.getConsommationSemaine();
+        
+        if (response && response.data) {
+          // Format pour la semaine (tableau de jours)
+          const joursSemaine = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+          const jourMap = {};
+          
+          // Initialiser tous les jours avec valeur 0
+          joursSemaine.forEach((jour, index) => {
+            jourMap[jour] = {
+              jourId: index + 1,
+              time: jour,
+              value: 0
+            };
+          });
+          
+          // Remplir avec les données réelles
+          response.data.forEach(item => {
+            const jourCourt = item.jour_court || item.jour.substring(0, 3).toLowerCase();
+            if (jourMap[jourCourt]) {
+              jourMap[jourCourt].value = item.total_consommation;
+            }
+          });
+          
+          setConsommationData(Object.values(jourMap).sort((a, b) => a.jourId - b.jourId));
+        } else {
+          setConsommationData([]);
+        }
+      } else {
+        response = await EnergieService.getConsommationMois();
+        
+        if (response && response.data) {
+          // Formater les données mensuelles avec l'approche numérique
+          const formattedData = formatMonthlyData(response.data);
+          setConsommationData(formattedData);
+        } else {
+          setConsommationData([]);
+        }
+      }
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des données de consommation ${selectedPeriod}:`, error);
+      setErrorConsommation(`Impossible de charger les données de consommation pour la ${selectedPeriod}`);
+      setConsommationData([]);
+    } finally {
+      setLoadingConsommation(false);
+    }
+  };
+
   // Fonction pour formatter le rôle
   const formatterRole = (role) => {
     if (!role) return "";
@@ -58,7 +172,6 @@ const DashboardHistorique = () => {
       case "utilisateur":
         return "Utilisateur";
       default:
-        // Première lettre en majuscule pour tout autre rôle
         return role.charAt(0).toUpperCase() + role.slice(1);
     }
   };
@@ -79,55 +192,39 @@ const DashboardHistorique = () => {
 
     fetchUser();
     fetchLogs();
-    const interval = setInterval(fetchLogs, 10000); // 🔄 Rafraîchit toutes les 10 sec
-    return () => clearInterval(interval); // ✅ Nettoie l'intervalle quand le composant est démonté
+    
+    const interval = setInterval(fetchLogs, 10000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Données de consommation par période
-  const weeklyData = [
-    { time: "Lundi", value: 25 },
-    { time: "Mardi", value: 37 },
-    { time: "Mercredi", value: 22 },
-    { time: "Jeudi", value: 45 },
-    { time: "Vendredi", value: 32 },
-    { time: "Samedi", value: 37 },
-    { time: "Dimanche", value: 28 },
-  ];
+  // Effet pour charger les données de consommation quand la période change
+  useEffect(() => {
+    fetchConsommationData();
+  }, [selectedPeriod]);
 
-  const monthlyData = [
-    { time: "Jan", value: 32 },
-    { time: "Fév", value: 38 },
-    { time: "Mar", value: 30 },
-    { time: "Avr", value: 35 },
-    { time: "Mai", value: 28 },
-    { time: "Juin", value: 40 },
-    { time: "Juil", value: 45 },
-    { time: "Août", value: 48 },
-    { time: "Sep", value: 37 },
-    { time: "Oct", value: 30 },
-    { time: "Nov", value: 25 },
-    { time: "Déc", value: 35 },
-  ];
-
-  // Fonction pour obtenir les données selon la période sélectionnée
-  const getConsumptionData = () => {
-    return selectedPeriod === "semaine" ? weeklyData : monthlyData;
+  // Fonction pour obtenir la configuration Y selon les données
+  const getYAxisConfig = () => {
+    if (consommationData.length === 0) 
+      return { domain: [0, 50], ticks: [0, 10, 20, 30, 40, 50] };
+    
+    // Calculer le max pour définir le domaine de l'axe Y
+    const maxValue = Math.max(...consommationData.map(item => item.value));
+    const roundedMax = Math.ceil(maxValue / 10) * 10; // Arrondi à la dizaine supérieure
+    
+    // Générer les graduations
+    const tickCount = 5;
+    const tickStep = roundedMax / tickCount;
+    const ticks = Array.from({ length: tickCount + 1 }, (_, i) => i * tickStep);
+    
+    return {
+      domain: [0, roundedMax],
+      ticks: ticks
+    };
   };
 
-  // Fonction pour obtenir la configuration Y selon la période
-  const getYAxisConfig = () => {
-    if (selectedPeriod === "semaine") {
-      return {
-        domain: [0, 50],
-        ticks: [0, 10, 20, 30, 40, 50],
-      };
-    } else {
-      // Configuration pour les données mensuelles
-      return {
-        domain: [0, 50],
-        ticks: [0, 10, 20, 30, 40, 50],
-      };
-    }
+  // Fonction pour déterminer la clé à utiliser pour l'affichage dans le graphique
+  const getTimeDisplayKey = () => {
+    return selectedPeriod === "mois" ? "monthLabel" : "time";
   };
 
   return (
@@ -186,7 +283,6 @@ const DashboardHistorique = () => {
                 }`}
                 onClick={() => setActiveTab("consommation")}
               >
-                {/*chart avec lucide react*/}
                 <LineChartIcon size={20} />
                 Consommation
               </button>
@@ -194,7 +290,6 @@ const DashboardHistorique = () => {
                 className={`tab-btn ${activeTab === "logs" ? "active" : ""}`}
                 onClick={() => setActiveTab("logs")}
               >
-                {/*logs avec lucide react*/}
                 <LogsIcon size={20} />
                 Logs d{"'"}activité
               </button>
@@ -209,43 +304,50 @@ const DashboardHistorique = () => {
                   <h3 style={{ color: "#274c77" }}>Consommation courante</h3>{" "}
                   <span className="chart-type">Électricité</span>
                 </div>
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart
-                      data={getConsumptionData()}
-                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                    >
-                      <CartesianGrid vertical={false} horizontal={false} />
-                      <XAxis
-                        dataKey="time"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#666", fontSize: 12 }}
-                        dy={10}
-                        interval={
-                          selectedPeriod === "mois" ? 0 : "preserveStart"
-                        }
-                      />
-                      <YAxis
-                        domain={getYAxisConfig().domain}
-                        ticks={getYAxisConfig().ticks}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#666", fontSize: 12 }}
-                        tickFormatter={(value) => `${value}kWh`}
-                        dx={-5}
-                      />
-                      <Line
-                        type="natural"
-                        dataKey="value"
-                        stroke="#FFB800"
-                        strokeWidth={2}
-                        dot={false}
-                        isAnimationActive={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                {loadingConsommation ? (
+                  <div className="loading-indicator">Chargement des données...</div>
+                ) : errorConsommation ? (
+                  <div className="error-message">{errorConsommation}</div>
+                ) : consommationData.length === 0 ? (
+                  <div className="no-data-message">Aucune donnée de consommation disponible</div>
+                ) : (
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart
+                        data={consommationData}
+                        margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                      >
+                        <CartesianGrid vertical={false} horizontal={false} />
+                        <XAxis
+                          dataKey={getTimeDisplayKey()}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#666", fontSize: 12 }}
+                          dy={10}
+                          interval={0}
+                          type="category"
+                        />
+                        <YAxis
+                          domain={getYAxisConfig().domain}
+                          ticks={getYAxisConfig().ticks}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#666", fontSize: 12 }}
+                          tickFormatter={(value) => `${value}kWh`}
+                          dx={-5}
+                        />
+                        <Line
+                          type="natural"
+                          dataKey="value"
+                          stroke="#FFB800"
+                          strokeWidth={2}
+                          dot={false}
+                          isAnimationActive={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="activity-logs">
@@ -257,41 +359,45 @@ const DashboardHistorique = () => {
                   </button>
                 </div>
                 <div className="logs-table-container">
-                  <table className="logs-table">
-                    <thead>
-                      <tr>
-                        <th>Pieces</th>
-                        <th>Appareil</th>
-                        <th>Action</th>
-                        <th>Date/Heure</th>
-                        <th>Utilisateur</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentLogs.length > 0 ? (
-                        currentLogs.map((log) => (
-                          <tr key={log._id}>
-                            <td>{log.nom_piece || "Non définie"}</td> {/* Colonne manquante pour la pièce */}
-                            <td>{log.nom_app}</td>
-                            <td>{log.type_operation}</td>
-                            <td>{new Date(log.createdAt).toLocaleString()}</td>
-                            <td>
-                              {log.user
-                                ? `${log.user.prenom} ${log.user.nom}`
-                                : "Système"}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
+                  {loadingLogs ? (
+                    <div className="loading-indicator">Chargement des logs...</div>
+                  ) : (
+                    <table className="logs-table">
+                      <thead>
                         <tr>
-                          <td colSpan="4">Aucun log trouvé.</td>
+                          <th>Pieces</th>
+                          <th>Appareil</th>
+                          <th>Action</th>
+                          <th>Date/Heure</th>
+                          <th>Utilisateur</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {currentLogs.length > 0 ? (
+                          currentLogs.map((log) => (
+                            <tr key={log._id}>
+                              <td>{log.nom_piece || "Non définie"}</td>
+                              <td>{log.nom_app}</td>
+                              <td>{log.type_operation}</td>
+                              <td>{new Date(log.createdAt).toLocaleString()}</td>
+                              <td>
+                                {log.user
+                                  ? `${log.user.prenom} ${log.user.nom}`
+                                  : "Système"}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5">Aucun log trouvé.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  )}
                   <div className="pagination">
                     <button onClick={prevPage} disabled={currentPage === 1}>
-                    <ArrowLeftToLine size={18} />
+                      <ArrowLeftToLine size={18} />
                       Précédent
                     </button>
                     <span>

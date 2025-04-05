@@ -50,12 +50,12 @@ export const EnergieService = {
 
   getConsommationSemaine: async () => {
     setAuthHeader();
-    return apiClient.get("/historique/semaine"); // Nouvelle route backend pour récupérer la consommation de la semaine
+    return apiClient.get("/consommation/semaine");
   },
-
+  
   getConsommationMois: async () => {
     setAuthHeader();
-    return apiClient.get("/historique/mois"); // Nouvelle route backend pour récupérer la consommation du mois
+    return apiClient.get("/consommation/mois");
   },
 
 
