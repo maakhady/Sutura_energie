@@ -252,6 +252,45 @@ const emailService = {
       html: html,
     });
   },
+
+  /**
+   * Envoie un email de contact
+   * @param {object} incendie - Informations de l'incendie
+   * @param {object} utilisateur - Utilisateur destinataire
+   * @returns {Promise<object>} Résultat de l'envoi
+   */
+
+  // envoyer email à tout les utilisateurs pour alerté l'incendie
+  envoyerAlerteIncendie: async function (utilisateurs) {
+    const sujet =
+      "🚨 ALERTE INCENDIE - Arrêt d'urgence des appareils - Sutura Énergie";
+
+    for (const utilisateur of utilisateurs) {
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #fff3f3;">
+          <h2 style="color: #dc2626;">🚨 ALERTE INCENDIE</h2>
+          <p>Bonjour <strong>${utilisateur.prenom} ${utilisateur.nom}</strong>,</p>
+          <p style="color: #dc2626; font-weight: bold;">Un risque d'incendie a été détecté dans le système.</p>
+          <p>Par mesure de sécurité, tous les appareils ont été automatiquement arrêtés.</p>
+          <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #dc2626;">
+            <h3 style="margin-top: 0; color: #dc2626;">Actions prises :</h3>
+            <ul>
+              <li>Arrêt immédiat de tous les appareils</li>
+              <li>Activation du protocole de sécurité</li>
+            </ul>
+          </div>
+          <p>Veuillez vérifier votre installation et contacter les services d'urgence si nécessaire.</p>
+          <p style="margin-top: 30px; color: #666;">L'équipe Sutura Énergie</p>
+        </div>
+      `;
+
+      await this.envoyerEmail({
+        to: utilisateur.email,
+        subject: sujet,
+        html: html,
+      });
+    }
+  },
 };
 
 module.exports = emailService;

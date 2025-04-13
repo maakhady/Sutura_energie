@@ -1,6 +1,9 @@
 const Appareil = require("../models/Appareil");
+const Utilisateur = require("../models/Utilisateur");
 const relayService = require("../services/relayService");
+const emailService = require("../services/emailService");
 const { creerHistorique } = require("./historiqueControleur");
+
 const axios = require("axios");
 
 // Fonction pour obtenir le prochain relay_ID disponible
@@ -332,7 +335,13 @@ exports.arreterTousLesAppareils = async (req, res) => {
         return appareil.save();
       })
     );
+    // Transmettre l'information à tous les utilisateurs
+    const utilisateurs = await Utilisateur.find();
 
+    // ✅ Envoyer un e-mail à tous les utilisateurs
+    await emailService.envoyerAlerteIncendie(utilisateurs);
+
+    
     // Emit Socket.IO event with more detailed information
     global.io.emit("emergency_shutdown", {
       message:
