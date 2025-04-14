@@ -3,6 +3,8 @@ import { Mail, Lock, Eye, EyeClosed, LayoutGrid } from "lucide-react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom"; // Importez useNavigate pour la redirection
 import { authService } from "../../services/authService"; // Importez le service d'authentification
+import { getEmergencyStatus } from "../../utils/socket";
+import Swal from "sweetalert2";
 
 const LoginForm = ({ setPage }) => {
   const [email, setEmail] = useState("");
@@ -26,6 +28,21 @@ const LoginForm = ({ setPage }) => {
       const response = await authService.loginWithEmail(email, password);
 
       if (response.success) {
+        // Mettre à jour l'état d'urgence
+        const emergencyStatus = getEmergencyStatus();
+        if (emergencyStatus) {
+          await Swal.fire({
+            title: "🚨 Alerte de Sécurité !",
+            text: emergencyStatus.message,
+            icon: "warning",
+            confirmButtonText: "Compris",
+            confirmButtonColor: "#274c77",
+            background: "#fff",
+            customClass: {
+              popup: "emergency-alert",
+            },
+          });
+        }
         // Stocker le token dans le localStorage
         localStorage.setItem("token", response.token);
         // Stocker l'utilisateur dans le localStorage

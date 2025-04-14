@@ -265,6 +265,12 @@ const emailService = {
     const sujet =
       "🚨 ALERTE INCENDIE - Arrêt d'urgence des appareils - Sutura Énergie";
 
+    const dateArret = new Date().toLocaleString("fr-FR", {
+      dateStyle: "long",
+      timeStyle: "medium",
+      timeZone: "Africa/Dakar",
+    });
+
     for (const utilisateur of utilisateurs) {
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #fff3f3;">
@@ -278,6 +284,7 @@ const emailService = {
               <li>Arrêt immédiat de tous les appareils</li>
               <li>Activation du protocole de sécurité</li>
             </ul>
+            <p><strong>Heure de l'arrêt d'urgence :</strong> ${dateArret}</p>
           </div>
           <p>Veuillez vérifier votre installation et contacter les services d'urgence si nécessaire.</p>
           <p style="margin-top: 30px; color: #666;">L'équipe Sutura Énergie</p>

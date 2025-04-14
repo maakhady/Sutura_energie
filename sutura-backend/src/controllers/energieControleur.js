@@ -133,12 +133,38 @@ const recevoirDonneesCapteurs = async (req, res) => {
 // 📌 Récupérer l’historique de consommation
 const getHistorique = async (req, res) => {
   try {
-    const historique = await HistoriqueEnergie.find().populate("app_id");
-    console.log(" Récupération de l'historique :", historique);
-    res.json(historique);
+    const historique = await HistoriqueEnergie.find()
+      .populate({
+        path: "app_id",
+        select: "nom_app pieces_id",
+        populate: {
+          path: "pieces_id",
+          select: "nom_piece",
+        },
+      })
+      .sort({ date_heure: -1 });
+
+    // Format the data for frontend consumption
+    const formattedHistorique = historique.map((entry) => ({
+      id: entry._id,
+      appareil: entry.app_id?.nom_app || "Unknown Device",
+      piece: entry.app_id?.pieces_id?.nom_piece || "Unknown Room",
+      consommation: parseFloat(entry.consommation).toFixed(2),
+      date: new Date(entry.date_heure).toLocaleString(),
+      timestamp: entry.date_heure,
+    }));
+
+    res.json({
+      success: true,
+      data: formattedHistorique,
+    });
   } catch (error) {
-    console.error(" Erreur récupération historique :", error);
-    res.status(500).json({ message: "Erreur serveur", error: error.message });
+    console.error("Error retrieving energy history:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -278,84 +304,87 @@ const getConsommationParJour = async (req, res) => {
 //   }
 // };
 
-
 const getConsommationSemaine = async (req, res) => {
   try {
     // Permet de spécifier le début de semaine (1 = lundi, 0 = dimanche)
-    const debutSemaine = req.query.debutSemaine ? parseInt(req.query.debutSemaine) : 1;
-    
+    const debutSemaine = req.query.debutSemaine
+      ? parseInt(req.query.debutSemaine)
+      : 1;
+
     const now = new Date();
     let startOfWeek;
-    
-    if (debutSemaine === 1) { // Lundi comme début
+
+    if (debutSemaine === 1) {
+      // Lundi comme début
       const day = now.getDay();
       const diff = now.getDate() - day + (day === 0 ? -6 : 1);
       startOfWeek = new Date(now.setDate(diff));
-    } else { // Dimanche comme début
+    } else {
+      // Dimanche comme début
       startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
     }
-    
+
     startOfWeek.setHours(0, 0, 0, 0);
-    
+
     // Fin de la semaine = début + 6 jours
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
-    
+
     const consommationSemaine = await HistoriqueEnergie.aggregate([
       {
         $match: {
-          date_heure: { $gte: startOfWeek, $lte: endOfWeek }
-        }
+          date_heure: { $gte: startOfWeek, $lte: endOfWeek },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$date_heure" },
             month: { $month: "$date_heure" },
-            day: { $dayOfMonth: "$date_heure" }
+            day: { $dayOfMonth: "$date_heure" },
           },
           total_consommation: { $sum: "$consommation" },
-          date: { $first: "$date_heure" }
-        }
+          date: { $first: "$date_heure" },
+        },
       },
-      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
     ]);
-    
+
     // Générer tous les jours de la semaine pour avoir une structure complète
     const resultatComplet = [];
     const currentDate = new Date(startOfWeek);
-    
+
     while (currentDate <= endOfWeek) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       const day = currentDate.getDate();
-      
+
       // Chercher si on a des données pour ce jour
-      const jourData = consommationSemaine.find(item => 
-        item._id.year === year && 
-        item._id.month === month && 
-        item._id.day === day
+      const jourData = consommationSemaine.find(
+        (item) =>
+          item._id.year === year &&
+          item._id.month === month &&
+          item._id.day === day
       );
-      
+
       resultatComplet.push({
         date: new Date(year, month - 1, day),
         // Format lisible pour le frontend
-        jour: currentDate.toLocaleDateString('fr-FR', { weekday: 'long' }),
-        total_consommation: jourData ? jourData.total_consommation : 0
+        jour: currentDate.toLocaleDateString("fr-FR", { weekday: "long" }),
+        total_consommation: jourData ? jourData.total_consommation : 0,
       });
-      
+
       // Avancer au jour suivant
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    
+
     res.json(resultatComplet);
   } catch (error) {
     console.error("❌ Erreur récupération consommation de la semaine :", error);
     res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
-
 
 // const getConsommationParMois = async (req, res) => {
 //   try {
@@ -379,93 +408,124 @@ const getConsommationSemaine = async (req, res) => {
 //   }
 // };
 
-
-
-
 // 🔹 Récupérer la consommation totale par mois
 
 const getConsommationParMois = async (req, res) => {
   try {
     // Récupérer les paramètres de la requête pour filtrer la période
-    const annee = req.query.annee ? parseInt(req.query.annee) : new Date().getFullYear();
+    const annee = req.query.annee
+      ? parseInt(req.query.annee)
+      : new Date().getFullYear();
     const nbMois = req.query.nbMois ? parseInt(req.query.nbMois) : 12; // Par défaut, montrer une année complète
-    
+
     // Calculer la date de début (12 mois avant la date actuelle)
     const dateActuelle = new Date();
     const dateDebut = new Date(dateActuelle);
     dateDebut.setMonth(dateActuelle.getMonth() - nbMois + 1);
     dateDebut.setDate(1);
     dateDebut.setHours(0, 0, 0, 0);
-    
+
     // Calculer la date de fin (dernier jour du mois actuel)
-    const dateFin = new Date(dateActuelle.getFullYear(), dateActuelle.getMonth() + 1, 0, 23, 59, 59, 999);
-    
+    const dateFin = new Date(
+      dateActuelle.getFullYear(),
+      dateActuelle.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
     const consommationMois = await HistoriqueEnergie.aggregate([
       {
         $match: {
-          date_heure: { $gte: dateDebut, $lte: dateFin }
-        }
+          date_heure: { $gte: dateDebut, $lte: dateFin },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: "$date_heure" },
-            month: { $month: "$date_heure" }
+            month: { $month: "$date_heure" },
           },
-          total_consommation: { $sum: "$consommation" }
-        }
+          total_consommation: { $sum: "$consommation" },
+        },
       },
-      { $sort: { "_id.year": 1, "_id.month": 1 } }
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
-    
+
     // Générer tous les mois de la période pour avoir une structure complète
     const resultatComplet = [];
     const currentDate = new Date(dateDebut);
-    
+
     // Mapper les numéros de mois aux abréviations françaises
     const moisAbreviations = {
-      1: "jan", 2: "fév", 3: "mar", 4: "avr", 5: "mai", 6: "jui",
-      7: "jul", 8: "aoû", 9: "sep", 10: "oct", 11: "nov", 12: "déc"
+      1: "jan",
+      2: "fév",
+      3: "mar",
+      4: "avr",
+      5: "mai",
+      6: "jui",
+      7: "jul",
+      8: "aoû",
+      9: "sep",
+      10: "oct",
+      11: "nov",
+      12: "déc",
     };
-    
+
     while (currentDate <= dateFin) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      
+
       // Chercher si on a des données pour ce mois
-      const moisData = consommationMois.find(item => 
-        item._id.year === year && item._id.month === month
+      const moisData = consommationMois.find(
+        (item) => item._id.year === year && item._id.month === month
       );
-      
+
       resultatComplet.push({
         date: new Date(year, month - 1, 1),
-        mois: currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+        mois: currentDate.toLocaleDateString("fr-FR", {
+          month: "long",
+          year: "numeric",
+        }),
         mois_court: moisAbreviations[month], // Abréviation standardisée
         total_consommation: moisData ? moisData.total_consommation : 0,
         annee: year,
         mois_numero: month,
         // Propriété pour faciliter le tri dans le frontend
-        date_ordre: `${year}-${month.toString().padStart(2, '0')}`
+        date_ordre: `${year}-${month.toString().padStart(2, "0")}`,
       });
-      
+
       // Passer au mois suivant
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
-    
+
     // Tri explicite des résultats par date croissante
     resultatComplet.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     // Ajouter des statistiques supplémentaires
     const statistiques = {
-      moyenne: resultatComplet.reduce((acc, mois) => acc + mois.total_consommation, 0) / resultatComplet.length,
-      total: resultatComplet.reduce((acc, mois) => acc + mois.total_consommation, 0),
-      max: Math.max(...resultatComplet.map(mois => mois.total_consommation)),
-      min: Math.min(...resultatComplet.filter(mois => mois.total_consommation > 0).map(mois => mois.total_consommation) || [0])
+      moyenne:
+        resultatComplet.reduce(
+          (acc, mois) => acc + mois.total_consommation,
+          0
+        ) / resultatComplet.length,
+      total: resultatComplet.reduce(
+        (acc, mois) => acc + mois.total_consommation,
+        0
+      ),
+      max: Math.max(...resultatComplet.map((mois) => mois.total_consommation)),
+      min: Math.min(
+        ...(resultatComplet
+          .filter((mois) => mois.total_consommation > 0)
+          .map((mois) => mois.total_consommation) || [0])
+      ),
     };
-    
+
     res.json({
       mois: resultatComplet,
-      statistiques
+      statistiques,
     });
   } catch (error) {
     console.error("❌ Erreur récupération consommation par mois :", error);

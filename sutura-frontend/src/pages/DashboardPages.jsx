@@ -11,6 +11,7 @@ import "../styles/dashboard.css";
 import RightPanel from "../components/RightPanel";
 import { EnergieService } from "../services/EnergieService";
 import PieceService from "../services/PieceService";
+import { socket, getEmergencyStatus } from "../utils/socket";
 import {
   Lightbulb,
   Tv,
@@ -31,6 +32,63 @@ const DashboardPage = () => {
   const [error, setError] = useState(null); // Gère les erreurs
   const [currentPage, setCurrentPage] = useState(1);
   const devicesPerPage = 4;
+
+  useEffect(() => {
+    fetchRooms();
+
+    // Check for existing emergency status
+    const currentEmergency = getEmergencyStatus();
+    if (currentEmergency) {
+      Swal.fire({
+        title: "🚨 Alerte de Sécurité !",
+        text: currentEmergency.message,
+        icon: "warning",
+        confirmButtonText: "Compris",
+        confirmButtonColor: "#274c77",
+        background: "#fff",
+        customClass: {
+          popup: "emergency-alert",
+        },
+      });
+    }
+
+    // Listen for emergency updates
+    const handleEmergency = (data) => {
+      console.log("🚨 Arrêt d'urgence reçu:", data);
+
+      // Update all devices status
+      setRooms((prevRooms) =>
+        prevRooms.map((room) => ({
+          ...room,
+          devices: room.devices.map((device) => ({
+            ...device,
+            actif: false,
+            isOn: false,
+            status: "Inactif",
+          })),
+        }))
+      );
+
+      // Show alert
+      Swal.fire({
+        title: "🚨 Alerte de Sécurité !",
+        text: data.message,
+        icon: "warning",
+        confirmButtonText: "Compris",
+        confirmButtonColor: "#274c77",
+        background: "#fff",
+        customClass: {
+          popup: "emergency-alert",
+        },
+      });
+    };
+
+    socket.on("emergency_shutdown", handleEmergency);
+
+    return () => {
+      socket.off("emergency_shutdown", handleEmergency);
+    };
+  }, []);
 
   useEffect(() => {
     fetchRooms();

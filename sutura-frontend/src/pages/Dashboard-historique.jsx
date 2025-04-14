@@ -12,7 +12,15 @@ import RightPanel from "../components/RightPanel";
 import { authService } from "../services/authService";
 import { HistoriqueService } from "../services/HistoriqueService";
 import { EnergieService } from "../services/EnergieService";
-import { FileUpIcon, LineChartIcon, LogsIcon, ArrowLeftToLine, ArrowRightToLine } from "lucide-react";
+import { socket, getEmergencyStatus } from "../utils/socket";
+import Swal from "sweetalert2";
+import {
+  FileUpIcon,
+  LineChartIcon,
+  LogsIcon,
+  ArrowLeftToLine,
+  ArrowRightToLine,
+} from "lucide-react";
 
 const DashboardHistorique = () => {
   const [utilisateur, setUtilisateur] = useState(null);
@@ -34,6 +42,50 @@ const DashboardHistorique = () => {
   const currentLogs = activityLogs.slice(indexOfFirstLog, indexOfLastLog);
   const totalPages = Math.ceil(activityLogs.length / logsPerPage);
 
+  useEffect(() => {
+    // Check for existing emergency status
+    const currentEmergency = getEmergencyStatus();
+    if (currentEmergency) {
+      Swal.fire({
+        title: "🚨 Alerte de Sécurité !",
+        text: currentEmergency.message,
+        icon: "warning",
+        confirmButtonText: "Compris",
+        confirmButtonColor: "#274c77",
+        background: "#fff",
+        customClass: {
+          popup: "emergency-alert",
+        },
+      });
+    }
+
+    // Listen for emergency updates
+    const handleEmergency = (data) => {
+      console.log("🚨 Arrêt d'urgence reçu:", data);
+      
+      Swal.fire({
+        title: "🚨 Alerte de Sécurité !",
+        text: data.message,
+        icon: "warning",
+        confirmButtonText: "Compris",
+        confirmButtonColor: "#274c77",
+        background: "#fff",
+        customClass: {
+          popup: "emergency-alert",
+        },
+      });
+    };
+
+    socket.on("emergency_shutdown", handleEmergency);
+
+    return () => {
+      socket.off("emergency_shutdown", handleEmergency);
+    };
+  }, []);
+
+
+
+
   // Ordre chronologique des mois pour l'affichage
   const monthsOrder = [
     { id: 1, label: "jan" },
@@ -47,7 +99,7 @@ const DashboardHistorique = () => {
     { id: 9, label: "sep" },
     { id: 10, label: "oct" },
     { id: 11, label: "nov" },
-    { id: 12, label: "déc" }
+    { id: 12, label: "déc" },
   ];
 
   const nextPage = () => {
@@ -79,29 +131,29 @@ const DashboardHistorique = () => {
 
     // Récupérer les données dans le bon format
     const monthsData = data.mois || data;
-    
+
     // Créer un objet pour stocker les données par mois
     const monthDataMap = {};
-    
+
     // Initialiser tous les mois avec des valeurs à 0
-    monthsOrder.forEach(month => {
+    monthsOrder.forEach((month) => {
       monthDataMap[month.id] = {
         monthId: month.id,
         monthLabel: month.label,
-        value: 0
+        value: 0,
       };
     });
-    
+
     // Remplir avec les données réelles
-    monthsData.forEach(item => {
+    monthsData.forEach((item) => {
       const date = new Date(item.date);
-      const month = item.mois_numero || (date.getMonth() + 1);
-      
+      const month = item.mois_numero || date.getMonth() + 1;
+
       if (monthDataMap[month]) {
         monthDataMap[month].value = item.total_consommation;
       }
     });
-    
+
     // Convertir l'objet en tableau trié par id de mois
     return Object.values(monthDataMap).sort((a, b) => a.monthId - b.monthId);
   };
@@ -111,40 +163,51 @@ const DashboardHistorique = () => {
     try {
       setLoadingConsommation(true);
       setErrorConsommation(null);
-      
+
       let response;
       if (selectedPeriod === "semaine") {
         response = await EnergieService.getConsommationSemaine();
-        
+
         if (response && response.data) {
           // Format pour la semaine (tableau de jours)
-          const joursSemaine = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+          const joursSemaine = [
+            "lun",
+            "mar",
+            "mer",
+            "jeu",
+            "ven",
+            "sam",
+            "dim",
+          ];
           const jourMap = {};
-          
+
           // Initialiser tous les jours avec valeur 0
           joursSemaine.forEach((jour, index) => {
             jourMap[jour] = {
               jourId: index + 1,
               time: jour,
-              value: 0
+              value: 0,
             };
           });
-          
+
           // Remplir avec les données réelles
-          response.data.forEach(item => {
-            const jourCourt = item.jour_court || item.jour.substring(0, 3).toLowerCase();
+          response.data.forEach((item) => {
+            const jourCourt =
+              item.jour_court || item.jour.substring(0, 3).toLowerCase();
             if (jourMap[jourCourt]) {
               jourMap[jourCourt].value = item.total_consommation;
             }
           });
-          
-          setConsommationData(Object.values(jourMap).sort((a, b) => a.jourId - b.jourId));
+
+          setConsommationData(
+            Object.values(jourMap).sort((a, b) => a.jourId - b.jourId)
+          );
         } else {
           setConsommationData([]);
         }
       } else {
         response = await EnergieService.getConsommationMois();
-        
+
         if (response && response.data) {
           // Formater les données mensuelles avec l'approche numérique
           const formattedData = formatMonthlyData(response.data);
@@ -154,8 +217,13 @@ const DashboardHistorique = () => {
         }
       }
     } catch (error) {
-      console.error(`Erreur lors de la récupération des données de consommation ${selectedPeriod}:`, error);
-      setErrorConsommation(`Impossible de charger les données de consommation pour la ${selectedPeriod}`);
+      console.error(
+        `Erreur lors de la récupération des données de consommation ${selectedPeriod}:`,
+        error
+      );
+      setErrorConsommation(
+        `Impossible de charger les données de consommation pour la ${selectedPeriod}`
+      );
       setConsommationData([]);
     } finally {
       setLoadingConsommation(false);
@@ -192,7 +260,7 @@ const DashboardHistorique = () => {
 
     fetchUser();
     fetchLogs();
-    
+
     const interval = setInterval(fetchLogs, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -204,21 +272,21 @@ const DashboardHistorique = () => {
 
   // Fonction pour obtenir la configuration Y selon les données
   const getYAxisConfig = () => {
-    if (consommationData.length === 0) 
+    if (consommationData.length === 0)
       return { domain: [0, 50], ticks: [0, 10, 20, 30, 40, 50] };
-    
+
     // Calculer le max pour définir le domaine de l'axe Y
-    const maxValue = Math.max(...consommationData.map(item => item.value));
+    const maxValue = Math.max(...consommationData.map((item) => item.value));
     const roundedMax = Math.ceil(maxValue / 10) * 10; // Arrondi à la dizaine supérieure
-    
+
     // Générer les graduations
     const tickCount = 5;
     const tickStep = roundedMax / tickCount;
     const ticks = Array.from({ length: tickCount + 1 }, (_, i) => i * tickStep);
-    
+
     return {
       domain: [0, roundedMax],
-      ticks: ticks
+      ticks: ticks,
     };
   };
 
@@ -305,11 +373,15 @@ const DashboardHistorique = () => {
                   <span className="chart-type">Électricité</span>
                 </div>
                 {loadingConsommation ? (
-                  <div className="loading-indicator">Chargement des données...</div>
+                  <div className="loading-indicator">
+                    Chargement des données...
+                  </div>
                 ) : errorConsommation ? (
                   <div className="error-message">{errorConsommation}</div>
                 ) : consommationData.length === 0 ? (
-                  <div className="no-data-message">Aucune donnée de consommation disponible</div>
+                  <div className="no-data-message">
+                    Aucune donnée de consommation disponible
+                  </div>
                 ) : (
                   <div className="chart-container">
                     <ResponsiveContainer width="100%" height={300}>
@@ -360,7 +432,9 @@ const DashboardHistorique = () => {
                 </div>
                 <div className="logs-table-container">
                   {loadingLogs ? (
-                    <div className="loading-indicator">Chargement des logs...</div>
+                    <div className="loading-indicator">
+                      Chargement des logs...
+                    </div>
                   ) : (
                     <table className="logs-table">
                       <thead>
@@ -379,7 +453,9 @@ const DashboardHistorique = () => {
                               <td>{log.nom_piece || "Non définie"}</td>
                               <td>{log.nom_app}</td>
                               <td>{log.type_operation}</td>
-                              <td>{new Date(log.createdAt).toLocaleString()}</td>
+                              <td>
+                                {new Date(log.createdAt).toLocaleString()}
+                              </td>
                               <td>
                                 {log.user
                                   ? `${log.user.prenom} ${log.user.nom}`
@@ -407,7 +483,7 @@ const DashboardHistorique = () => {
                       onClick={nextPage}
                       disabled={currentPage === totalPages}
                     >
-                      Suivant 
+                      Suivant
                       <ArrowRightToLine size={18} />
                     </button>
                   </div>
