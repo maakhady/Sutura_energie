@@ -8,7 +8,9 @@ import { EnergieService } from "../services/EnergieService";
 import { Eye, EyeOff } from "lucide-react";
 import MemoizedProfileEditModal from "./ProfileEditModal"; // Importer le composant de modification de profil
 import Swal from "sweetalert2";
+import { io } from "socket.io-client";
 
+// ✅ Remplace par l'URL de ton backend
 // Définir le composant PasswordChangeModal en dehors du composant principal
 // pour qu'il ne soit pas recréé à chaque rendu du composant parent
 const PasswordChangeModal = ({
@@ -538,68 +540,62 @@ const RightPanel = () => {
   const AlertDetailsModal = () => {
     const renderAlertContent = () => {
       switch (selectedAlert) {
+        // In the renderAlertContent function:
         case "consumption":
           return (
             <div className="alert-details-content">
-              <h3>⚡ Consommation</h3>
-              <div className="detail-row">
-                <span className="detail-label">Pièce:</span>
-                <span className="detail-value">Salon</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Usage:</span>
-                <span className="detail-value">46.5 W</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Moyenne:</span>
-                <span className="detail-value">35 W</span>
-              </div>
+              <h3>⚡ Pic de Consommation</h3>
+              {maxPuissance && (
+                <>
+                  <div className="detail-row">
+                    <span className="detail-label">Appareil:</span>
+                    <span className="detail-value">
+                      {maxPuissance.appareil.nom}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Puissance:</span>
+                    <span className="detail-value">
+                      {maxPuissance.puissance.toFixed(2)}W
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Détecté le:</span>
+                    <span className="detail-value">
+                      {new Date(maxPuissance.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           );
-        case "security":
-          return (
-            <div className="alert-details-content">
-              <h3 className="alert-security-title">🔒 Alerte Sécurité:</h3>
-              <div className="security-alert-message">
-                Système mise sous hors tension
+          case "equipment":
+            return (
+              <div className="alert-details-content">
+                <h3>🔧 Appareil Actif le Plus Longtemps</h3>
+                {longestActiveDevice && (
+                  <>
+                    <div className="detail-row">
+                      <span className="detail-label">Appareil:</span>
+                      <span className="detail-value">{longestActiveDevice.appareil.nom}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Durée:</span>
+                      <span className="detail-value">
+                        {Math.floor(longestActiveDevice.duree / 3600)}h 
+                        {Math.floor((longestActiveDevice.duree % 3600) / 60)}m
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Depuis:</span>
+                      <span className="detail-value">
+                        {new Date(longestActiveDevice.startTime).toLocaleString()}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="detail-row">
-                <span className="detail-label">Cause:</span>
-                <span className="detail-value critical">Incendie</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">État:</span>
-                <span className="detail-value critical">Critique</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">État Système:</span>
-                <span className="detail-value">Coupé</span>
-              </div>
-            </div>
-          );
-        case "equipment":
-          return (
-            <div className="alert-details-content">
-              <h3>🔧 Équipement</h3>
-              <div className="detail-row">
-                <span className="detail-label">Pièce:</span>
-                <span className="detail-value">Salon 2</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Appareil:</span>
-                <span className="detail-value">Ventilateur</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Temps:</span>
-                <span className="detail-value">18h</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Énergie:</span>
-                <span className="detail-value">35W</span>
-              </div>
-            </div>
-          );
-        default:
+            );   default:
           return null;
       }
     };
@@ -635,6 +631,27 @@ const RightPanel = () => {
       setLoading(false);
     }
   };
+
+  const [maxPuissance, setMaxPuissance] = useState(null);
+  const [longestActiveDevice, setLongestActiveDevice] = useState(null);
+
+  // Add this useEffect to listen for updates
+  useEffect(() => {
+    const socket = io("http://localhost:2500"); // Make sure to use your actual socket URL
+
+    socket.on("maxPuissanceUpdate", (data) => {
+      setMaxPuissance(data);
+    });
+
+    socket.on("longestActiveDeviceUpdate", (data) => {
+      setLongestActiveDevice(data);
+    });
+
+    return () => {
+      socket.off("maxPuissanceUpdate");
+      socket.off("longestActiveDeviceUpdate");
+    };
+  }, []);
 
   return (
     <div className="right-panel">
@@ -737,53 +754,44 @@ const RightPanel = () => {
         </div>
 
         <div className="alert-list">
-          <div className="alert-item">
-            <div className="alert-icon consumption">⚡</div>
-            <div className="alert-content">
-              <div className="alert-title">Consommation</div>
-              <div className="alert-subtitle">TV - Usage - Salon +25%</div>
-              <button
-                className="view-details"
-                onClick={() => handleViewDetails("consumption")}
-              >
-                Voir détails
-              </button>
-            </div>
-          </div>
-
-          <div className="alert-item">
-            <div className="alert-icon security">🔒</div>
-            <div className="alert-content">
-              <div className="alert-title">Alerte Sécurité</div>
-              <div className="alert-subtitle">
-                Système mise sous hors Tension
+          {maxPuissance && (
+            <div className="alert-item">
+              <div className="alert-icon consumption">⚡</div>
+              <div className="alert-content">
+                <div className="alert-title">Pic de Consommation</div>
+                <div className="alert-subtitle">
+                  {maxPuissance.appareil.nom} -{" "}
+                  {maxPuissance.puissance.toFixed(2)}W
+                </div>
+                <button
+                  className="view-details"
+                  onClick={() => handleViewDetails("consumption")}
+                >
+                  Voir détails
+                </button>
               </div>
-              <div className="status-line">
-                <span className="status-dot"></span>
-                <span>Terminal source active - 85%</span>
-              </div>
-              <button
-                className="view-details"
-                onClick={() => handleViewDetails("security")}
-              >
-                Voir détails
-              </button>
             </div>
-          </div>
+          )}
 
-          <div className="alert-item">
-            <div className="alert-icon equipment">🔧</div>
-            <div className="alert-content">
-              <div className="alert-title">Équipement</div>
-              <div className="alert-subtitle">Clim - Allumée - Salon 2</div>
-              <button
-                className="view-details"
-                onClick={() => handleViewDetails("equipment")}
-              >
-                Voir détails
-              </button>
+          {longestActiveDevice && (
+            <div className="alert-item">
+              <div className="alert-icon equipment">🔧</div>
+              <div className="alert-content">
+                <div className="alert-title">Appareil Actif</div>
+                <div className="alert-subtitle">
+                  {longestActiveDevice.appareil.nom} -{" "}
+                  {Math.floor(longestActiveDevice.duree / 3600)}h
+                  {Math.floor((longestActiveDevice.duree % 3600) / 60)}m
+                </div>
+                <button
+                  className="view-details"
+                  onClick={() => handleViewDetails("equipment")}
+                >
+                  Voir détails
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

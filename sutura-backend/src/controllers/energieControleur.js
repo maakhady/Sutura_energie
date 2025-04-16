@@ -11,6 +11,16 @@ const setSocketInstance = (socketInstance) => {
   io = socketInstance;
 };
 
+let longestActiveDevice = {
+  appareil: null,
+  duree: 0,
+  startTime: null,
+};
+let maxPuissance = {
+  valeur: 0,
+  appareil: null,
+  timestamp: null,
+};
 //  Traitement des données envoyées par le Raspberry
 // Traitement des données envoyées par le Raspberry
 const recevoirDonneesCapteurs = async (req, res) => {
@@ -38,7 +48,24 @@ const recevoirDonneesCapteurs = async (req, res) => {
         courant,
         "A"
       );
-
+      if (puissance > maxPuissance.valeur) {
+        maxPuissance = {
+          valeur: puissance,
+          appareil: appareil,
+          timestamp: now,
+        };
+        // Emit the new max power value
+        if (io) {
+          io.emit("maxPuissanceUpdate", {
+            puissance: puissance,
+            appareil: {
+              nom: appareil.nom_app,
+              piece: appareil.pieces_id,
+            },
+            timestamp: now,
+          });
+        }
+      }
       if (!appareil) continue;
 
       const puissance = TENSION * courant; // P = U × I
@@ -73,6 +100,34 @@ const recevoirDonneesCapteurs = async (req, res) => {
           total_consom: 0,
           last_activation: null,
         });
+      }
+
+      // Track active duration
+      if (appareil.actif) {
+        if (!appareil.lastActivationTime) {
+          appareil.lastActivationTime = now;
+          await appareil.save();
+        }
+
+        const activeDuration = (now - appareil.lastActivationTime) / 1000; // in seconds
+        if (activeDuration > longestActiveDevice.duree) {
+          longestActiveDevice = {
+            appareil: appareil,
+            duree: activeDuration,
+            startTime: appareil.lastActivationTime,
+          };
+          // Emit the new longest active device
+          if (io) {
+            io.emit("longestActiveDeviceUpdate", {
+              appareil: {
+                nom: appareil.nom_app,
+                piece: appareil.pieces_id,
+              },
+              duree: activeDuration,
+              startTime: appareil.lastActivationTime,
+            });
+          }
+        }
       }
 
       // 🚀 Nouvelle logique d'arrêt :

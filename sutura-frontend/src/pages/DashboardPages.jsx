@@ -235,14 +235,20 @@ const DashboardPage = () => {
 
   // Formater les données pour affichage dans le graphe
   const formatData = (rawData) => {
-    return rawData.map((item) => ({
-      time: new Date(
-        item._id.year,
-        item._id.month - 1,
-        item._id.day
-      ).toLocaleDateString("fr-FR", { weekday: "long" }),
-      value: item.total_consommation,
-    }));
+    if (!Array.isArray(rawData)) return [];
+
+    return rawData.map((item) => {
+      const date = item.date
+        ? new Date(item.date)
+        : item._id && item._id.year
+        ? new Date(item._id.year, item._id.month - 1, item._id.day)
+        : new Date();
+
+      return {
+        time: date.toLocaleDateString("fr-FR", { weekday: "long" }),
+        value: Number(item.total_consommation?.toFixed(2)) || 0,
+      };
+    });
   };
 
   const getDeviceIcon = (nom_app) => {

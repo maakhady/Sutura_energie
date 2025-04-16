@@ -62,7 +62,7 @@ const DashboardHistorique = () => {
     // Listen for emergency updates
     const handleEmergency = (data) => {
       console.log("🚨 Arrêt d'urgence reçu:", data);
-      
+
       Swal.fire({
         title: "🚨 Alerte de Sécurité !",
         text: data.message,
@@ -82,9 +82,6 @@ const DashboardHistorique = () => {
       socket.off("emergency_shutdown", handleEmergency);
     };
   }, []);
-
-
-
 
   // Ordre chronologique des mois pour l'affichage
   const monthsOrder = [
@@ -159,6 +156,25 @@ const DashboardHistorique = () => {
   };
 
   // Fonction pour récupérer les données de consommation
+  // Add this new formatData function
+  const formatData = (rawData) => {
+    if (!Array.isArray(rawData)) return [];
+
+    return rawData.map((item) => {
+      const date = item.date
+        ? new Date(item.date)
+        : item._id && item._id.year
+        ? new Date(item._id.year, item._id.month - 1, item._id.day)
+        : new Date();
+
+      return {
+        time: date.toLocaleDateString("fr-FR", { weekday: "long" }),
+        value: Number(item.total_consommation?.toFixed(2)) || 0,
+      };
+    });
+  };
+
+  // Update the fetchConsommationData function
   const fetchConsommationData = async () => {
     try {
       setLoadingConsommation(true);
@@ -169,39 +185,8 @@ const DashboardHistorique = () => {
         response = await EnergieService.getConsommationSemaine();
 
         if (response && response.data) {
-          // Format pour la semaine (tableau de jours)
-          const joursSemaine = [
-            "lun",
-            "mar",
-            "mer",
-            "jeu",
-            "ven",
-            "sam",
-            "dim",
-          ];
-          const jourMap = {};
-
-          // Initialiser tous les jours avec valeur 0
-          joursSemaine.forEach((jour, index) => {
-            jourMap[jour] = {
-              jourId: index + 1,
-              time: jour,
-              value: 0,
-            };
-          });
-
-          // Remplir avec les données réelles
-          response.data.forEach((item) => {
-            const jourCourt =
-              item.jour_court || item.jour.substring(0, 3).toLowerCase();
-            if (jourMap[jourCourt]) {
-              jourMap[jourCourt].value = item.total_consommation;
-            }
-          });
-
-          setConsommationData(
-            Object.values(jourMap).sort((a, b) => a.jourId - b.jourId)
-          );
+          const formattedData = formatData(response.data);
+          setConsommationData(formattedData);
         } else {
           setConsommationData([]);
         }
@@ -209,12 +194,15 @@ const DashboardHistorique = () => {
         response = await EnergieService.getConsommationMois();
 
         if (response && response.data) {
-          // Formater les données mensuelles avec l'approche numérique
           const formattedData = formatMonthlyData(response.data);
           setConsommationData(formattedData);
         } else {
           setConsommationData([]);
         }
+      }
+
+      if (consommationData.length === 0) {
+        setErrorConsommation("Aucune donnée disponible pour cette période.");
       }
     } catch (error) {
       console.error(
