@@ -9,6 +9,7 @@ import { Eye, EyeOff } from "lucide-react";
 import MemoizedProfileEditModal from "./ProfileEditModal"; // Importer le composant de modification de profil
 import Swal from "sweetalert2";
 import { io } from "socket.io-client";
+import speechService from "../services/SpeechService";
 
 // ✅ Remplace par l'URL de ton backend
 // Définir le composant PasswordChangeModal en dehors du composant principal
@@ -617,16 +618,43 @@ const RightPanel = () => {
 
   const [relaisActifs, setRelaisActifs] = useState(false);
 
+  // const toggleRelais = async () => {
+  //   setLoading(true);
+  //   try {
+  //     await AppareilService.activerDesactiverTousLesRelais(!relaisActifs);
+  //     setRelaisActifs(!relaisActifs);
+
+  //     // 🔥 Notifier les autres composants qu'un changement a eu lieu
+  //     window.dispatchEvent(new Event("updateDevices"));
+  //   } catch (error) {
+  //     console.error("Erreur lors du changement d'état des relais :", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const toggleRelais = async () => {
     setLoading(true);
     try {
       await AppareilService.activerDesactiverTousLesRelais(!relaisActifs);
-      setRelaisActifs(!relaisActifs);
-
+      const nouveauStatut = !relaisActifs;
+      setRelaisActifs(nouveauStatut);
+  
+      // Utiliser le SpeechService pour la synthèse vocale
+      if (nouveauStatut) {
+        speechService.speak(speechService.phrases.TOUS_APPAREILS_ACTIVES);
+      } else {
+        speechService.speak(speechService.phrases.TOUS_APPAREILS_DESACTIVES);
+      }
+  
       // 🔥 Notifier les autres composants qu'un changement a eu lieu
       window.dispatchEvent(new Event("updateDevices"));
     } catch (error) {
       console.error("Erreur lors du changement d'état des relais :", error);
+      
+      // Lecture à voix haute de l'erreur
+      speechService.speak(speechService.phrases.ERREUR_CHANGEMENT_ETAT);
     } finally {
       setLoading(false);
     }
