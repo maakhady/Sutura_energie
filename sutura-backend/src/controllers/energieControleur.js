@@ -48,6 +48,13 @@ const recevoirDonneesCapteurs = async (req, res) => {
         courant,
         "A"
       );
+
+      if (!appareil) continue;
+
+      const puissance = TENSION * courant; // P = U × I
+      const energie_kWh = puissance * (1 / 3600); // Conso en kWh sur 1 sec
+
+      // Check for max power after puissance is calculated
       if (puissance > maxPuissance.valeur) {
         maxPuissance = {
           valeur: puissance,
@@ -66,10 +73,6 @@ const recevoirDonneesCapteurs = async (req, res) => {
           });
         }
       }
-      if (!appareil) continue;
-
-      const puissance = TENSION * courant; // P = U × I
-      const energie_kWh = puissance * (1 / 3600); // Conso en kWh sur 1 sec
 
       //  Alerte si puissance supérieure au seuil et appareil actif
       if (puissance > SEUIL_ALERTE_PUISSANCE && appareil.actif) {
