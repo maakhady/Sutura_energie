@@ -1,0 +1,25 @@
+# Environnement
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Dépendances
+/node_modules
+/npm-debug.log
+/yarn-error.log
+/yarn-debug.log
+/.pnp
+.pnp.js
+
+# Production
+/build
+/dist
+
+# Divers
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.swp
