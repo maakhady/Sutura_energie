@@ -17,22 +17,35 @@ dotenv.config();
 // Initialisation d'Express
 const app = express();
 const server = http.createServer(app);
+
+// Extraire les origines autorisées
+const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['*'];
+
+// Configuration Socket.IO avec CORS approprié
 const io = socketIO(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: corsOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
 setSocketInstance(io);
-// Middleware
+
+// Middleware CORS pour Express
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: function(origin, callback) {
+      if (!origin || corsOrigins.includes(origin) || corsOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Non autorisé par CORS'));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -60,7 +73,7 @@ app.get("/", (req, res) => {
 
 // Gestion des connexions socket
 io.on("connection", (socket) => {
-  console.log("Client1 connecté:", socket.id);
+  console.log("Client connecté:", socket.id);
 
   // Envoi des événements aux clients connectés
   socket.on("disconnect", () => {
