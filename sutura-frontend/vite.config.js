@@ -1,18 +1,19 @@
-// import { defineConfig } from 'vite'
-// import react from '@vitejs/plugin-react'
-
-// // https://vite.dev/config/
-// export default defineConfig({
-//   plugins: [react()],
-// })
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV !== 'production', // Génère les source maps uniquement en développement
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
   },
   server: {
     hmr: true, // Active le Hot Module Replacement
@@ -21,4 +22,6 @@ export default defineConfig({
   optimizeDeps: {
     include: ["react", "react-dom"],
   },
+  // Définit la base URL pour l'application
+  base: '/',
 });
