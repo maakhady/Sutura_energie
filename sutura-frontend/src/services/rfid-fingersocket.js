@@ -1,9 +1,10 @@
 // services/socketService.js
 import io from 'socket.io-client';
+import config from "../config"; // Ajustez le chemin selon votre structure
 
 let socket = null;
 
-const SOCKET_URL = "http://localhost:2500"; // Même URL que votre API
+const SOCKET_URL = config.apiBaseURL; // URL dynamique selon l'environnement
 
 const initSocket = () => {
   if (!socket) {

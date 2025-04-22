@@ -1,6 +1,7 @@
 import axios from "axios";
+import config from "../config"; // Ajustez le chemin selon votre structure
 
-const API_URL = "http://localhost:2500/api/historiques"; // 🔹 Remplace par l'URL de ton backend
+const API_URL = `${config.apiBaseURL}/api/historiques`; // URL dynamique selon l'environnement
 
 // Création d'une instance Axios
 const apiClient = axios.create({

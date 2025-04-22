@@ -1,8 +1,9 @@
 import axios from "axios";
 import { io } from "socket.io-client";
+import config from "../config"; // Ajustez le chemin selon votre structure
 
-const API_URL = "http://localhost:2500/api/energie"; // URL de l'API
-const SOCKET_URL = "http://localhost:2500"; // URL du serveur WebSocket
+const API_URL = `${config.apiBaseURL}/api/energie`; // URL de l'API
+const SOCKET_URL = config.apiBaseURL; // URL du serveur WebSocket
 
 // Création de l'instance WebSocket
 const socket = io(SOCKET_URL);
