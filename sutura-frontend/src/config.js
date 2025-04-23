@@ -8,7 +8,8 @@ const config = {
 
   },
   production: {
-    apiBaseURL: 'https://sutura-energie.onrender.com',
+    // apiBaseURL: 'https://sutura-energie.onrender.com',
+    apiBaseURL: 'https://sutura-energie-ma-khadys-projects.vercel.app',
     cameraURL: 'http://192.168.1.147:7000/video_feed', // URL locale
 
   }
