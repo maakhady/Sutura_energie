@@ -1,24 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import fs from 'node:fs';
-import path from 'node:path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(), 
-    tailwindcss(),
-    {
-      name: 'generate-redirects',
-      closeBundle() {
-        fs.writeFileSync(
-          path.resolve(__dirname, 'dist', '_redirects'),
-          '/* /index.html 200'
-        );
-      }
-    }
-  ],
+  plugins: [react(), tailwindcss()],
   build: {
     sourcemap: process.env.NODE_ENV !== 'production', // Génère les source maps uniquement en développement
     rollupOptions: {
