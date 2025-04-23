@@ -28,7 +28,7 @@ const App = () => {
             path="/firstlogin/definir-mot-de-passe/:token"
             element={<FirstLoginPage />}
           />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/forgot-password/:" element={<ForgotPasswordPage />} />
           <Route
             path="/reinitialiser-mot-de-passe/:token"
             element={<ResetPasswordPage />}
