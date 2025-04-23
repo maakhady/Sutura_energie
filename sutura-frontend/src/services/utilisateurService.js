@@ -161,19 +161,20 @@ const demanderReinitialisation = async (email) => {
 
 const reinitialiserMotDePasse = async (
   token,
-  actuelPassword,
   nouveauPassword,
   confirmPassword
 ) => {
   if (!token) throw new Error("Token requis");
+
   const response = await apiClient.post(`/reinitialiser-mot-de-passe`, {
     token,
-    actuelPassword,
     nouveauPassword,
     confirmPassword,
   });
+
   return response.data;
 };
+
 
 const changerMotDePasse = async (
   actuelPassword,
