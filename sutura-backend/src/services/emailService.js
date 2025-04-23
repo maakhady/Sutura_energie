@@ -53,8 +53,7 @@ const emailService = {
    */
   envoyerIdentifiants: async function (utilisateur, token) {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    // Utiliser un paramètre de requête au lieu d'un paramètre de route
-    const definirMdpUrl = `${frontendUrl}/firstlogin/definir-mot-de-passe?token=${encodeURIComponent(token)}`;
+    const definirMdpUrl = `${frontendUrl}/firstlogin/definir-mot-de-passe/${token}`;
 
     const sujet =
       "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
@@ -176,8 +175,7 @@ const emailService = {
     token,
     frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
   ) {
-    // Utiliser un paramètre de requête au lieu d'un paramètre de route
-    const resetURL = `${frontendUrl}/reinitialiser-mot-de-passe?token=${encodeURIComponent(token)}`;
+    const resetURL = `${frontendUrl}/reinitialiser-mot-de-passe/${token}`;
 
     const sujet = "Réinitialisation de votre mot de passe - Sutura Énergie";
 
