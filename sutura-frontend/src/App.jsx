@@ -8,13 +8,14 @@ import FirstLoginPage from "./pages/auth/FirstLoginPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import DashboardPage from "./pages/DashboardPages";
+import DashboardPage from "./pages/DashboardPages"; // Utilisation de DashboardPage
 import AppareilsPage from "./pages/AppareilsPage";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ProtectedRoute from "./components/auth/ProtectedRoute"; // Importez votre composant ProtectedRoute
 import DashboardListes from "./pages/dashboard-listes";
 import AjouterUtilisateur from "./pages/AjouterUtilisateur";
 import ModifierUtilisateur from "./pages/ModifierUtilisateur";
 import DashboardHistorique from "./pages/Dashboard-historique";
+
 
 const App = () => {
   return (
@@ -23,15 +24,13 @@ const App = () => {
         <Routes>
           {/* Route publique */}
           <Route path="/" element={<LoginPage />} />
-          
-          {/* Routes modifiées pour utiliser des paramètres de requête */}
           <Route
-            path="/firstlogin/definir-mot-de-passe"
+            path="/firstlogin/definir-mot-de-passe/:token"
             element={<FirstLoginPage />}
           />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route
-            path="/reinitialiser-mot-de-passe"
+            path="/reinitialiser-mot-de-passe/:token"
             element={<ResetPasswordPage />}
           />
 
@@ -46,7 +45,7 @@ const App = () => {
                     <Routes>
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/appareils" element={<AppareilsPage />} />
-                      <Route path="/historiques" element={<DashboardHistorique />} />
+                      <Route path="/historiques" element={ < DashboardHistorique />} />
                       <Route
                         path="/utilisateurs"
                         element={<DashboardListes />}
@@ -59,6 +58,10 @@ const App = () => {
                         path="/modifier-utilisateur/:id"
                         element={<ModifierUtilisateur />}
                       />
+                      {/* <Route
+                        path="/modifier-utilisateur/"
+                        element={<ModifierUtilisateur />}
+                      /> */}
                     </Routes>
                   </div>
                 </div>
