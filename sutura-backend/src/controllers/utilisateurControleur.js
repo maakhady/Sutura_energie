@@ -999,26 +999,13 @@ const reinitialiserMotDePasse = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("Token décodé:", decoded);
 
-    const utilisateur = await Utilisateur.findById(decoded.id).select(
-      "+password"
-    );
+    const utilisateur = await Utilisateur.findById(decoded.id).select("+password");
     console.log("Utilisateur trouvé:", utilisateur);
 
     if (!utilisateur) {
       return res.status(404).json({
         success: false,
         message: "Utilisateur non trouvé",
-      });
-    }
-
-    // Vérifier le mot de passe actuel
-    const isMatch = await utilisateur.comparePassword(actuelPassword);
-    console.log("Mot de passe correspond:", isMatch);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: "Mot de passe actuel incorrect",
       });
     }
 
@@ -1047,15 +1034,21 @@ const reinitialiserMotDePasse = async (req, res) => {
     console.error("Erreur reinitialiserMotDePasse:", error);
 
     // Créer l'historique pour l'échec de la réinitialisation du mot de passe
-    await creerHistorique({
-      users_id: req.body.token
+    try {
+      const userId = req.body.token
         ? jwt.verify(req.body.token, process.env.JWT_SECRET).id
-        : null,
-      type_entite: "utilisateur",
-      type_operation: "modif",
-      description: `Échec de la réinitialisation du mot de passe: ${error.message}`,
-      statut: "erreur",
-    });
+        : null;
+
+      await creerHistorique({
+        users_id: userId,
+        type_entite: "utilisateur",
+        type_operation: "modif",
+        description: `Échec de la réinitialisation du mot de passe: ${error.message}`,
+        statut: "erreur",
+      });
+    } catch (e) {
+      console.error("Erreur lors de la création de l'historique d'erreur:", e);
+    }
 
     res.status(500).json({
       success: false,
