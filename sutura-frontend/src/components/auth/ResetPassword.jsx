@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Lock, Eye, EyeClosed } from "lucide-react";
 import PropTypes from "prop-types";
-import { useNavigate, useSearchParams } from "react-router-dom"; // Utiliser useSearchParams au lieu de useParams
+import { useNavigate, useParams } from "react-router-dom"; // Utiliser useSearchParams au lieu de useParams
 import { authService } from "../../services/authService";
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams(); // Récupérer les paramètres de l'URL
-  const token = searchParams.get('token'); // Récupérer le token depuis les paramètres de requête
+  // const [searchParams] = useSearchParams(); // Récupérer les paramètres de l'URL
+  // const token = searchParams.get('token'); // Récupérer le token depuis les paramètres de requête
+  const { token } = useParams(); // ✅ à ajouter
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
