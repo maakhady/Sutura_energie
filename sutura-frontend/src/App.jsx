@@ -25,12 +25,12 @@ const App = () => {
           {/* Route publique */}
           <Route path="/" element={<LoginPage />} />
           <Route
-            path="/firstlogin/definir-mot-de-passe/"
+            path="/firstlogin/definir-mot-de-passe/:token"
             element={<FirstLoginPage />}
           />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route
-            path="/reinitialiser-mot-de-passe/"
+            path="/reinitialiser-mot-de-passe/:token"
             element={<ResetPasswordPage />}
           />
 
