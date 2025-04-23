@@ -53,10 +53,9 @@ const emailService = {
    */
   envoyerIdentifiants: async function (utilisateur, token) {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    const definirMdpUrl = `${frontendUrl}/firstlogin/definir-mot-de-passe/${token}`;
+    const definirMdpUrl = `${frontendUrl}/firstlogin/definir-mot-de-passe/${encodeURIComponent(token)}`;
 
-    const sujet =
-      "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
+    const sujet = "Bienvenue sur Sutura Énergie - Vos identifiants de connexion";
 
     const texte = `
       Bonjour ${utilisateur.prenom} ${utilisateur.nom},
@@ -109,7 +108,7 @@ const emailService = {
   },
 
   /**
-   * Envoie une notification de confirmation après la définition du mot de passe avec le code de connexion
+   * Envoie un email de confirmation lorsque le mot de passe est défini
    * @param {object} utilisateur - Utilisateur destinataire
    * @returns {Promise<object>} Résultat de l'envoi
    */
@@ -139,16 +138,14 @@ const emailService = {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
         <h2 style="color: #274C77;">Confirmation d'activation de compte</h2>
         <p>Bonjour <strong>${utilisateur.prenom} ${utilisateur.nom}</strong>,</p>
-        <p>Nous vous confirmons que votre mot de passe a été défini avec succès et que votre compte est maintenant actif.</p>
+        <p>Votre mot de passe a bien été défini. Votre compte est maintenant actif.</p>
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #333;">Vos options de connexion:</h3>
-          <p><strong>Option 1:</strong> Connectez-vous avec votre email et votre mot de passe</p>
           <p><strong>Email:</strong> ${utilisateur.email}</p>
-          <p style="margin-top: 15px;"><strong>Option 2:</strong> Connectez-vous simplement avec votre code</p>
-          <p><strong>Code:</strong> <span style="font-size: 1.2em; color: #274C77; font-weight: bold;">${utilisateur.code}</span></p>
+          <p><strong>Code:</strong> <span style="font-size: 1.2em; color: #274C77;">${utilisateur.code}</span></p>
         </div>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${loginUrl}" style="background-color: #274C77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Se connecter à la plateforme</a>
+          <a href="${loginUrl}" style="background-color: #274C77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">Se connecter à la plateforme</a>
         </div>
         <p>Merci de garder ces informations confidentielles.</p>
         <p style="margin-top: 30px; color: #666;">L'équipe Sutura Énergie</p>
@@ -164,10 +161,10 @@ const emailService = {
   },
 
   /**
-   * Envoie un email avec le lien de réinitialisation du mot de passe
+   * Envoie un email de réinitialisation de mot de passe avec un lien
    * @param {object} utilisateur - Utilisateur destinataire
-   * @param {string} token - Token de réinitialisation
-   * @param {string} frontendUrl - URL de base du frontend
+   * @param {string} token - Token pour réinitialisation
+   * @param {string} frontendUrl - URL du frontend
    * @returns {Promise<object>} Résultat de l'envoi
    */
   envoyerLienReinitialisation: async function (
@@ -175,7 +172,7 @@ const emailService = {
     token,
     frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
   ) {
-    const resetURL = `${frontendUrl}/reinitialiser-mot-de-passe/${token}`;
+    const resetURL = `${frontendUrl}/reinitialiser-mot-de-passe/${encodeURIComponent(token)}`;
 
     const sujet = "Réinitialisation de votre mot de passe - Sutura Énergie";
 
@@ -199,11 +196,12 @@ const emailService = {
         <h2 style="color: #274C77 ">Réinitialisation de votre mot de passe</h2>
         <p>Bonjour <strong>${utilisateur.prenom} ${utilisateur.nom}</strong>,</p>
         <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+        <p style="color: #e74c3c;">Cliquez sur le lien suivant pour réinitialiser votre mot de passe:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetURL}" style="background-color: #274C77; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Réinitialiser mon mot de passe</a>
+          <a href="${resetURL}" style="background-color: #274C77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">Réinitialiser mon mot de passe</a>
         </div>
-        <p style="color: #666;">Ce lien est valide pendant 5 minutes.</p>
-        <p style="color: #e74c3c;">Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>
+        <p>Ce lien est valide pendant 1 heure.</p>
+        <p style="color: #999;">Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
         <p style="margin-top: 30px; color: #666;">L'équipe Sutura Énergie</p>
       </div>
     `;
