@@ -828,7 +828,7 @@ const RightPanel = () => {
       </div>
 
       {/* Widget Caméra */}
-      {/* <div className="camera-widget">
+      <div className="camera-widget">
       <h3>Caméra</h3>
       <div className="camera-feed">
         <span className="live-badge">LIVE</span>
@@ -847,9 +847,9 @@ const RightPanel = () => {
           <div className="camera-unavailable">Caméra non disponible</div>
         )}
       </div>
-    </div> */}
+    </div>
 
-      <div className="camera-widget">
+      {/* <div className="camera-widget">
         <h3>Caméra</h3>
         <div className="camera-feed-container" style={{ position: 'relative' }}>
           <span className="live-badge">LIVE</span>
@@ -884,7 +884,7 @@ const RightPanel = () => {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
       {/* Modals */}
       {showAlertDetails && <AlertDetailsModal />}
 
