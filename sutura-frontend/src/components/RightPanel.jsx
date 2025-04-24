@@ -828,7 +828,7 @@ const RightPanel = () => {
       </div>
 
       {/* Widget Caméra */}
-      <div className="camera-widget">
+      {/* <div className="camera-widget">
       <h3>Caméra</h3>
       <div className="camera-feed">
         <span className="live-badge">LIVE</span>
@@ -847,7 +847,44 @@ const RightPanel = () => {
           <div className="camera-unavailable">Caméra non disponible</div>
         )}
       </div>
-    </div>
+    </div> */}
+
+      <div className="camera-widget">
+        <h3>Caméra</h3>
+        <div className="camera-feed-container" style={{ position: 'relative' }}>
+          <span className="live-badge">LIVE</span>
+          {config.cameraURL ? (
+            <iframe
+              src={`${config.cameraURL.includes('/video_feed') 
+                ? config.cameraURL.replace('/video_feed', '/') 
+                : config.cameraURL}?ngrok-skip-browser-warning=1`}
+              title="Camera Feed"
+              className="camera-iframe"
+              style={{
+                width: '100%',
+                height: '240px',
+                border: 'none',
+                borderRadius: '8px',
+                backgroundColor: '#f0f0f0'
+              }}
+              onError={(e) => {
+                console.error("Erreur de chargement de l'iframe:", e);
+              }}
+            />
+          ) : (
+            <div className="camera-unavailable" style={{
+              height: '240px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '8px'
+            }}>
+              <p>Caméra non disponible</p>
+            </div>
+          )}
+        </div>
+      </div>
       {/* Modals */}
       {showAlertDetails && <AlertDetailsModal />}
 
