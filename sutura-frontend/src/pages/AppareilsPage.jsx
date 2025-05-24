@@ -9,8 +9,13 @@ import PieceService from "../services/PieceService";
 import Swal from "sweetalert2";
 import "../styles/Appareils.css";
 import { io } from "socket.io-client";
+import config from "../config"; // Importez la configuration
 
-const socket = io("http://localhost:2500"); // ✅ Remplace par l'URL de ton backend
+
+// const socket = io("http://localhost:2500"); // ✅ Remplace par l'URL de ton backend
+
+// Utilisez l'URL dynamique du backend selon l'environnement
+const socket = io(config.apiBaseURL);
 
 const AppareilsPage = () => {
   const [rooms, setRooms] = useState([]);

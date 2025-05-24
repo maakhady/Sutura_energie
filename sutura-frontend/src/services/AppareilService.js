@@ -1,6 +1,10 @@
 import axios from "axios";
+import config from "../config"; // Ajustez le chemin selon votre structure
 
-const API_URL = "http://localhost:2500/api/appareils"; // URL de base
+// const API_URL = "http://localhost:2500/api/appareils"; // URL de base
+
+const API_URL = `${config.apiBaseURL}/api/appareils`;
+
 
 // Création d'une instance Axios
 const apiClient = axios.create({

@@ -1,13 +1,15 @@
 import axios from "axios";
 import { authService } from "./authService";
 import { socketService } from "./rfid-fingersocket";
+import config from "../config"; // Ajustez le chemin selon votre structure
 
-const API_URL = "http://localhost:2500/api/utilisateurs";
+const API_URL = `${config.apiBaseURL}/api/utilisateurs`;
 
 // Création d'une instance Axios avec intercepteur
 const apiClient = axios.create({
   baseURL: API_URL,
 });
+
 
 // Intercepteur pour gérer les erreurs 401 (token expiré)
 apiClient.interceptors.response.use(
@@ -159,19 +161,20 @@ const demanderReinitialisation = async (email) => {
 
 const reinitialiserMotDePasse = async (
   token,
-  actuelPassword,
   nouveauPassword,
   confirmPassword
 ) => {
   if (!token) throw new Error("Token requis");
+
   const response = await apiClient.post(`/reinitialiser-mot-de-passe`, {
     token,
-    actuelPassword,
     nouveauPassword,
     confirmPassword,
   });
+
   return response.data;
 };
+
 
 const changerMotDePasse = async (
   actuelPassword,

@@ -11,6 +11,9 @@ import Swal from "sweetalert2";
 import { io } from "socket.io-client";
 import speechService from "../services/SpeechService";
 
+import config from "../config"; // Ajoutez cette importation
+
+
 // ✅ Remplace par l'URL de ton backend
 // Définir le composant PasswordChangeModal en dehors du composant principal
 // pour qu'il ne soit pas recréé à chaque rendu du composant parent
@@ -665,7 +668,8 @@ const RightPanel = () => {
 
   // Add this useEffect to listen for updates
   useEffect(() => {
-    const socket = io("http://localhost:2500"); // Make sure to use your actual socket URL
+    // const socket = io("http://localhost:2500"); // Make sure to use your actual socket URL
+    const socket = io(config.apiBaseURL);
 
     socket.on("maxPuissanceUpdate", (data) => {
       setMaxPuissance(data);
@@ -825,16 +829,62 @@ const RightPanel = () => {
 
       {/* Widget Caméra */}
       <div className="camera-widget">
-        <h3>Caméra</h3>
-        <div className="camera-feed">
-          <span className="live-badge">LIVE</span>
+      <h3>Caméra</h3>
+      <div className="camera-feed">
+        <span className="live-badge">LIVE</span>
+        {config.cameraURL ? (
           <img
-            src="http://192.168.1.147:7000/video_feed"
+            src={config.cameraURL}
             alt="Camera Feed"
             className="camera-image"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/camera-offline.png'; // Image de remplacement
+              e.target.classList.add('camera-offline');
+            }}
           />
-        </div>
+        ) : (
+          <div className="camera-unavailable">Caméra non disponible</div>
+        )}
       </div>
+    </div>
+
+      {/* <div className="camera-widget">
+        <h3>Caméra</h3>
+        <div className="camera-feed-container" style={{ position: 'relative' }}>
+          <span className="live-badge">LIVE</span>
+          {config.cameraURL ? (
+            <iframe
+              src={`${config.cameraURL.includes('/video_feed') 
+                ? config.cameraURL.replace('/video_feed', '/') 
+                : config.cameraURL}?ngrok-skip-browser-warning=1`}
+              title="Camera Feed"
+              className="camera-iframe"
+              style={{
+                width: '100%',
+                height: '240px',
+                border: 'none',
+                borderRadius: '8px',
+                backgroundColor: '#f0f0f0'
+              }}
+              onError={(e) => {
+                console.error("Erreur de chargement de l'iframe:", e);
+              }}
+            />
+          ) : (
+            <div className="camera-unavailable" style={{
+              height: '240px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '8px'
+            }}>
+              <p>Caméra non disponible</p>
+            </div>
+          )}
+        </div>
+      </div> */}
       {/* Modals */}
       {showAlertDetails && <AlertDetailsModal />}
 

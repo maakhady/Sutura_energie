@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Lock, Eye, EyeClosed } from "lucide-react";
 import PropTypes from "prop-types";
-import { useNavigate, useParams } from "react-router-dom"; // Utiliser useParams pour récupérer le token
-import { authService } from "../../services/authService"; // Assure-toi d'importer ton service
+import { useNavigate, useParams } from "react-router-dom"; // Utiliser useSearchParams au lieu de useParams
+import { authService } from "../../services/authService";
 
 const ResetPassword = () => {
-  const { token } = useParams(); // Récupérer le token depuis l'URL
+  // const [searchParams] = useSearchParams(); // Récupérer les paramètres de l'URL
+  // const token = searchParams.get('token'); // Récupérer le token depuis les paramètres de requête
+  const { token } = useParams(); // ✅ à ajouter
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -23,6 +25,12 @@ const ResetPassword = () => {
     }
 
     try {
+      // Vérifier si le token est disponible
+      if (!token) {
+        setError("Token de réinitialisation manquant ou invalide.");
+        return;
+      }
+
       // Appeler le service pour réinitialiser le mot de passe
       const response = await authService.reinitialiserMotDePasse(token, {
         nouveauPassword: newPassword,
@@ -53,7 +61,7 @@ const ResetPassword = () => {
         <div className="card-body">
           <div className="text-center mb-4">
             <img
-              src="images/Sutura-Énergie.png"
+              src="/images/Sutura-Énergie.png" // Ajout du / initial pour chemin absolu
               alt="Sutura-Énergie"
               className="img-fluid"
               style={{ width: "100px", height: "100px", borderRadius: "20%" }}
@@ -65,36 +73,6 @@ const ResetPassword = () => {
           </h4>
 
           <form onSubmit={handleSubmit}>
-            {/* <div className="mb-3">
-              <label className="form-label primary-text">
-                Mot de passe actuel
-              </label>
-              <div className="input-group">
-                <span className="input-group-text">
-                  <Lock size={16} />
-                </span>
-                <input
-                  type={showActuelPassword ? "text" : "password"}
-                  className="form-control border-primary"
-                  placeholder="Entrez votre mot de passe actuel"
-                  value={actuelPassword}
-                  onChange={(e) => setActuelPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowActuelPassword(!showActuelPassword)}
-                >
-                  {showActuelPassword ? (
-                    <Eye size={16} />
-                  ) : (
-                    <EyeClosed size={16} />
-                  )}
-                </button>
-              </div>
-            </div> */}
-
             <div className="mb-3">
               <label className="form-label primary-text">
                 Nouveau mot de passe
@@ -156,9 +134,15 @@ const ResetPassword = () => {
             </div>
 
             {message && (
-              <div className="text-success small mb-3">{message}</div>
+              <div className="alert alert-success mt-3" role="alert">
+                {message}
+              </div>
             )}
-            {error && <div className="text-danger small mb-3">{error}</div>}
+            {error && (
+              <div className="alert alert-danger mt-3" role="alert">
+                {error}
+              </div>
+            )}
 
             <button type="submit" className="btn btn-primary w-100 py-2">
               Confirmer
@@ -170,8 +154,9 @@ const ResetPassword = () => {
   );
 };
 
+// Modification des PropTypes - setPage n'est pas utilisé, donc le rendre optionnel
 ResetPassword.propTypes = {
-  setPage: PropTypes.func.isRequired,
+  setPage: PropTypes.func
 };
 
 export default ResetPassword;

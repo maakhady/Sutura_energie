@@ -1,6 +1,7 @@
 import axios from "axios";
+import config from "../config"; // Ajustez le chemin selon votre structure
 
-const API_URL = "http://localhost:2500/api/pieces"; // URL de base
+const API_URL = `${config.apiBaseURL}/api/pieces`; // URL dynamique selon l'environnement
 
 // Création d'une instance Axios
 const apiClient = axios.create({

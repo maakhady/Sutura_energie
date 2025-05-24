@@ -1,7 +1,8 @@
 import axios from "axios";
+import config from "../config"; // Ajustez le chemin selon votre structure
 
-const API_URL = "http://localhost:2500/api/auth"; // URL du backend
-const API_URL2 = "http://localhost:2500/api/utilisateurs"; // URL du backend
+const API_URL = `${config.apiBaseURL}/api/auth`; // URL du backend
+const API_URL2 = `${config.apiBaseURL}/api/utilisateurs`; // URL du backend
 
 // Création d'une instance Axios avec baseURL
 const apiClient = axios.create({
