@@ -8,7 +8,7 @@ const config = {
 
   },
   production: {
-    apiBaseURL: 'https://energie-sutura.onrender.com',
+    apiBaseURL: 'https://energie-sutura.onrender.com/',
     // cameraURL: 'http://192.168.1.7:7000/video_feed', // URL locale
     cameraURL: 'https://df5d-41-82-241-32.ngrok-free.app/video_feed', // URL locale
 
