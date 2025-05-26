@@ -52,24 +52,33 @@ const verifierAppareils = (io) => {
 
         if (appareil.actif !== doitEtreActif) {
           console.log(
-            `🔄 Changement d'état : ${appareil.nom_app} (${relay_ID}) -> ${
+            ` Changement d'état : ${appareil.nom_app} (${relay_ID}) -> ${
               doitEtreActif ? "ON" : "OFF"
             }`
           );
 
+          // Créer une copie de l'appareil avec le nouvel état
+          const appareilUpdate = {
+            ...appareil.toObject(),
+            actif: doitEtreActif,
+          };
+
+          // Activer/désactiver le relais avant de sauvegarder l'état
+          await activerDesactiverRelay(appareilUpdate);
+
+          // Sauvegarder le nouvel état dans la base de données
           appareil.actif = doitEtreActif;
           await appareil.save();
-          await activerDesactiverRelay(appareil);
 
-          // 🚀 Notifier les clients WebSocket SEULEMENT si l'état a changé
+          //  Notifier les clients WebSocket SEULEMENT si l'état a changé
           if (ioInstance) {
             ioInstance.emit("deviceStatusUpdated", {
               _id: appareil._id,
               actif: appareil.actif,
             });
-            console.log("📢 Notification WebSocket envoyée !");
+            console.log(" Notification WebSocket envoyée !");
           } else {
-            console.error("⚠️ Erreur : ioInstance est undefined !");
+            console.error(" Erreur : ioInstance est undefined !");
           }
         }
       }

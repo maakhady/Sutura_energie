@@ -19,7 +19,9 @@ const app = express();
 const server = http.createServer(app);
 
 // Extraire les origines autorisées
-const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['*'];
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",")
+  : ["*"];
 
 // Configuration Socket.IO avec CORS approprié
 const io = socketIO(server, {
@@ -35,11 +37,15 @@ setSocketInstance(io);
 // Middleware CORS pour Express
 app.use(
   cors({
-    origin: function(origin, callback) {
-      if (!origin || corsOrigins.includes(origin) || corsOrigins.includes('*')) {
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        corsOrigins.includes(origin) ||
+        corsOrigins.includes("*")
+      ) {
         callback(null, true);
       } else {
-        callback(new Error('Non autorisé par CORS'));
+        callback(new Error("Non autorisé par CORS"));
       }
     },
     credentials: true,
@@ -178,9 +184,9 @@ app.use((err, req, res, next) => {
 
 // Gestionnaire d'arrêt propre pour les connexions séries
 const handleGracefulShutdown = () => {
-  console.log('Arrêt du serveur, nettoyage des connexions...');
+  console.log("Arrêt du serveur, nettoyage des connexions...");
   serialService.cleanupConnections();
-  
+
   // Attendre un peu pour permettre aux connexions de se terminer proprement
   setTimeout(() => {
     process.exit(0);
@@ -188,47 +194,44 @@ const handleGracefulShutdown = () => {
 };
 
 // Configurer les gestionnaires d'événements pour l'arrêt propre
-process.on('SIGINT', handleGracefulShutdown);
-process.on('SIGTERM', handleGracefulShutdown);
+process.on("SIGINT", handleGracefulShutdown);
+process.on("SIGTERM", handleGracefulShutdown);
 
-// Connexion à la base de données puis démarrage du serveur
+// Démarrage du serveur
 const PORT = process.env.PORT || 2500;
+server.listen(PORT, async () => {
+  try {
+    // Connexion à la base de données
+    await connectDB();
+    console.log(" Connecté à la base de données.");
 
-connectDB()
-  .then(async () => {
-    // Initialiser la connexion série
-    try {
-      // Initialiser le service de communication série - Notez l'utilisation de await
-      const connected = await serialService.initSerialConnection();
-      
-      if (connected) {
-        console.log("Connexion série avec Arduino initialisée");
-
-        // Initialiser les services qui utilisent la connexion série
-        fingerprintService.init();
-        rfidService.init();
-        verifierAppareils(io);
-
-        console.log("Services d'empreinte et RFID initialisés");
-      } else {
-        console.warn("Échec de la connexion série avec Arduino");
-        console.log("L'application continue sans connexion à l'Arduino, tentatives automatiques programmées");
-      }
-    } catch (error) {
-      console.warn("Impossible de se connecter à l'Arduino:", error.message);
-      console.log("L'application démarre sans connexion à l'Arduino, tentatives de reconnexion programmées");
+    // Initialisation des services
+    const connected = await serialService.initSerialConnection();
+    if (connected) {
+      console.log(" Connexion série avec Arduino initialisée");
+      await fingerprintService.init();
+      await rfidService.init();
+      console.log(" Services d'empreinte et RFID initialisés");
+    } else {
+      console.warn(" Échec de la connexion série avec Arduino");
+      console.log(
+        "L'application continue sans connexion à l'Arduino, tentatives automatiques programmées"
+      );
     }
 
-    // Utiliser server.listen au lieu de app.listen pour supporter Socket.IO
-    server.listen(PORT, () => {
-      console.log(
-        `Serveur démarré en mode ${
-          process.env.NODE_ENV || "development"
-        } sur le port ${PORT}`
-      );
-    });
-  })
-  .catch((err) => {
-    console.error("Impossible de démarrer le serveur:", err.message);
+    // Initialisation du service de vérification des appareils
+    console.log(
+      "🕒 Initialisation du service de vérification des appareils..."
+    );
+    await verifierAppareils(io);
+
+    console.log(
+      `🚀 Serveur démarré en mode ${
+        process.env.NODE_ENV || "development"
+      } sur le port ${PORT}`
+    );
+  } catch (error) {
+    console.error("❌ Erreur lors du démarrage du serveur:", error);
     process.exit(1);
-  });
+  }
+});

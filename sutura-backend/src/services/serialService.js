@@ -39,9 +39,12 @@ const initSerialConnection = async () => {
         serialPort.close();
         console.log("Port existant fermé avant reconnexion");
       } catch (err) {
-        console.log("Erreur lors de la fermeture du port existant:", err.message);
+        console.log(
+          "Erreur lors de la fermeture du port existant:",
+          err.message
+        );
       }
-      
+
       // Attendre un moment pour que le port se libère
       setTimeout(connectToPort, 1000);
     } else {
@@ -50,14 +53,17 @@ const initSerialConnection = async () => {
 
     function connectToPort() {
       try {
-        serialPort = new SerialPort({ path: PORT, baudRate: BAUD_RATE }, (err) => {
-          if (err) {
-            console.error("Erreur d'ouverture du port série:", err.message);
-            tryingToConnect = false;
-            watchForDevice();
-            return resolve(false);
+        serialPort = new SerialPort(
+          { path: PORT, baudRate: BAUD_RATE },
+          (err) => {
+            if (err) {
+              console.error("Erreur d'ouverture du port série:", err.message);
+              tryingToConnect = false;
+              watchForDevice();
+              return resolve(false);
+            }
           }
-        });
+        );
 
         parser = serialPort.pipe(new ReadlineParser({ delimiter: "\r\n" }));
 
@@ -78,13 +84,13 @@ const initSerialConnection = async () => {
         serialPort.on("open", () => {
           console.log("Connexion série établie avec Arduino");
           tryingToConnect = false;
-          
+
           // Arrêter l'intervalle de vérification si existant
           if (deviceCheckInterval) {
             clearInterval(deviceCheckInterval);
             deviceCheckInterval = null;
           }
-          
+
           resolve(true); // Indique que la connexion a réussi
         });
 
@@ -106,18 +112,20 @@ const initSerialConnection = async () => {
 // Surveiller la connexion du périphérique
 const watchForDevice = () => {
   if (tryingToConnect) return;
-  
+
   // Si un intervalle existe déjà, ne pas en créer un nouveau
   if (deviceCheckInterval) return;
-  
+
   console.log("Démarrage de la surveillance du périphérique...");
-  
+
   deviceCheckInterval = setInterval(async () => {
-    console.log(`⏳ Vérification des appareils à ${new Date().toLocaleTimeString()}...`);
-    
+    console.log(
+      `🔌 Vérification de la connexion Arduino à ${new Date().toLocaleTimeString()}...`
+    );
+
     if (isPortAvailable()) {
       console.log(`Périphérique détecté sur ${PORT}. Connexion...`);
-      
+
       try {
         const connected = await initSerialConnection();
         if (connected) {
@@ -128,7 +136,7 @@ const watchForDevice = () => {
         console.error("Erreur de connexion:", err.message);
       }
     }
-  }, 5000);
+  }, 100000); // Vérification toutes les 10 secondes
 };
 
 // Envoyer une commande à l'Arduino
@@ -170,7 +178,7 @@ const cleanupConnections = () => {
     clearInterval(deviceCheckInterval);
     deviceCheckInterval = null;
   }
-  
+
   if (serialPort && serialPort.isOpen) {
     try {
       serialPort.close();
@@ -179,7 +187,7 @@ const cleanupConnections = () => {
       console.error("Erreur lors de la fermeture du port:", err);
     }
   }
-  
+
   tryingToConnect = false;
   messageListeners = [];
 };
@@ -190,7 +198,7 @@ module.exports = {
   addMessageListener,
   removeMessageListener,
   isDeviceConnected,
-  cleanupConnections
+  cleanupConnections,
 };
 
 // Lancer la surveillance dès le démarrage

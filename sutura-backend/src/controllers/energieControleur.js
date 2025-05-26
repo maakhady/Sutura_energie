@@ -40,6 +40,7 @@ const recevoirDonneesCapteurs = async (req, res) => {
     for (let i = 0; i < sensors.length; i++) {
       const courant = sensors[i]; // Courant mesuré (A)
       const appareil = appareils.find((a) => a.relay_ID === i + 1);
+      const puissance = courant * TENSION; // Calcul de la puissance (P = U * I)
 
       console.log(
         `⚡ Appareil ${i + 1} :`,
@@ -68,7 +69,6 @@ const recevoirDonneesCapteurs = async (req, res) => {
       }
       if (!appareil) continue;
 
-      const puissance = TENSION * courant; // P = U × I
       const energie_kWh = puissance * (1 / 3600); // Conso en kWh sur 1 sec
 
       //  Alerte si puissance supérieure au seuil et appareil actif

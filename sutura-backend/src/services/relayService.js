@@ -1,74 +1,8 @@
-// const axios = require("axios");
-
-// const RASPBERRY_PI_URL = "http://192.168.1.28:2500"; // Mets l'IP réelle
-
-// // Fonction pour activer/désactiver un relais unique
-// exports.activerDesactiverRelay = async (appareil) => {
-//   try {
-//     if (!appareil.relay_ID || typeof appareil.relay_ID !== "number") {
-//       throw new Error("relay_ID doit être un nombre valide");
-//     }
-
-//     console.log(
-//       `➡️ Envoi de la requête à : ${RASPBERRY_PI_URL}/control-relay/${appareil.relay_ID}`
-//     );
-//     console.log(`📡 Données envoyées :`, { actif: appareil.actif });
-
-//     const response = await axios.post(
-//       `${RASPBERRY_PI_URL}/control-relay/${appareil.relay_ID}`,
-//       { actif: appareil.actif }
-//     );
-
-//     console.log(
-//       `✅ Relais ${appareil.relay_ID} ${
-//         appareil.actif ? "activé" : "désactivé"
-//       }`
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "❌ Erreur lors du contrôle du relais :",
-//       error.response?.data || error.message
-//     );
-//     throw new Error(
-//       "Impossible d’activer/désactiver l’appareil sur le Raspberry Pi"
-//     );
-//   }
-// };
-
-// // Fonction pour activer/désactiver plusieurs relais d’un coup
-// exports.activerDesactiverPlusieursRelais = async (relais_ids, actif) => {
-//   try {
-//     console.log(
-//       `➡️ Envoi de la requête à : ${RASPBERRY_PI_URL}/control-multiple-relays`
-//     );
-//     console.log(`📡 Données envoyées :`, { relais_ids, actif });
-
-//     const response = await axios.post(
-//       `${RASPBERRY_PI_URL}/control-multiple-relays`,
-//       { relais_ids, actif }
-//     );
-
-//     console.log(
-//       `✅ Relais ${relais_ids} ${actif ? "activés" : "désactivés"} avec succès.`
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "❌ Erreur lors du contrôle des relais :",
-//       error.response?.data || error.message
-//     );
-//     throw new Error(
-//       "Impossible d’activer/désactiver plusieurs relais sur le Raspberry Pi"
-//     );
-//   }
-// };
-
 const axios = require("axios");
 
 // Externaliser l'URL dans une variable d'environnement ou un fichier de configuration
 const RASPBERRY_PI_URL =
-  process.env.RASPBERRY_PI_URL || "http://192.168.1.57:2500";
+  process.env.RASPBERRY_PI_URL || "https://e5f4-154-125-210-107.ngrok-free.app";
 
 // Configuration d'axios avec timeout
 const axiosInstance = axios.create({
