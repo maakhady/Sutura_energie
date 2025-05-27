@@ -779,10 +779,10 @@ const RightPanel = () => {
       <div className="security-alerts">
         <div className="alerts-header">
           <h3 className="title-alert">Alertes sécurité</h3>
-          <div className="alerts-icons">
+          {/* <div className="alerts-icons">
             <span className="time-icon">⏰</span>
             <span className="alert-count">3 ALERTES</span>
-          </div>
+          </div> */}
         </div>
 
         <div className="alert-list">
