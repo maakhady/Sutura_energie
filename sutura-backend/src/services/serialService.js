@@ -2,7 +2,7 @@ const { SerialPort } = require("serialport");
 const { ReadlineParser } = require("@serialport/parser-readline");
 const fs = require("fs");
 
-const PORT = process.env.ARDUINO_PORT || "/dev/ttyUSB0";
+const PORT = process.env.ARDUINO_PORT || "/dev/ttyUSB1";
 const BAUD_RATE = 9600;
 
 let serialPort;
