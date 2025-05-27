@@ -2,7 +2,7 @@ const axios = require("axios");
 
 // Externaliser l'URL dans une variable d'environnement ou un fichier de configuration
 const RASPBERRY_PI_URL =
-  process.env.RASPBERRY_PI_URL || "https://e5f4-154-125-210-107.ngrok-free.app";
+  process.env.RASPBERRY_PI_URL || "https://4f1d-154-125-210-107.ngrok-free.app/";
 
 // Configuration d'axios avec timeout
 const axiosInstance = axios.create({
